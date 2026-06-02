@@ -9,8 +9,8 @@ function required(name: string): string {
 }
 
 export const env = {
-  appId: required("APP_ID"),
-  appSecret: required("APP_SECRET"),
+  appId: required("APP_ID") || "default-app-id",
+  appSecret: required("APP_SECRET") || "default-secret-change-in-production",
   isProduction: process.env.NODE_ENV === "production",
-  databaseUrl: required("DATABASE_URL"),
+  databaseUrl: required("DATABASE_URL") || "data/sqlite.db",
 };
