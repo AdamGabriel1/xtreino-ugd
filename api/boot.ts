@@ -21,7 +21,7 @@ app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
 export default app;
 
 if (env.isProduction) {
-  const { serve } = await import("@hono/node-server");
+  const { serve } = await import("hono/node-server");
   const { serveStaticFiles } = await import("./lib/vite.js");
   serveStaticFiles(app);
 
