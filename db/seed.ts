@@ -2,7 +2,7 @@ import { getDb } from "../api/queries/connection.js";
 import { admins, settings, teams, players, championships, xtreinos, rankings } from "./schema.js";
 import { hashSync } from "bcryptjs";
 
-function seed() {
+export function seed() {
   const db = getDb();
   console.log("Seeding database...");
 
@@ -189,4 +189,8 @@ try {
 } catch (err) {
   console.error("Seed failed:", err);
   process.exit(1);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seed();
 }

@@ -11,7 +11,7 @@ let instance: ReturnType<typeof drizzle<typeof fullSchema>>;
 
 export function getDb() {
   if (!instance) {
-    const dbPath = process.env.DATABASE_URL || "data/sqlite.db";
+    const dbPath = process.env.DATABASE_URL || "/data/sqlite.db";
     // Cria a pasta se não existir (importante para o Render Disk)
     mkdirSync(dirname(dbPath), { recursive: true });
     const sqlite = new Database(dbPath);

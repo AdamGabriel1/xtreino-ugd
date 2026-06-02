@@ -10,7 +10,6 @@ console.log("[BOOT] Starting server...");
 const app = new Hono();
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
-
 app.get("/health", (c) => c.json({ status: "ok", time: Date.now() }));
 
 app.all("/api/trpc/*", async (c) => {
@@ -24,15 +23,32 @@ app.all("/api/trpc/*", async (c) => {
 
 app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
 
-// Serve static files in production (React app built by Vite)
 if (env.isProduction) {
   console.log("[BOOT] Production mode detected");
   console.log("[BOOT] DATABASE_URL:", env.databaseUrl);
 
+  // Auto-seed if database is empty
+  try {
+    const { getDb } = await import("./queries/connection.js");
+    const { admins } = await import("../db/schema.js");
+    const db = getDb();
+    const existingAdmin = db.select().from(admins).get();
+    
+    if (!existingAdmin) {
+      console.log("[BOOT] Database empty, seeding...");
+      const { seed } = await import("../db/seed.js");
+      seed();
+      console.log("[BOOT] Seed completed");
+    } else {
+      console.log("[BOOT] Database already has data");
+    }
+  } catch (error) {
+    console.error("[BOOT] Seed error:", error);
+  }
+
   const { serve } = await import("@hono/node-server");
   const { serveStatic } = await import("@hono/node-server/serve-static");
 
-  // Serve built frontend files from dist/public
   app.use("/*", serveStatic({ root: "./dist/public" }));
 
   const port = parseInt(process.env.PORT || "3000");
