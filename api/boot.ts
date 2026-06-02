@@ -1,16 +1,19 @@
-console.log("[BOOT] Step 0: File loaded");
-
-// Apenas imports que não falham
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "./router.js";
 import { createContext } from "./context.js";
+import { env } from "./lib/env.js";
 
+// @ts-ignore - Hono types
 const app = new Hono();
+
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
+
+// Health check endpoint
 app.get("/health", (c) => c.json({ status: "ok", time: Date.now() }));
 
+// tRPC API handler
 app.all("/api/trpc/*", async (c) => {
   return fetchRequestHandler({
     endpoint: "/api/trpc",
@@ -20,35 +23,23 @@ app.all("/api/trpc/*", async (c) => {
   });
 });
 
+// API 404 fallback
 app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
 
-// Tudo dinâmico a partir daqui
-if (process.env.NODE_ENV === "production") {
-  console.log("[BOOT] Production mode");
-  
-  try {
-    console.log("[BOOT] Importing router...");
-    const { appRouter } = await import("./router.js");
-    
-    console.log("[BOOT] Importing context...");
-    const { createContext } = await import("./context.js");
-    
-    console.log("[BOOT] Importing env...");
-    const { env } = await import("./lib/env.js");
-    
-    console.log("[BOOT] Importing connection...");
-    const { getDb } = await import("./queries/connection.js");
-    
-    console.log("[BOOT] Importing schema...");
-    const { admins, settings } = await import("../db/schema.js");
-    
-    console.log("[BOOT] All imports OK");
-    
-    // ... resto do código
-  } catch (error) {
-    console.error("[BOOT] IMPORT ERROR:", error);
-    process.exit(1);
-  }
+// Serve static files in production (React app built by Vite)
+if (env.isProduction) {
+  // @ts-ignore - dynamic import
+  const { serve } = await import("@hono/node-server");
+  // @ts-ignore - dynamic import
+  const { serveStatic } = await import("@hono/node-server/serve-static");
+
+  // Serve built frontend files from dist/public
+  app.use("/*", serveStatic({ root: "./dist/public" }));
+
+  const port = parseInt(process.env.PORT || "3000");
+  serve({ fetch: app.fetch, port }, () => {
+    console.log(`Server running on port ${port}`);
+  });
 }
 
 export default app;
