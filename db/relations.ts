@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { teams, players, championships, championshipTeams, matches, xtreinos, xtreinoTeams, scrims } from "./schema";
+import { teams, players, championships, championshipTeams, matches, xtreinos, xtreinoTeams, scrims } from "./schema.js";
 
 export const teamsRelations = relations(teams, ({ many }) => ({
   players: many(players),

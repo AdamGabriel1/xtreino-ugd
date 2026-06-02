@@ -1,5 +1,5 @@
-import { getDb } from "../api/queries/connection";
-import { admins, settings, teams, players, championships, xtreinos, rankings } from "./schema";
+import { getDb } from "../api/queries/connection.js";
+import { admins, settings, teams, players, championships, xtreinos, rankings } from "./schema.js";
 import { hashSync } from "bcryptjs";
 
 function seed() {
