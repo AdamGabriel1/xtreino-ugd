@@ -94,10 +94,6 @@ echo -e "${CYAN}🐍 Python${NC}"
 echo ""
 
 # Ambientes virtuais
-remove_item "venv" "venv (raiz)"
-remove_item ".venv" ".venv (raiz)"
-remove_item "env" "env (raiz)"
-remove_item ".env" ".env (raiz)"
 remove_dirs_pattern "venv" "venv"
 remove_dirs_pattern ".venv" ".venv"
 remove_dirs_pattern "env" "env"
