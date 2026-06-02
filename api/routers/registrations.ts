@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
-import { registrations } from "@db/schema";
+import { registrations } from "../../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 

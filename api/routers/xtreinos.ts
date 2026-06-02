@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
-import { xtreinos, xtreinoTeams, teams } from "@db/schema";
+import { xtreinos, xtreinoTeams, teams } from "../../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 

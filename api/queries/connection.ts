@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import * as schema from "@db/schema";
-import * as relations from "@db/relations";
+import * as schema from "../../db/schema.js";
+import * as relations from "../../db/relations.js";;
 
 const fullSchema = { ...schema, ...relations };
 
