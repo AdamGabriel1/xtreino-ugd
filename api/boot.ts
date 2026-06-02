@@ -4,6 +4,8 @@ console.log("[BOOT] Step 0: File loaded");
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { appRouter } from "./router.js";
+import { createContext } from "./context.js";
 
 const app = new Hono();
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
