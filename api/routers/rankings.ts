@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { rankings, teams, players } from "@db/schema";
 import { eq, desc } from "drizzle-orm";
-import { verifyToken } from "../lib/auth";
+import { verifyToken } from "../lib/auth.js";
 
 export const rankingsRouter = createRouter({
   teams: publicQuery
@@ -12,19 +12,25 @@ export const rankingsRouter = createRouter({
         limit: z.number().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
-      let query = db
+
+      if (input?.limit) {
+        return db
+          .select()
+          .from(rankings)
+          .where(eq(rankings.entityType, "team"))
+          .orderBy(desc(rankings.points))
+          .limit(input.limit)
+          .all();
+      }
+
+      return db
         .select()
         .from(rankings)
         .where(eq(rankings.entityType, "team"))
-        .orderBy(desc(rankings.points));
-
-      if (input?.limit) {
-        query = query.limit(input.limit) as typeof query;
-      }
-
-      return query;
+        .orderBy(desc(rankings.points))
+        .all();
     }),
 
   players: publicQuery
@@ -33,33 +39,39 @@ export const rankingsRouter = createRouter({
         limit: z.number().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
-      let query = db
+
+      if (input?.limit) {
+        return db
+          .select()
+          .from(rankings)
+          .where(eq(rankings.entityType, "player"))
+          .orderBy(desc(rankings.points))
+          .limit(input.limit)
+          .all();
+      }
+
+      return db
         .select()
         .from(rankings)
         .where(eq(rankings.entityType, "player"))
-        .orderBy(desc(rankings.points));
-
-      if (input?.limit) {
-        query = query.limit(input.limit) as typeof query;
-      }
-
-      return query;
+        .orderBy(desc(rankings.points))
+        .all();
     }),
 
-  recalculate: adminQuery.mutation(async ({ ctx }) => {
+  recalculate: adminQuery.mutation(({ ctx }) => {
     const payload = verifyToken(ctx.adminToken as string);
     if (!payload) throw new Error("Invalid token");
 
     const db = getDb();
 
     // Clear existing rankings
-    await db.delete(rankings);
+    db.delete(rankings).run();
 
     // Calculate team rankings from players
-    const allTeams = await db.select().from(teams);
-    const allPlayers = await db.select().from(players);
+    const allTeams = db.select().from(teams).all();
+    const allPlayers = db.select().from(players).all();
 
     for (const team of allTeams) {
       const teamPlayers = allPlayers.filter(p => p.teamId === team.id);
@@ -67,10 +79,10 @@ export const rankingsRouter = createRouter({
       const totalWins = teamPlayers.reduce((sum, p) => sum + p.wins, 0);
       const totalMatches = teamPlayers.reduce((sum, p) => sum + p.matches, 0);
       const totalDeaths = teamPlayers.reduce((sum, p) => sum + p.deaths, 0);
-      const kdRatio = totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : totalKills > 0 ? totalKills.toFixed(2) : "0.00";
+      const kdRatio = totalDeaths > 0 ? parseFloat((totalKills / totalDeaths).toFixed(2)) : totalKills > 0 ? parseFloat(totalKills.toFixed(2)) : 0;
       const points = totalKills * 2 + totalWins * 50 + totalMatches * 5;
 
-      await db.insert(rankings).values({
+      db.insert(rankings).values({
         entityType: "team",
         entityId: team.id,
         entityName: team.name,
@@ -79,16 +91,14 @@ export const rankingsRouter = createRouter({
         wins: totalWins,
         participations: totalMatches,
         kdRatio,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }).run();
     }
 
     for (const player of allPlayers) {
-      const kdRatio = player.deaths > 0 ? (player.kills / player.deaths).toFixed(2) : player.kills > 0 ? player.kills.toFixed(2) : "0.00";
+      const kdRatio = player.deaths > 0 ? parseFloat((player.kills / player.deaths).toFixed(2)) : player.kills > 0 ? parseFloat(player.kills.toFixed(2)) : 0;
       const points = player.kills * 2 + player.wins * 50 + player.matches * 5;
 
-      await db.insert(rankings).values({
+      db.insert(rankings).values({
         entityType: "player",
         entityId: player.id,
         entityName: player.nickname,
@@ -97,9 +107,7 @@ export const rankingsRouter = createRouter({
         wins: player.wins,
         participations: player.matches,
         kdRatio,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }).run();
     }
 
     return { success: true };

@@ -1,28 +1,26 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { scrims, teams } from "@db/schema";
 import { eq, desc } from "drizzle-orm";
-import { verifyToken } from "../lib/auth";
+import { verifyToken } from "../lib/auth.js";
 
 export const scrimsRouter = createRouter({
-  list: publicQuery.query(async () => {
+  list: publicQuery.query(() => {
     const db = getDb();
-    const allScrims = await db.select().from(scrims).orderBy(desc(scrims.createdAt));
+    const allScrims = db.select().from(scrims).orderBy(desc(scrims.createdAt)).all();
 
-    const scrimsWithTeams = await Promise.all(
-      allScrims.map(async (s) => {
-        const t1 = s.team1Id ? await db.select().from(teams).where(eq(teams.id, s.team1Id)).limit(1) : [];
-        const t2 = s.team2Id ? await db.select().from(teams).where(eq(teams.id, s.team2Id)).limit(1) : [];
-        return {
-          ...s,
-          team1Name: t1[0]?.name ?? null,
-          team2Name: t2[0]?.name ?? null,
-          team1Tag: t1[0]?.tag ?? null,
-          team2Tag: t2[0]?.tag ?? null,
-        };
-      })
-    );
+    const scrimsWithTeams = allScrims.map((s) => {
+      const t1 = s.team1Id ? db.select().from(teams).where(eq(teams.id, s.team1Id)).get() : null;
+      const t2 = s.team2Id ? db.select().from(teams).where(eq(teams.id, s.team2Id)).get() : null;
+      return {
+        ...s,
+        team1Name: t1?.name ?? null,
+        team2Name: t2?.name ?? null,
+        team1Tag: t1?.tag ?? null,
+        team2Tag: t2?.tag ?? null,
+      };
+    });
 
     return scrimsWithTeams;
   }),
@@ -40,16 +38,13 @@ export const scrimsRouter = createRouter({
         result: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      const result = await db.insert(scrims).values({
-        ...input,
-        createdAt: new Date(),
-      });
-      return { id: Number(result[0].insertId), success: true };
+      const result = db.insert(scrims).values(input).run();
+      return { id: Number(result.lastInsertRowid), success: true };
     }),
 
   update: adminQuery
@@ -66,24 +61,24 @@ export const scrimsRouter = createRouter({
         result: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const { id, ...data } = input;
       const db = getDb();
-      await db.update(scrims).set(data).where(eq(scrims.id, id));
+      db.update(scrims).set(data).where(eq(scrims.id, id)).run();
       return { success: true };
     }),
 
   delete: adminQuery
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      await db.delete(scrims).where(eq(scrims.id, input.id));
+      db.delete(scrims).where(eq(scrims.id, input.id)).run();
       return { success: true };
     }),
 });

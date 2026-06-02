@@ -1,13 +1,13 @@
-import { createRouter, publicQuery } from "./middleware";
-import { authRouter } from "./routers/auth";
-import { settingsRouter } from "./routers/settings";
-import { teamsRouter } from "./routers/teams";
-import { playersRouter } from "./routers/players";
-import { championshipsRouter } from "./routers/championships";
-import { xtreinosRouter } from "./routers/xtreinos";
-import { scrimsRouter } from "./routers/scrims";
-import { registrationsRouter } from "./routers/registrations";
-import { rankingsRouter } from "./routers/rankings";
+import { createRouter, publicQuery } from "./middleware.js";
+import { authRouter } from "./routers/auth.js";
+import { settingsRouter } from "./routers/settings.js";
+import { teamsRouter } from "./routers/teams.js";
+import { playersRouter } from "./routers/players.js";
+import { championshipsRouter } from "./routers/championships.js";
+import { xtreinosRouter } from "./routers/xtreinos.js";
+import { scrimsRouter } from "./routers/scrims.js";
+import { registrationsRouter } from "./routers/registrations.js";
+import { rankingsRouter } from "./routers/rankings.js";
 
 export const appRouter = createRouter({
   ping: publicQuery.query(() => ({ ok: true, ts: Date.now() })),

@@ -1,15 +1,15 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { settings } from "@db/schema";
 import { eq } from "drizzle-orm";
-import { verifyToken } from "../lib/auth";
+import { verifyToken } from "../lib/auth.js";
 
 export const settingsRouter = createRouter({
-  get: publicQuery.query(async () => {
+  get: publicQuery.query(() => {
     const db = getDb();
-    const result = await db.select().from(settings).limit(1);
-    return result[0] ?? null;
+    const result = db.select().from(settings).get();
+    return result ?? null;
   }),
 
   update: adminQuery
@@ -27,29 +27,24 @@ export const settingsRouter = createRouter({
         whatsappTemplate: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       // Verify admin token
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      const existing = await db.select().from(settings).limit(1);
+      const existing = db.select().from(settings).get();
 
-      if (existing.length === 0) {
-        await db.insert(settings).values({
-          ...input,
-          updatedAt: new Date(),
-        });
+      if (!existing) {
+        db.insert(settings).values(input).run();
         return { success: true };
       }
 
-      await db
+      db
         .update(settings)
-        .set({
-          ...input,
-          updatedAt: new Date(),
-        })
-        .where(eq(settings.id, existing[0].id));
+        .set(input)
+        .where(eq(settings.id, existing.id))
+        .run();
 
       return { success: true };
     }),

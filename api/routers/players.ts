@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { players, teams } from "@db/schema";
 import { eq, like, desc } from "drizzle-orm";
-import { verifyToken } from "../lib/auth";
+import { verifyToken } from "../lib/auth.js";
 
 export const playersRouter = createRouter({
   list: publicQuery
@@ -13,14 +13,15 @@ export const playersRouter = createRouter({
         teamId: z.number().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
       if (input?.search) {
         return db
           .select()
           .from(players)
           .where(like(players.nickname, `%${input.search}%`))
-          .orderBy(desc(players.createdAt));
+          .orderBy(desc(players.createdAt))
+          .all();
       }
 
       if (input?.teamId) {
@@ -28,35 +29,36 @@ export const playersRouter = createRouter({
           .select()
           .from(players)
           .where(eq(players.teamId, input.teamId))
-          .orderBy(desc(players.createdAt));
+          .orderBy(desc(players.createdAt))
+          .all();
       }
 
-      return db.select().from(players).orderBy(desc(players.createdAt));
+      return db.select().from(players).orderBy(desc(players.createdAt)).all();
     }),
 
   getById: publicQuery
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
-      const player = await db
+      const player = db
         .select()
         .from(players)
         .where(eq(players.id, input.id))
-        .limit(1);
+        .get();
 
-      if (!player[0]) return null;
+      if (!player) return null;
 
       let teamName = null;
-      if (player[0].teamId) {
-        const team = await db
+      if (player.teamId) {
+        const team = db
           .select()
           .from(teams)
-          .where(eq(teams.id, player[0].teamId))
-          .limit(1);
-        teamName = team[0]?.name ?? null;
+          .where(eq(teams.id, player.teamId))
+          .get();
+        teamName = team?.name ?? null;
       }
 
-      return { ...player[0], teamName };
+      return { ...player, teamName };
     }),
 
   create: adminQuery
@@ -72,17 +74,13 @@ export const playersRouter = createRouter({
         matches: z.number().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      const result = await db.insert(players).values({
-        ...input,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return { id: Number(result[0].insertId), success: true };
+      const result = db.insert(players).values(input).run();
+      return { id: Number(result.lastInsertRowid), success: true };
     }),
 
   update: adminQuery
@@ -99,27 +97,28 @@ export const playersRouter = createRouter({
         matches: z.number().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const { id, ...data } = input;
       const db = getDb();
-      await db
+      db
         .update(players)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(players.id, id));
+        .set(data)
+        .where(eq(players.id, id))
+        .run();
       return { success: true };
     }),
 
   delete: adminQuery
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      await db.delete(players).where(eq(players.id, input.id));
+      db.delete(players).where(eq(players.id, input.id)).run();
       return { success: true };
     }),
 });

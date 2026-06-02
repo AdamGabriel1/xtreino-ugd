@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { createRouter, publicQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { admins } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { compareSync } from "bcryptjs";
-import { signToken, verifyToken } from "../lib/auth";
+import { signToken, verifyToken } from "../lib/auth.js";
 
 export const authRouter = createRouter({
   login: publicQuery

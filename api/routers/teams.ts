@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { teams, players } from "@db/schema";
 import { eq, like, desc } from "drizzle-orm";
-import { verifyToken } from "../lib/auth";
+import { verifyToken } from "../lib/auth.js";
 
 export const teamsRouter = createRouter({
   list: publicQuery
@@ -12,36 +12,38 @@ export const teamsRouter = createRouter({
         search: z.string().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
       if (input?.search) {
         return db
           .select()
           .from(teams)
           .where(like(teams.name, `%${input.search}%`))
-          .orderBy(desc(teams.createdAt));
+          .orderBy(desc(teams.createdAt))
+          .all();
       }
-      return db.select().from(teams).orderBy(desc(teams.createdAt));
+      return db.select().from(teams).orderBy(desc(teams.createdAt)).all();
     }),
 
   getById: publicQuery
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
-      const team = await db
+      const team = db
         .select()
         .from(teams)
         .where(eq(teams.id, input.id))
-        .limit(1);
+        .get();
 
-      if (!team[0]) return null;
+      if (!team) return null;
 
-      const teamPlayers = await db
+      const teamPlayers = db
         .select()
         .from(players)
-        .where(eq(players.teamId, input.id));
+        .where(eq(players.teamId, input.id))
+        .all();
 
-      return { ...team[0], players: teamPlayers };
+      return { ...team, players: teamPlayers };
     }),
 
   create: adminQuery
@@ -55,17 +57,13 @@ export const teamsRouter = createRouter({
         whatsapp: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      const result = await db.insert(teams).values({
-        ...input,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return { id: Number(result[0].insertId), success: true };
+      const result = db.insert(teams).values(input).run();
+      return { id: Number(result.lastInsertRowid), success: true };
     }),
 
   update: adminQuery
@@ -80,27 +78,28 @@ export const teamsRouter = createRouter({
         whatsapp: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const { id, ...data } = input;
       const db = getDb();
-      await db
+      db
         .update(teams)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(teams.id, id));
+        .set(data)
+        .where(eq(teams.id, id))
+        .run();
       return { success: true };
     }),
 
   delete: adminQuery
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      await db.delete(teams).where(eq(teams.id, input.id));
+      db.delete(teams).where(eq(teams.id, input.id)).run();
       return { success: true };
     }),
 });

@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware";
-import { getDb } from "../queries/connection";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
+import { getDb } from "../queries/connection.js";
 import { championships, championshipTeams, matches, teams } from "@db/schema";
 import { eq, desc, and } from "drizzle-orm";
-import { verifyToken } from "../lib/auth";
+import { verifyToken } from "../lib/auth.js";
 
 export const championshipsRouter = createRouter({
   list: publicQuery
@@ -12,39 +12,42 @@ export const championshipsRouter = createRouter({
         status: z.string().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
       if (input?.status) {
         return db
           .select()
           .from(championships)
           .where(eq(championships.status, input.status))
-          .orderBy(desc(championships.createdAt));
+          .orderBy(desc(championships.createdAt))
+          .all();
       }
-      return db.select().from(championships).orderBy(desc(championships.createdAt));
+      return db.select().from(championships).orderBy(desc(championships.createdAt)).all();
     }),
 
   getById: publicQuery
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       const db = getDb();
-      const champ = await db
+      const champ = db
         .select()
         .from(championships)
         .where(eq(championships.id, input.id))
-        .limit(1);
+        .get();
 
-      if (!champ[0]) return null;
+      if (!champ) return null;
 
-      const cTeams = await db
+      const cTeams = db
         .select()
         .from(championshipTeams)
-        .where(eq(championshipTeams.championshipId, input.id));
+        .where(eq(championshipTeams.championshipId, input.id))
+        .all();
 
-      const allMatches = await db
+      const allMatches = db
         .select()
         .from(matches)
-        .where(eq(matches.championshipId, input.id));
+        .where(eq(matches.championshipId, input.id))
+        .all();
 
       // Get team names for matches
       const allTeamIds = [...new Set([
@@ -53,12 +56,9 @@ export const championshipsRouter = createRouter({
         ...allMatches.filter(m => m.team2Id).map(m => m.team2Id!),
       ])];
 
-      const teamData = await Promise.all(
-        allTeamIds.map(async (tid) => {
-          const t = await db.select().from(teams).where(eq(teams.id, tid)).limit(1);
-          return t[0];
-        })
-      );
+      const teamData = allTeamIds.map((tid) => {
+        return db.select().from(teams).where(eq(teams.id, tid)).get();
+      }).filter(Boolean);
 
       const teamMap = new Map(teamData.filter(Boolean).map(t => [t!.id, t!]));
 
@@ -75,7 +75,7 @@ export const championshipsRouter = createRouter({
       }));
 
       return {
-        ...champ[0],
+        ...champ,
         teams: cTeamsWithNames,
         matches: matchesWithTeams,
       };
@@ -95,17 +95,13 @@ export const championshipsRouter = createRouter({
         maxTeams: z.number().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      const result = await db.insert(championships).values({
-        ...input,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return { id: Number(result[0].insertId), success: true };
+      const result = db.insert(championships).values(input).run();
+      return { id: Number(result.lastInsertRowid), success: true };
     }),
 
   update: adminQuery
@@ -125,29 +121,30 @@ export const championshipsRouter = createRouter({
         registeredTeams: z.number().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const { id, ...data } = input;
       const db = getDb();
-      await db
+      db
         .update(championships)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(championships.id, id));
+        .set(data)
+        .where(eq(championships.id, id))
+        .run();
       return { success: true };
     }),
 
   delete: adminQuery
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      await db.delete(matches).where(eq(matches.championshipId, input.id));
-      await db.delete(championshipTeams).where(eq(championshipTeams.championshipId, input.id));
-      await db.delete(championships).where(eq(championships.id, input.id));
+      db.delete(matches).where(eq(matches.championshipId, input.id)).run();
+      db.delete(championshipTeams).where(eq(championshipTeams.championshipId, input.id)).run();
+      db.delete(championships).where(eq(championships.id, input.id)).run();
       return { success: true };
     }),
 
@@ -159,28 +156,29 @@ export const championshipsRouter = createRouter({
         groupName: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      await db.insert(championshipTeams).values({
+      db.insert(championshipTeams).values({
         championshipId: input.championshipId,
         teamId: input.teamId,
         groupName: input.groupName,
-        createdAt: new Date(),
-      });
+      }).run();
 
       // Update registered teams count
-      const count = await db
+      const count = db
         .select()
         .from(championshipTeams)
-        .where(eq(championshipTeams.championshipId, input.championshipId));
+        .where(eq(championshipTeams.championshipId, input.championshipId))
+        .all();
 
-      await db
+      db
         .update(championships)
         .set({ registeredTeams: count.length })
-        .where(eq(championships.id, input.championshipId));
+        .where(eq(championships.id, input.championshipId))
+        .run();
 
       return { success: true };
     }),
@@ -192,29 +190,32 @@ export const championshipsRouter = createRouter({
         teamId: z.number(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-      await db
+      db
         .delete(championshipTeams)
         .where(
           and(
             eq(championshipTeams.championshipId, input.championshipId),
             eq(championshipTeams.teamId, input.teamId)
           )
-        );
+        )
+        .run();
 
-      const count = await db
+      const count = db
         .select()
         .from(championshipTeams)
-        .where(eq(championshipTeams.championshipId, input.championshipId));
+        .where(eq(championshipTeams.championshipId, input.championshipId))
+        .all();
 
-      await db
+      db
         .update(championships)
         .set({ registeredTeams: count.length })
-        .where(eq(championships.id, input.championshipId));
+        .where(eq(championships.id, input.championshipId))
+        .run();
 
       return { success: true };
     }),
@@ -234,7 +235,7 @@ export const championshipsRouter = createRouter({
         scheduledDate: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
@@ -242,17 +243,16 @@ export const championshipsRouter = createRouter({
       const { id, championshipId, ...data } = input;
 
       if (id) {
-        await db
+        db
           .update(matches)
-          .set({ ...data, updatedAt: new Date() })
-          .where(eq(matches.id, id));
+          .set(data)
+          .where(eq(matches.id, id))
+          .run();
       } else {
-        await db.insert(matches).values({
+        db.insert(matches).values({
           championshipId,
           ...data,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+        }).run();
       }
       return { success: true };
     }),
@@ -267,16 +267,17 @@ export const championshipsRouter = createRouter({
         matchesPlayed: z.number().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       const payload = verifyToken(ctx.adminToken as string);
       if (!payload) throw new Error("Invalid token");
 
       const { championshipTeamId, ...data } = input;
       const db = getDb();
-      await db
+      db
         .update(championshipTeams)
         .set(data)
-        .where(eq(championshipTeams.id, championshipTeamId));
+        .where(eq(championshipTeams.id, championshipTeamId))
+        .run();
       return { success: true };
     }),
 });
