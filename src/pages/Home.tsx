@@ -1,23 +1,172 @@
 import { Link } from "react-router";
-import { Trophy, Dumbbell, Users, UserCircle, TrendingUp, Calendar, ChevronRight } from "lucide-react";
+import {
+  Trophy,
+  Dumbbell,
+  Users,
+  UserCircle,
+  TrendingUp,
+  Calendar,
+  ChevronRight,
+  Swords,
+} from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
+import { useState } from "react";
+
+type RankCategory = "xtreino" | "campeonato" | "scrim";
 
 export default function Home() {
-  const { data: championships } = trpc.championships.list.useQuery({ status: "ativo" });
-  const { data: xtreinosList } = trpc.xtreinos.list.useQuery({ status: "aberto" });
+  const [teamRankType, setTeamRankType] = useState<RankCategory>("xtreino");
+  const [playerRankType, setPlayerRankType] = useState<RankCategory>("xtreino");
+
+  const { data: championships } = trpc.championships.list.useQuery({
+    status: "ativo",
+  });
+  const { data: xtreinosList } = trpc.xtreinos.list.useQuery({
+    status: "aberto",
+  });
   const { data: teamsList } = trpc.teams.list.useQuery();
   const { data: playersList } = trpc.players.list.useQuery();
-  const { data: teamRankings } = trpc.rankings.teams.useQuery({ limit: 5 });
-  const { data: playerRankings } = trpc.rankings.players.useQuery({ limit: 5 });
   const { data: settings } = trpc.settings.get.useQuery();
+
+  // Rankings separados por tipo
+  const { data: teamRankingsXtreino } = trpc.rankings.list.useQuery({
+    entityType: "team",
+    rankType: "xtreino",
+    limit: 5,
+  });
+  const { data: teamRankingsCampeonato } = trpc.rankings.list.useQuery({
+    entityType: "team",
+    rankType: "campeonato",
+    limit: 5,
+  });
+  const { data: teamRankingsScrim } = trpc.rankings.list.useQuery({
+    entityType: "team",
+    rankType: "scrim",
+    limit: 5,
+  });
+
+  const { data: playerRankingsXtreino } = trpc.rankings.list.useQuery({
+    entityType: "player",
+    rankType: "xtreino",
+    limit: 5,
+  });
+  const { data: playerRankingsCampeonato } = trpc.rankings.list.useQuery({
+    entityType: "player",
+    rankType: "campeonato",
+    limit: 5,
+  });
+  const { data: playerRankingsScrim } = trpc.rankings.list.useQuery({
+    entityType: "player",
+    rankType: "scrim",
+    limit: 5,
+  });
+
+  const teamRankingsMap = {
+    xtreino: teamRankingsXtreino,
+    campeonato: teamRankingsCampeonato,
+    scrim: teamRankingsScrim,
+  };
+
+  const playerRankingsMap = {
+    xtreino: playerRankingsXtreino,
+    campeonato: playerRankingsCampeonato,
+    scrim: playerRankingsScrim,
+  };
 
   const stats = [
     { label: "Equipes", value: teamsList?.length ?? 0, icon: Users },
     { label: "Jogadores", value: playersList?.length ?? 0, icon: UserCircle },
-    { label: "Campeonatos Ativos", value: championships?.length ?? 0, icon: Trophy },
+    {
+      label: "Campeonatos Ativos",
+      value: championships?.length ?? 0,
+      icon: Trophy,
+    },
     { label: "XTreinos", value: xtreinosList?.length ?? 0, icon: Dumbbell },
   ];
+
+  const rankTabs: { key: RankCategory; label: string; icon: typeof Trophy }[] =
+    [
+      { key: "xtreino", label: "XTreinos", icon: Dumbbell },
+      { key: "campeonato", label: "Campeonatos", icon: Trophy },
+      { key: "scrim", label: "Scrims", icon: Swords },
+    ];
+
+  const RankTab = ({
+    active,
+    onClick,
+    label,
+    icon: Icon,
+  }: {
+    active: boolean;
+    onClick: () => void;
+    label: string;
+    icon: typeof Trophy;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        active
+          ? "bg-red-500/10 text-red-400 border border-red-500/20"
+          : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
+      }`}
+    >
+      <Icon className="w-4 h-4" />
+      {label}
+    </button>
+  );
+
+  const RankList = ({
+    rankings,
+    type,
+  }: {
+    rankings?: Array<{
+      id: number;
+      entityName: string;
+      points: number;
+      kills?: number;
+      wins?: number;
+    }>;
+    type: "team" | "player";
+  }) => (
+    <div className="divide-y divide-[#2a2a3a]">
+      {rankings?.map((r, i) => (
+        <div
+          key={r.id}
+          className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
+        >
+          <span
+            className={`w-8 text-center font-bold ${
+              i === 0
+                ? "text-yellow-400"
+                : i === 1
+                  ? "text-gray-300"
+                  : i === 2
+                    ? "text-amber-600"
+                    : "text-[#5a5a6e]"
+            }`}
+          >
+            {i + 1}
+          </span>
+          <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
+            {r.entityName}
+          </span>
+          <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
+          {type === "team" && (
+            <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
+          )}
+          {type === "player" && (
+            <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
+          )}
+        </div>
+      ))}
+      {(!rankings || rankings.length === 0) && (
+        <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
+          Sem dados de ranking para este modo
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <MainLayout>
@@ -66,7 +215,9 @@ export default function Home() {
                     </div>
                     <span className="text-[#8a8a9e] text-sm">{stat.label}</span>
                   </div>
-                  <p className="text-2xl font-bold text-[#f0f0f5]">{stat.value}</p>
+                  <p className="text-2xl font-bold text-[#f0f0f5]">
+                    {stat.value}
+                  </p>
                 </div>
               );
             })}
@@ -94,15 +245,21 @@ export default function Home() {
                   Ativo
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-[#f0f0f5] mb-2">{champ.name}</h3>
-              <p className="text-sm text-[#8a8a9e] mb-1">Modo: {champ.modality?.toUpperCase()}</p>
+              <h3 className="text-lg font-bold text-[#f0f0f5] mb-2">
+                {champ.name}
+              </h3>
+              <p className="text-sm text-[#8a8a9e] mb-1">
+                Modo: {champ.modality?.toUpperCase()}
+              </p>
               <p className="text-sm text-[#8a8a9e] mb-4">
                 {champ.registeredTeams}/{champ.maxTeams} equipes
               </p>
               <div className="w-full bg-[#1a1a24] rounded-full h-2 mb-4">
                 <div
                   className="bg-red-500 h-2 rounded-full transition-all"
-                  style={{ width: `${(champ.registeredTeams / champ.maxTeams) * 100}%` }}
+                  style={{
+                    width: `${(champ.registeredTeams / champ.maxTeams) * 100}%`,
+                  }}
                 />
               </div>
               <Link
@@ -126,12 +283,16 @@ export default function Home() {
                   Aberto
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-[#f0f0f5] mb-2">{xt.name}</h3>
+              <h3 className="text-lg font-bold text-[#f0f0f5] mb-2">
+                {xt.name}
+              </h3>
               <div className="flex items-center gap-2 text-sm text-[#8a8a9e] mb-1">
                 <Calendar className="w-4 h-4" />
                 {xt.date}
               </div>
-              <p className="text-sm text-[#8a8a9e] mb-4">Modo: {xt.modality?.toUpperCase()}</p>
+              <p className="text-sm text-[#8a8a9e] mb-4">
+                Modo: {xt.modality?.toUpperCase()}
+              </p>
               <Link
                 to={`/xtreinos`}
                 className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300 font-medium"
@@ -153,52 +314,52 @@ export default function Home() {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Team Rankings */}
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-red-400" />
-              <h3 className="font-bold text-[#f0f0f5]">Top Equipes</h3>
+            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-red-400" />
+                <h3 className="font-bold text-[#f0f0f5]">Top Equipes</h3>
+              </div>
+              <div className="flex gap-2">
+                {rankTabs.map((tab) => (
+                  <RankTab
+                    key={tab.key}
+                    active={teamRankType === tab.key}
+                    onClick={() => setTeamRankType(tab.key)}
+                    label={tab.label}
+                    icon={tab.icon}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="divide-y divide-[#2a2a3a]">
-              {teamRankings?.map((r, i) => (
-                <div
-                  key={r.id}
-                  className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
-                >
-                  <span className={`w-8 text-center font-bold ${
-                    i === 0 ? "text-yellow-400" : i === 1 ? "text-gray-300" : i === 2 ? "text-amber-600" : "text-[#5a5a6e]"
-                  }`}>
-                    {i + 1}
-                  </span>
-                  <span className="flex-1 text-[#f0f0f5] font-medium text-sm">{r.entityName}</span>
-                  <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
-                  <span className="text-[#5a5a6e] text-xs">{r.wins}V</span>
-                </div>
-              ))}
-            </div>
+            <RankList
+              rankings={teamRankingsMap[teamRankType]}
+              type="team"
+            />
           </div>
 
           {/* Player Rankings */}
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center gap-2">
-              <UserCircle className="w-5 h-5 text-red-400" />
-              <h3 className="font-bold text-[#f0f0f5]">Top Jogadores</h3>
+            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <UserCircle className="w-5 h-5 text-red-400" />
+                <h3 className="font-bold text-[#f0f0f5]">Top Jogadores</h3>
+              </div>
+              <div className="flex gap-2">
+                {rankTabs.map((tab) => (
+                  <RankTab
+                    key={tab.key}
+                    active={playerRankType === tab.key}
+                    onClick={() => setPlayerRankType(tab.key)}
+                    label={tab.label}
+                    icon={tab.icon}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="divide-y divide-[#2a2a3a]">
-              {playerRankings?.map((r, i) => (
-                <div
-                  key={r.id}
-                  className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
-                >
-                  <span className={`w-8 text-center font-bold ${
-                    i === 0 ? "text-yellow-400" : i === 1 ? "text-gray-300" : i === 2 ? "text-amber-600" : "text-[#5a5a6e]"
-                  }`}>
-                    {i + 1}
-                  </span>
-                  <span className="flex-1 text-[#f0f0f5] font-medium text-sm">{r.entityName}</span>
-                  <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
-                  <span className="text-[#5a5a6e] text-xs">{r.kills}K</span>
-                </div>
-              ))}
-            </div>
+            <RankList
+              rankings={playerRankingsMap[playerRankType]}
+              type="player"
+            />
           </div>
         </div>
       </section>
