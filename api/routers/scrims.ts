@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
-import { scrims, teams } from "../../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { scrims, teams, scrimResults, scrimPlayerStats } from "../../db/schema.js";
+import { eq, desc, sql } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 
 export const scrimsRouter = createRouter({
+  // ============================================================
+  // ROTAS ORIGINAIS (scrims agendados)
+  // ============================================================
+
   list: publicQuery.query(() => {
     const db = getDb();
     const allScrims = db.select().from(scrims).orderBy(desc(scrims.createdAt)).all();
@@ -81,4 +85,92 @@ export const scrimsRouter = createRouter({
       db.delete(scrims).where(eq(scrims.id, input.id)).run();
       return { success: true };
     }),
+
+  // ============================================================
+  // ROTAS NOVAS (dados historicos de scrims — rankings)
+  // ============================================================
+
+  /** Listar datas unicas disponiveis nos dados historicos */
+  dates: publicQuery.query(() => {
+    const db = getDb();
+    const results = db
+      .select({ date: scrimResults.date })
+      .from(scrimResults)
+      .groupBy(scrimResults.date)
+      .orderBy(desc(scrimResults.date))
+      .all();
+    return results.map((r) => r.date);
+  }),
+
+  /** Colocacoes dos times por data */
+  teamResults: publicQuery
+    .input(
+      z.object({
+        date: z.string().optional(),
+      })
+    )
+    .query(({ input }) => {
+      const db = getDb();
+      let query = db.select().from(scrimResults);
+
+      if (input.date) {
+        query = query.where(eq(scrimResults.date, input.date)) as typeof query;
+      }
+
+      return query.orderBy(scrimResults.q1Pos).all();
+    }),
+
+  /** Estatisticas dos jogadores por data */
+  playerStats: publicQuery
+    .input(
+      z.object({
+        date: z.string().optional(),
+      })
+    )
+    .query(({ input }) => {
+      const db = getDb();
+      let query = db.select().from(scrimPlayerStats);
+
+      if (input.date) {
+        query = query.where(eq(scrimPlayerStats.date, input.date)) as typeof query;
+      }
+
+      return query.orderBy(desc(scrimPlayerStats.totalKills)).all();
+    }),
+
+  /** Top jogadores de todos os tempos (soma total de kills) */
+  playerStatsAllTime: publicQuery.query(() => {
+    const db = getDb();
+    return db
+      .select({
+        playerName: scrimPlayerStats.playerName,
+        teamName: sql<string>`MAX(${scrimPlayerStats.teamName})`,
+        totalKills: sql<number>`SUM(${scrimPlayerStats.totalKills})`,
+        totalQ1: sql<number>`SUM(${scrimPlayerStats.q1Kills})`,
+        totalQ2: sql<number>`SUM(${scrimPlayerStats.q2Kills})`,
+        totalQ3: sql<number>`SUM(${scrimPlayerStats.q3Kills})`,
+        matches: sql<number>`COUNT(DISTINCT ${scrimPlayerStats.date})`,
+      })
+      .from(scrimPlayerStats)
+      .groupBy(scrimPlayerStats.playerName)
+      .orderBy(desc(sql`SUM(${scrimPlayerStats.totalKills})`))
+      .all();
+  }),
+
+  /** Top times de todos os tempos (media de posicoes) */
+  teamResultsAllTime: publicQuery.query(() => {
+    const db = getDb();
+    return db
+      .select({
+        teamName: scrimResults.teamName,
+        avgQ1: sql<number>`AVG(${scrimResults.q1Pos})`,
+        avgQ2: sql<number>`AVG(${scrimResults.q2Pos})`,
+        avgQ3: sql<number>`AVG(${scrimResults.q3Pos})`,
+        matches: sql<number>`COUNT(*)`,
+      })
+      .from(scrimResults)
+      .groupBy(scrimResults.teamName)
+      .orderBy(sql`AVG(${scrimResults.q1Pos})`)
+      .all();
+  }),
 });
