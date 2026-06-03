@@ -16,12 +16,13 @@ import {
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
 
-// Sistema de pontuação por posição
+// Sistema de pontuação por posição (atualizado)
 const POSITION_POINTS: Record<number, number> = {
-  1: 12, 2: 9, 3: 7, 4: 5, 5: 4, 6: 3, 7: 2, 8: 1,
+  1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7, 7: 6, 8: 5,
+  9: 4, 10: 3, 11: 2, 12: 1, 13: 1, 14: 0, 15: 0,
 };
 
-// Pontos por kill (padrão: 1 ponto por kill)
+// Pontos por kill
 const KILL_POINTS = 1;
 
 interface TeamStats {
@@ -452,7 +453,7 @@ export default function XTreinos() {
               <Trophy className="w-4 h-4 text-yellow-400" />
               Pontuação por Posição
             </h4>
-            <div className="grid grid-cols-4 gap-2 text-xs">
+            <div className="grid grid-cols-5 gap-x-2 gap-y-1 text-xs">
               {Object.entries(POSITION_POINTS).map(([pos, pts]) => (
                 <div key={pos} className="flex justify-between text-[#8a8a9e]">
                   <span>{pos}º</span>
