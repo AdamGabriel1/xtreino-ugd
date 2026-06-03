@@ -99,6 +99,7 @@ export function seed() {
     { name: "Misturado", tag: "MIX" },
     { name: "Time I", tag: "TI" },
     { name: "Time E", tag: "TE" },
+    { name: "Dev", tag: "DEV" },
   ];
 
   let teamsCount = 0;
@@ -149,8 +150,7 @@ export function seed() {
   }
   console.log(`[SEED] ${xtreinosCount} xtreinos created`);
 
-  // --- Players (extraídos dos dados dos xtreinos históricos) ---
-  // Mapeamento: teamName -> teamId (será resolvido após inserção dos times)
+  // --- Players (extraídos dos dados dos xtreinos históricos + Dev) ---
   const allTeams = db.select().from(teams).all();
   const teamIdMap = new Map(allTeams.map(t => [t.name, t.id]));
 
@@ -272,6 +272,14 @@ export function seed() {
     { nickname: "Λつつ Unknown", teamName: "Λつつ" },
     { nickname: "Λつつ_$CAVEIRA", teamName: "Λつつ" },
     { nickname: "『PsS-KINN-ボ", teamName: "Λつつ" },
+    // Dev
+    { nickname: "DevNexT★", teamName: "Dev" },
+    { nickname: "DevBatata", teamName: "Dev" },
+    { nickname: "DevPisca", teamName: "Dev" },
+    { nickname: "DevThorfinn", teamName: "Dev" },
+    { nickname: "Dev_Guizin", teamName: "Dev" },
+    { nickname: "Dev_LTz", teamName: "Dev" },
+    { nickname: "Dev Ana", teamName: "Dev" },
   ];
 
   let playersCount = 0;
