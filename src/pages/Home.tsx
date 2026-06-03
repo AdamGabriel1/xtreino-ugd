@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 type RankCategory = "xtreino" | "campeonato" | "scrim";
 
@@ -29,50 +29,36 @@ export default function Home() {
   const { data: playersList } = trpc.players.list.useQuery();
   const { data: settings } = trpc.settings.get.useQuery();
 
-  // Rankings separados por tipo
-  const { data: teamRankingsXtreino } = trpc.rankings.list.useQuery({
-    entityType: "team",
-    rankType: "xtreino",
-    limit: 5,
-  });
-  const { data: teamRankingsCampeonato } = trpc.rankings.list.useQuery({
-    entityType: "team",
-    rankType: "campeonato",
-    limit: 5,
-  });
-  const { data: teamRankingsScrim } = trpc.rankings.list.useQuery({
-    entityType: "team",
-    rankType: "scrim",
-    limit: 5,
+  // Busca todos os rankings (sem filtro de rankType no backend ainda)
+  const { data: allTeamRankings } = trpc.rankings.teams.useQuery({ limit: 50 });
+  const { data: allPlayerRankings } = trpc.rankings.players.useQuery({
+    limit: 50,
   });
 
-  const { data: playerRankingsXtreino } = trpc.rankings.list.useQuery({
-    entityType: "player",
-    rankType: "xtreino",
-    limit: 5,
-  });
-  const { data: playerRankingsCampeonato } = trpc.rankings.list.useQuery({
-    entityType: "player",
-    rankType: "campeonato",
-    limit: 5,
-  });
-  const { data: playerRankingsScrim } = trpc.rankings.list.useQuery({
-    entityType: "player",
-    rankType: "scrim",
-    limit: 5,
-  });
+  // Filtra no cliente por rankType
+  const teamRankingsMap = useMemo(() => {
+    const byType = (type: RankCategory) =>
+      allTeamRankings
+        ?.filter((r) => (r.rankType ?? "xtreino") === type)
+        .slice(0, 5) ?? [];
+    return {
+      xtreino: byType("xtreino"),
+      campeonato: byType("campeonato"),
+      scrim: byType("scrim"),
+    };
+  }, [allTeamRankings]);
 
-  const teamRankingsMap = {
-    xtreino: teamRankingsXtreino,
-    campeonato: teamRankingsCampeonato,
-    scrim: teamRankingsScrim,
-  };
-
-  const playerRankingsMap = {
-    xtreino: playerRankingsXtreino,
-    campeonato: playerRankingsCampeonato,
-    scrim: playerRankingsScrim,
-  };
+  const playerRankingsMap = useMemo(() => {
+    const byType = (type: RankCategory) =>
+      allPlayerRankings
+        ?.filter((r) => (r.rankType ?? "xtreino") === type)
+        .slice(0, 5) ?? [];
+    return {
+      xtreino: byType("xtreino"),
+      campeonato: byType("campeonato"),
+      scrim: byType("scrim"),
+    };
+  }, [allPlayerRankings]);
 
   const stats = [
     { label: "Equipes", value: teamsList?.length ?? 0, icon: Users },
@@ -105,13 +91,13 @@ export default function Home() {
   }) => (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
         active
           ? "bg-red-500/10 text-red-400 border border-red-500/20"
           : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
       }`}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-3.5 h-3.5" />
       {label}
     </button>
   );
@@ -120,7 +106,7 @@ export default function Home() {
     rankings,
     type,
   }: {
-    rankings?: Array<{
+    rankings: Array<{
       id: number;
       entityName: string;
       points: number;
@@ -130,37 +116,38 @@ export default function Home() {
     type: "team" | "player";
   }) => (
     <div className="divide-y divide-[#2a2a3a]">
-      {rankings?.map((r, i) => (
-        <div
-          key={r.id}
-          className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
-        >
-          <span
-            className={`w-8 text-center font-bold ${
-              i === 0
-                ? "text-yellow-400"
-                : i === 1
-                  ? "text-gray-300"
-                  : i === 2
-                    ? "text-amber-600"
-                    : "text-[#5a5a6e]"
-            }`}
+      {rankings.length > 0 ? (
+        rankings.map((r, i) => (
+          <div
+            key={r.id}
+            className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
           >
-            {i + 1}
-          </span>
-          <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
-            {r.entityName}
-          </span>
-          <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
-          {type === "team" && (
-            <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
-          )}
-          {type === "player" && (
-            <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
-          )}
-        </div>
-      ))}
-      {(!rankings || rankings.length === 0) && (
+            <span
+              className={`w-8 text-center font-bold ${
+                i === 0
+                  ? "text-yellow-400"
+                  : i === 1
+                    ? "text-gray-300"
+                    : i === 2
+                      ? "text-amber-600"
+                      : "text-[#5a5a6e]"
+              }`}
+            >
+              {i + 1}
+            </span>
+            <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
+              {r.entityName}
+            </span>
+            <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
+            {type === "team" && (
+              <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
+            )}
+            {type === "player" && (
+              <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
+            )}
+          </div>
+        ))
+      ) : (
         <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
           Sem dados de ranking para este modo
         </div>
@@ -233,7 +220,6 @@ export default function Home() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Championships */}
           {championships?.slice(0, 2).map((champ) => (
             <div
               key={champ.id}
@@ -263,7 +249,7 @@ export default function Home() {
                 />
               </div>
               <Link
-                to={`/campeonatos`}
+                to="/campeonatos"
                 className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300 font-medium"
               >
                 Ver detalhes <ChevronRight className="w-4 h-4" />
@@ -271,7 +257,6 @@ export default function Home() {
             </div>
           ))}
 
-          {/* XTreinos */}
           {xtreinosList?.slice(0, 1).map((xt) => (
             <div
               key={xt.id}
@@ -294,7 +279,7 @@ export default function Home() {
                 Modo: {xt.modality?.toUpperCase()}
               </p>
               <Link
-                to={`/xtreinos`}
+                to="/xtreinos"
                 className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300 font-medium"
               >
                 Ver detalhes <ChevronRight className="w-4 h-4" />
