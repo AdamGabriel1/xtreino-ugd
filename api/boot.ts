@@ -6,6 +6,13 @@ import { createContext } from "./context.js";
 import { env } from "./lib/env.js";
 import { getDb } from "./queries/connection.js";
 import { seed, seedMinimal } from "../db/seed.js";
+import { runSeedIfNeeded } from "../db/seed-runner.js";
+
+// ============================================================
+// IMPORTS DOS SEEDS DIARIOS
+// Adicione novos imports aqui conforme for criando seeds
+// ============================================================
+import { seed as seed20260603 } from "../db/seeds/2026-06-03.js";
 
 console.log("[BOOT] Starting server...");
 
@@ -47,29 +54,49 @@ if (env.isProduction) {
       tableExists = false;
     }
 
-    console.log("[BOOT] Table exists:", tableExists);
+    console.log("[BOOT] Table 'admins' exists:", tableExists);
 
     if (!tableExists) {
-      console.log("[BOOT] Tables not found, running seed...");
+      // ========================================================
+      // PRIMEIRA VEZ: tabelas nao existem
+      // Roda seed inicial (idempotente) + registra no seed_runs
+      // ========================================================
+      console.log("[BOOT] Tables not found, running initial seed...");
       seed();
-      console.log("[BOOT] Seed completed successfully!");
+      console.log("[BOOT] Initial seed completed successfully!");
     } else {
-      // Check if admin exists
+      // ========================================================
+      // TABELAS JA EXISTEM: verifica se precisa de seed inicial
+      // ========================================================
       // @ts-ignore
       const adminCheck = sqlite.prepare("SELECT * FROM admins LIMIT 1").get();
       if (!adminCheck) {
-        console.log("[BOOT] Tables exist but empty, running seed...");
+        console.log("[BOOT] Tables exist but empty, running initial seed...");
         seed();
-        console.log("[BOOT] Seed completed successfully!");
+        console.log("[BOOT] Initial seed completed successfully!");
       } else {
-        console.log("[BOOT] Database already has data, skipping seed");
+        console.log("[BOOT] Database already has initial data, skipping initial seed");
       }
     }
+
+    // ============================================================
+    // SEEDS DIARIOS
+    // Sempre executa (com controle via seed_runs)
+    // Adicione novos seeds aqui na ordem cronologica
+    // ============================================================
+    console.log("[BOOT] Checking daily seeds...");
+    runSeedIfNeeded("daily_2026_06_03", seed20260603);
+    // Exemplo futuro:
+    // import { seed as seed20260604 } from "../db/seeds/2026-06-04.js";
+    // runSeedIfNeeded("daily_2026_06_04", seed20260604);
+
+    console.log("[BOOT] All seeds processed");
+
   } catch (error) {
     console.error("[BOOT] Database/Seed error:", error);
-    // Try minimal seed as fallback
+    // Fallback: tenta minimal seed
     try {
-      console.log("[BOOT] Trying minimal seed...");
+      console.log("[BOOT] Trying minimal seed as fallback...");
       seedMinimal();
       console.log("[BOOT] Minimal seed completed");
     } catch (err) {

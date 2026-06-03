@@ -1,21 +1,98 @@
 import { getDb } from "../api/queries/connection.js";
 import { admins, settings, teams, players, championships, xtreinos, rankings } from "./schema.js";
+import { seedRuns } from "./schema.js";
+import { eq, and } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
+
+// ============================================================
+// HELPERS IDEMPOTENTES
+// ============================================================
+
+function upsertAdmin(db: ReturnType<typeof getDb>, data: typeof admins.$inferInsert) {
+  const existing = db.select().from(admins).where(eq(admins.username, data.username)).get();
+  if (!existing) {
+    db.insert(admins).values(data).run();
+    return true;
+  }
+  return false;
+}
+
+function upsertSettings(db: ReturnType<typeof getDb>, data: typeof settings.$inferInsert) {
+  const existing = db.select().from(settings).limit(1).get();
+  if (!existing) {
+    db.insert(settings).values(data).run();
+    return true;
+  }
+  return false;
+}
+
+function upsertTeam(db: ReturnType<typeof getDb>, data: typeof teams.$inferInsert) {
+  const existing = db.select().from(teams).where(eq(teams.name, data.name)).get();
+  if (!existing) {
+    return db.insert(teams).values(data).returning().get();
+  }
+  return existing;
+}
+
+function upsertPlayer(db: ReturnType<typeof getDb>, data: typeof players.$inferInsert) {
+  const existing = db.select().from(players).where(eq(players.nickname, data.nickname)).get();
+  if (!existing) {
+    return db.insert(players).values(data).returning().get();
+  }
+  return existing;
+}
+
+function upsertChampionship(db: ReturnType<typeof getDb>, data: typeof championships.$inferInsert) {
+  const existing = db.select().from(championships).where(eq(championships.name, data.name)).get();
+  if (!existing) {
+    return db.insert(championships).values(data).returning().get();
+  }
+  return existing;
+}
+
+function upsertXtreino(db: ReturnType<typeof getDb>, data: typeof xtreinos.$inferInsert) {
+  const existing = db.select().from(xtreinos).where(eq(xtreinos.name, data.name)).get();
+  if (!existing) {
+    return db.insert(xtreinos).values(data).returning().get();
+  }
+  return existing;
+}
+
+function upsertRanking(db: ReturnType<typeof getDb>, data: typeof rankings.$inferInsert) {
+  const existing = db
+    .select()
+    .from(rankings)
+    .where(
+      and(
+        eq(rankings.entityName, data.entityName),
+        eq(rankings.entityType, data.entityType)
+      )
+    )
+    .get();
+  if (!existing) {
+    return db.insert(rankings).values(data).returning().get();
+  }
+  return existing;
+}
+
+// ============================================================
+// SEED INICIAL (idempotente)
+// ============================================================
 
 export function seed() {
   const db = getDb();
-  console.log("[SEED] Starting...");
+  console.log("[SEED] Starting initial seed...");
 
-  // Create default admin
-  db.insert(admins).values({
+  // --- Admin ---
+  const adminCreated = upsertAdmin(db, {
     username: "admin",
     passwordHash: hashSync("admin123", 10),
     role: "super",
-  }).run();
-  console.log("[SEED] Admin created (admin/admin123)");
+  });
+  console.log(`[SEED] Admin ${adminCreated ? "created" : "already exists"} (admin/admin123)`);
 
-  // Create default settings
-  db.insert(settings).values({
+  // --- Settings ---
+  const settingsCreated = upsertSettings(db, {
     orgName: "Devils Mobile League",
     discordLink: "https://discord.gg/devils",
     whatsappLink: "https://wa.me/5511999999999",
@@ -24,10 +101,10 @@ export function seed() {
     defaultTimesBr: "8:00 PM",
     primaryColor: "#ff3b3b",
     whatsappTemplate: "{{ORG_NAME}} \n\nPLATAFORMA: MOBILE \n\nMODO: {{MODALITY}} \n\n{{DATE}}\n\nHORARIOS:\nMX {{TIME_MX}}\nBR {{TIME_BR}}\n\nSLOTS | EQUIPES:\n{{TEAMS_LIST}}\n\nRESERVAS:\n{{RESERVES_LIST}}\n\nDISCORD: {{DISCORD}}\nWHATSAPP: {{WHATSAPP}}\n\n@todos",
-  }).run();
-  console.log("[SEED] Settings created");
+  });
+  console.log(`[SEED] Settings ${settingsCreated ? "created" : "already exists"}`);
 
-  // Create teams
+  // --- Teams ---
   const teamsData = [
     { name: "Red Devils", tag: "RD", captainName: "DevilKing", captainDiscord: "devilking#1234", whatsapp: "5511988881111" },
     { name: "Underground", tag: "UG", captainName: "Shadow", captainDiscord: "shadow#5678", whatsapp: "5511977772222" },
@@ -38,12 +115,14 @@ export function seed() {
     { name: "Fire Squad", tag: "FS", captainName: "FireLord", captainDiscord: "firelord#2468", whatsapp: "5511922227777" },
     { name: "Ghost Team", tag: "GT", captainName: "GhostRider", captainDiscord: "ghost#9753", whatsapp: "5511911118888" },
   ];
+  let teamsCount = 0;
   for (const team of teamsData) {
-    db.insert(teams).values(team).run();
+    const created = upsertTeam(db, team);
+    if (created.id === teamsCount + 1 || created.id) teamsCount++;
   }
-  console.log("[SEED] 8 teams created");
+  console.log(`[SEED] ${teamsCount} teams ensured`);
 
-  // Create players
+  // --- Players ---
   const playersData = [
     { nickname: "DevilKing", uid: "123456789", discord: "devilking#1234", teamId: 1, kills: 450, deaths: 320, wins: 28, matches: 45 },
     { nickname: "DevilPro", uid: "123456790", discord: "devilpro#1234", teamId: 1, kills: 380, deaths: 290, wins: 25, matches: 42 },
@@ -64,12 +143,14 @@ export function seed() {
     { nickname: "GhostRider", uid: "123456805", discord: "ghost#9753", teamId: 8, kills: 390, deaths: 290, wins: 27, matches: 43 },
     { nickname: "GhostSniper", uid: "123456806", discord: "ghostsniper#9753", teamId: 8, kills: 450, deaths: 240, wins: 34, matches: 49 },
   ];
+  let playersCount = 0;
   for (const player of playersData) {
-    db.insert(players).values(player).run();
+    const created = upsertPlayer(db, player);
+    if (created) playersCount++;
   }
-  console.log("[SEED] 18 players created");
+  console.log(`[SEED] ${playersCount} players ensured`);
 
-  // Create championships
+  // --- Championships ---
   const championshipsData = [
     {
       name: "Devils Mobile Cup #1",
@@ -108,12 +189,14 @@ export function seed() {
       registeredTeams: 32,
     },
   ];
+  let champsCount = 0;
   for (const champ of championshipsData) {
-    db.insert(championships).values(champ).run();
+    const created = upsertChampionship(db, champ);
+    if (created) champsCount++;
   }
-  console.log("[SEED] 3 championships created");
+  console.log(`[SEED] ${champsCount} championships ensured`);
 
-  // Create xtreinos
+  // --- XTreinos ---
   const xtreinosData = [
     {
       name: "XTreino Devils - Semana 1",
@@ -152,12 +235,14 @@ export function seed() {
       status: "aberto",
     },
   ];
+  let xtCount = 0;
   for (const xt of xtreinosData) {
-    db.insert(xtreinos).values(xt).run();
+    const created = upsertXtreino(db, xt);
+    if (created) xtCount++;
   }
-  console.log("[SEED] 3 xtreinos created");
+  console.log(`[SEED] ${xtCount} xtreinos ensured`);
 
-  // Create rankings
+  // --- Rankings ---
   const rankingsData = [
     { entityType: "team", entityId: 3, entityName: "Black Dragons", points: 2850, kills: 420, wins: 32, participations: 15, kdRatio: 1.85 },
     { entityType: "team", entityId: 5, entityName: "Elite Mobile", points: 2720, kills: 400, wins: 33, participations: 14, kdRatio: 1.84 },
@@ -176,28 +261,36 @@ export function seed() {
     { entityType: "player", entityId: 4, entityName: "Shadow", points: 1250, kills: 410, wins: 30, participations: 15, kdRatio: 1.46 },
     { entityType: "player", entityId: 1, entityName: "DevilKing", points: 1220, kills: 450, wins: 28, participations: 13, kdRatio: 1.41 },
   ];
+  let ranksCount = 0;
   for (const rank of rankingsData) {
-    db.insert(rankings).values(rank).run();
+    const created = upsertRanking(db, rank);
+    if (created) ranksCount++;
   }
-  console.log("[SEED] Rankings created");
+  console.log(`[SEED] ${ranksCount} rankings ensured`);
 
-  console.log("[SEED] Completed successfully!");
+  console.log("[SEED] Initial seed completed successfully!");
 }
+
+// ============================================================
+// SEED MINIMAL (idempotente)
+// ============================================================
 
 export function seedMinimal() {
   const db = getDb();
-  console.log("[SEED-MINIMAL] Creating admin and settings only...");
+  console.log("[SEED-MINIMAL] Ensuring admin and settings...");
 
-  db.insert(admins).values({
+  const adminCreated = upsertAdmin(db, {
     username: "admin",
     passwordHash: hashSync("admin123", 10),
     role: "super",
-  }).run();
+  });
+  console.log(`[SEED-MINIMAL] Admin ${adminCreated ? "created" : "already exists"}`);
 
-  db.insert(settings).values({
+  const settingsCreated = upsertSettings(db, {
     orgName: "Devils Mobile League",
     primaryColor: "#ff3b3b",
-  }).run();
+  });
+  console.log(`[SEED-MINIMAL] Settings ${settingsCreated ? "created" : "already exists"}`);
 
   console.log("[SEED-MINIMAL] Done!");
 }

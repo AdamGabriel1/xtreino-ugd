@@ -5,6 +5,12 @@ import {
   real,
 } from "drizzle-orm/sqlite-core";
 
+export const seedRuns = sqliteTable("seed_runs", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  seedName: text("seed_name").notNull().unique(),
+  executedAt: integer("executed_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 export const admins = sqliteTable("admins", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
