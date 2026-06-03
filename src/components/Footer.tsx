@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#006400] to-[#004d00] flex items-center justify-center">
               <Gamepad2 className="w-4 h-4 text-white" />
             </div>
             <div>

@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-2 border-[#006400] border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div className="p-6 border-b border-[#2a2a3a]">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#006400] to-[#004d00] flex items-center justify-center">
               <Gamepad2 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   active
-                    ? "bg-red-500/10 text-red-400 border-l-2 border-red-500"
+                    ? "bg-[#006400]/10 text-[#006400] border-l-2 border-[#006400]"
                     : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
                 }`}
               >
@@ -103,8 +103,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="p-4 border-t border-[#2a2a3a]">
           <div className="flex items-center gap-3 px-4 py-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
-              <UserCircle className="w-4 h-4 text-red-400" />
+            <div className="w-8 h-8 rounded-full bg-[#006400]/20 flex items-center justify-center">
+              <UserCircle className="w-4 h-4 text-[#006400]" />
             </div>
             <div>
               <p className="text-sm font-medium text-[#f0f0f5]">{admin?.username}</p>
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-2.5 w-full rounded-lg text-sm text-[#8a8a9e] hover:text-red-400 hover:bg-red-500/10 transition-all"
+            className="flex items-center gap-3 px-4 py-2.5 w-full rounded-lg text-sm text-[#8a8a9e] hover:text-[#006400] hover:bg-[#006400]/10 transition-all"
           >
             <LogOut className="w-4 h-4" />
             Sair
