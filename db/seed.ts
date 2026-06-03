@@ -93,7 +93,7 @@ export function seed() {
 
   // --- Settings ---
   const settingsCreated = upsertSettings(db, {
-    orgName: "Devils Mobile League",
+    orgName: "Xtreino Underground",
     discordLink: "https://discord.gg/devils",
     whatsappLink: "https://wa.me/5511999999999",
     defaultRules: "1. Respeitar todos os participantes\n2. Proibido uso de cheats/hacks\n3. Pontualidade obrigatoria\n4. Decisoes da staff sao finais",
