@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
-import { players, teams } from "../../db/schema.js";
-import { eq, like, desc } from "drizzle-orm";
+import { players, teams, xtreinoPlayerStats, xtreinoResults } from "../../db/schema.js";
+import { eq, like, desc, and, sql } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 
 export const playersRouter = createRouter({
@@ -15,25 +15,41 @@ export const playersRouter = createRouter({
     )
     .query(({ input }) => {
       const db = getDb();
-      if (input?.search) {
-        return db
+
+      // Busca jogadores com joins para stats de xtreino
+      const allPlayers = db.select().from(players).all();
+
+      // Enriquece com stats dos xtreinos
+      const enriched = allPlayers.map(p => {
+        const stats = db
           .select()
-          .from(players)
-          .where(like(players.nickname, `%${input.search}%`))
-          .orderBy(desc(players.createdAt))
+          .from(xtreinoPlayerStats)
+          .where(eq(xtreinoPlayerStats.playerName, p.nickname))
           .all();
+
+        const totalKills = stats.reduce((sum, s) => sum + (s.totalKills ?? 0), 0);
+        const participations = stats.length;
+
+        return {
+          ...p,
+          xtreinoKills: totalKills,
+          xtreinoParticipations: participations,
+        };
+      });
+
+      if (input?.search) {
+        return enriched
+          .filter(p => p.nickname.toLowerCase().includes(input.search!.toLowerCase()))
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       }
 
       if (input?.teamId) {
-        return db
-          .select()
-          .from(players)
-          .where(eq(players.teamId, input.teamId))
-          .orderBy(desc(players.createdAt))
-          .all();
+        return enriched
+          .filter(p => p.teamId === input.teamId)
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       }
 
-      return db.select().from(players).orderBy(desc(players.createdAt)).all();
+      return enriched.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }),
 
   getById: publicQuery
@@ -58,7 +74,31 @@ export const playersRouter = createRouter({
         teamName = team?.name ?? null;
       }
 
-      return { ...player, teamName };
+      // Stats de xtreinos
+      const xtreinoStats = db
+        .select()
+        .from(xtreinoPlayerStats)
+        .where(eq(xtreinoPlayerStats.playerName, player.nickname))
+        .orderBy(desc(xtreinoPlayerStats.date))
+        .all();
+
+      const totalXtreinoKills = xtreinoStats.reduce((sum, s) => sum + (s.totalKills ?? 0), 0);
+      const xtreinoParticipations = xtreinoStats.length;
+
+      // Melhor performance
+      const bestXtreino = xtreinoStats.length > 0 
+        ? xtreinoStats.reduce((best, curr) => (curr.totalKills ?? 0) > (best.totalKills ?? 0) ? curr : best)
+        : null;
+
+      return { 
+        ...player, 
+        teamName,
+        xtreinoStats,
+        totalXtreinoKills,
+        xtreinoParticipations,
+        bestXtreinoKills: bestXtreino?.totalKills ?? 0,
+        bestXtreinoDate: bestXtreino?.date ?? null,
+      };
     }),
 
   create: adminQuery
