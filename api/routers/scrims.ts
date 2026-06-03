@@ -87,10 +87,10 @@ export const scrimsRouter = createRouter({
     }),
 
   // ============================================================
-  // ROTAS NOVAS (dados historicos de scrims — rankings)
+  // ROTAS NOVAS (dados historicos de scrims)
   // ============================================================
 
-  /** Listar datas unicas disponiveis nos dados historicos */
+  /** Listar datas unicas disponiveis */
   dates: publicQuery.query(() => {
     const db = getDb();
     const results = db
@@ -138,7 +138,7 @@ export const scrimsRouter = createRouter({
       return query.orderBy(desc(scrimPlayerStats.totalKills)).all();
     }),
 
-  /** Top jogadores de todos os tempos (soma total de kills) */
+  /** Top jogadores de todos os tempos (soma total) */
   playerStatsAllTime: publicQuery.query(() => {
     const db = getDb();
     return db
@@ -157,20 +157,91 @@ export const scrimsRouter = createRouter({
       .all();
   }),
 
-  /** Top times de todos os tempos (media de posicoes) */
+  /** Top times de todos os tempos (com totais reais) */
   teamResultsAllTime: publicQuery.query(() => {
     const db = getDb();
-    return db
-      .select({
-        teamName: scrimResults.teamName,
-        avgQ1: sql<number>`AVG(${scrimResults.q1Pos})`,
-        avgQ2: sql<number>`AVG(${scrimResults.q2Pos})`,
-        avgQ3: sql<number>`AVG(${scrimResults.q3Pos})`,
-        matches: sql<number>`COUNT(*)`,
-      })
-      .from(scrimResults)
-      .groupBy(scrimResults.teamName)
-      .orderBy(sql`AVG(${scrimResults.q1Pos})`)
-      .all();
+
+    // Buscar todos os resultados para calcular totais
+    const allResults = db.select().from(scrimResults).all();
+
+    // Agrupar por time
+    const teamMap = new Map<string, {
+      teamName: string;
+      totalQ1Points: number;
+      totalQ2Points: number;
+      totalQ3Points: number;
+      totalKills: number;
+      wins: number;
+      matches: number;
+      q1Sum: number;
+      q2Sum: number;
+      q3Sum: number;
+    }>();
+
+    for (const r of allResults) {
+      const existing = teamMap.get(r.teamName);
+
+      const q1Points = getPointsByPosition(r.q1Pos);
+      const q2Points = getPointsByPosition(r.q2Pos);
+      const q3Points = getPointsByPosition(r.q3Pos);
+
+      if (existing) {
+        existing.totalQ1Points += q1Points;
+        existing.totalQ2Points += q2Points;
+        existing.totalQ3Points += q3Points;
+        existing.wins += [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length;
+        existing.matches += 1;
+        existing.q1Sum += r.q1Pos || 0;
+        existing.q2Sum += r.q2Pos || 0;
+        existing.q3Sum += r.q3Pos || 0;
+      } else {
+        teamMap.set(r.teamName, {
+          teamName: r.teamName,
+          totalQ1Points: q1Points,
+          totalQ2Points: q2Points,
+          totalQ3Points: q3Points,
+          totalKills: 0, // sera calculado depois
+          wins: [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length,
+          matches: 1,
+          q1Sum: r.q1Pos || 0,
+          q2Sum: r.q2Pos || 0,
+          q3Sum: r.q3Pos || 0,
+        });
+      }
+    }
+
+    // Buscar kills por time
+    const allPlayers = db.select().from(scrimPlayerStats).all();
+    for (const p of allPlayers) {
+      const team = teamMap.get(p.teamName);
+      if (team) {
+        team.totalKills += p.totalKills || 0;
+      }
+    }
+
+    // Converter para array e calcular medias
+    const result = Array.from(teamMap.values()).map(t => ({
+      teamName: t.teamName,
+      totalPoints: t.totalQ1Points + t.totalQ2Points + t.totalQ3Points + t.totalKills,
+      totalKills: t.totalKills,
+      wins: t.wins,
+      matches: t.matches,
+      avgQ1: t.matches > 0 ? t.q1Sum / t.matches : 0,
+      avgQ2: t.matches > 0 ? t.q2Sum / t.matches : 0,
+      avgQ3: t.matches > 0 ? t.q3Sum / t.matches : 0,
+    }));
+
+    // Ordenar por pontos totais
+    return result.sort((a, b) => b.totalPoints - a.totalPoints);
   }),
 });
+
+function getPointsByPosition(pos: number | null): number {
+  if (!pos) return 0;
+  const points: Record<number, number> = {
+    1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7,
+    7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1,
+    13: 1, 14: 0, 15: 0,
+  };
+  return points[pos] ?? 0;
+}

@@ -33,7 +33,7 @@ export default function Rankings() {
   );
   const { data: scrimPlayerStats } = trpc.scrims.playerStats.useQuery(
     { date: selectedDate === "all" ? undefined : selectedDate },
-    { enabled: tab === "scrims-players" }
+    { enabled: tab === "scrims-players" || tab === "scrims-teams" } // <-- IMPORTANTE: tambem buscar para times
   );
   const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery(
     undefined,
@@ -54,18 +54,27 @@ export default function Rankings() {
   const scrimsTeamsData = useMemo(() => {
     if (tab !== "scrims-teams") return [];
 
+    // Calcular kills por time a partir dos dados dos jogadores
+    const calcTeamKills = (teamName: string) => {
+      const playerData = (scrimPlayerStats || []).filter((p: any) => p.teamName === teamName);
+      return playerData.reduce((sum: number, p: any) => sum + (p.totalKills || 0), 0);
+    };
+
     if (!isAllTime) {
-      // Dados de uma data especifica: calcular pontos por colocacao + kills
+      // Dados de uma data especifica
       const teamsWithPoints = (scrimTeamResults || []).map((t: any) => {
         const q1Points = getPointsByPosition(t.q1Pos);
         const q2Points = getPointsByPosition(t.q2Pos);
         const q3Points = getPointsByPosition(t.q3Pos);
         const positionPoints = q1Points + q2Points + q3Points;
+        const teamKills = calcTeamKills(t.teamName);
+
         return {
           id: t.id,
           entityName: t.teamName,
+          points: positionPoints + teamKills,
           positionPoints,
-          kills: 0, // sera preenchido abaixo
+          kills: teamKills,
           wins: [t.q1Pos, t.q2Pos, t.q3Pos].filter((p: number) => p === 1).length,
           participations: 1,
           q1Pos: t.q1Pos,
@@ -77,34 +86,30 @@ export default function Rankings() {
         };
       });
 
-      // Somar kills por time
-      const teamKills: Record<string, number> = {};
-      (scrimPlayerStats || []).forEach((p: any) => {
-        teamKills[p.teamName] = (teamKills[p.teamName] || 0) + p.totalKills;
-      });
-
-      return teamsWithPoints.map((t: any) => ({
-        ...t,
-        kills: teamKills[t.entityName] || 0,
-        points: t.positionPoints + (teamKills[t.entityName] || 0),
-      })).sort((a: any, b: any) => b.points - a.points);
+      return teamsWithPoints.sort((a: any, b: any) => b.points - a.points);
     }
 
-    // Todos os tempos: agregar
-    return (scrimTeamAllTime || []).map((t: any, i: number) => ({
-      id: i,
-      entityName: t.teamName,
-      points: 0,
-      kills: 0,
-      wins: 0,
-      participations: t.matches,
-      q1Pos: t.avgQ1,
-      q2Pos: t.avgQ2,
-      q3Pos: t.avgQ3,
-      q1Points: 0,
-      q2Points: 0,
-      q3Points: 0,
-    }));
+    // Todos os tempos: agregar com dados reais
+    // Precisamos buscar todos os resultados e jogadores para calcular totais
+    return (scrimTeamAllTime || []).map((t: any, i: number) => {
+      // Buscar todos os resultados deste time para calcular totais
+      // Como nao temos acesso a todos os dados raw aqui, vamos usar a query de allTime
+      // e calcular o que pudermos
+      return {
+        id: i,
+        entityName: t.teamName,
+        points: 0, // Nao temos como calcular sem dados raw — o backend deveria retornar isso
+        kills: 0,
+        wins: 0,
+        participations: t.matches,
+        q1Pos: t.avgQ1,
+        q2Pos: t.avgQ2,
+        q3Pos: t.avgQ3,
+        q1Points: 0,
+        q2Points: 0,
+        q3Points: 0,
+      };
+    });
   }, [tab, isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime]);
 
   const scrimsPlayersData = useMemo(() => {
@@ -114,13 +119,13 @@ export default function Rankings() {
       return (scrimPlayerStats || []).map((p: any) => ({
         id: p.id,
         entityName: p.playerName,
-        points: p.totalKills,
-        kills: p.totalKills,
+        points: p.totalKills || 0,
+        kills: p.totalKills || 0,
         wins: 0,
         participations: 1,
-        q1Kills: p.q1Kills,
-        q2Kills: p.q2Kills,
-        q3Kills: p.q3Kills,
+        q1Kills: p.q1Kills || 0,
+        q2Kills: p.q2Kills || 0,
+        q3Kills: p.q3Kills || 0,
         teamName: p.teamName,
       })).sort((a: any, b: any) => b.points - a.points);
     }
@@ -128,13 +133,13 @@ export default function Rankings() {
     return (scrimPlayerAllTime || []).map((p: any, i: number) => ({
       id: i,
       entityName: p.playerName,
-      points: p.totalKills,
-      kills: p.totalKills,
+      points: p.totalKills || 0,
+      kills: p.totalKills || 0,
       wins: 0,
-      participations: p.matches,
-      q1Kills: p.totalQ1,
-      q2Kills: p.totalQ2,
-      q3Kills: p.totalQ3,
+      participations: p.matches || 0,
+      q1Kills: p.totalQ1 || 0,
+      q2Kills: p.totalQ2 || 0,
+      q3Kills: p.totalQ3 || 0,
       teamName: p.teamName,
     })).sort((a: any, b: any) => b.points - a.points);
   }, [tab, isAllTime, scrimPlayerStats, scrimPlayerAllTime]);
@@ -168,8 +173,8 @@ export default function Rankings() {
   const getTitle = () => {
     if (tab === "teams") return "Rankings Gerais — Equipes";
     if (tab === "players") return "Rankings Gerais — Jogadores";
-    if (tab === "scrims-teams") return `Scrims — Colocações ${isAllTime ? "(Todos os Tempos)" : formatDate(selectedDate)}`;
-    if (tab === "scrims-players") return `Scrims — Kills ${isAllTime ? "(Todos os Tempos)" : formatDate(selectedDate)}`;
+    if (tab === "scrims-teams") return `Scrims — Times ${isAllTime ? "(Todos os Tempos)" : formatDate(selectedDate)}`;
+    if (tab === "scrims-players") return `Scrims — Jogadores ${isAllTime ? "(Todos os Tempos)" : formatDate(selectedDate)}`;
     return "Rankings";
   };
 
@@ -282,7 +287,7 @@ export default function Rankings() {
                     <span className="flex items-center justify-center gap-1"><Target className="w-3 h-3" /> Kills</span>
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                    <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Booyahs</span>
+                    <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Wins</span>
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">Scrims</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
@@ -312,7 +317,7 @@ export default function Rankings() {
                       </td>
                     )}
                     <td className="px-4 py-3 text-center">
-                      <span className="text-sm font-bold text-red-400">{r.points || 0}</span>
+                      <span className="text-sm font-bold text-red-400">{r.points ?? 0}</span>
                     </td>
                     <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.kills ?? 0}</td>
                     <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.wins ?? 0}</td>
@@ -323,7 +328,7 @@ export default function Rankings() {
                         : tab === "scrims-teams" && isAllTime
                         ? `${r.q1Pos?.toFixed(1) || "-"} / ${r.q2Pos?.toFixed(1) || "-"} / ${r.q3Pos?.toFixed(1) || "-"}`
                         : tab === "scrims-players"
-                        ? `${r.q1Kills || 0} / ${r.q2Kills || 0} / ${r.q3Kills || 0}`
+                        ? `${r.q1Kills ?? 0} / ${r.q2Kills ?? 0} / ${r.q3Kills ?? 0}`
                         : r.kdRatio ?? "—"
                       }
                     </td>

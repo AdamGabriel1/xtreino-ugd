@@ -40,7 +40,7 @@ export default function Scrims() {
   );
   const { data: scrimPlayerStats } = trpc.scrims.playerStats.useQuery(
     { date: selectedDate === "all" ? undefined : selectedDate },
-    { enabled: tab === "historico-jogadores" }
+    { enabled: tab === "historico-jogadores" || tab === "historico-times" } // <-- IMPORTANTE: tambem buscar para times
   );
   const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery(
     undefined,
@@ -67,19 +67,27 @@ export default function Scrims() {
   const historicoTimes = useMemo(() => {
     if (tab !== "historico-times") return [];
 
+    // Funcao para calcular kills de um time a partir dos jogadores
+    const calcTeamKills = (teamName: string) => {
+      const playerData = (scrimPlayerStats || []).filter((p: any) => p.teamName === teamName);
+      return playerData.reduce((sum: number, p: any) => sum + (p.totalKills || 0), 0);
+    };
+
     if (!isAllTime) {
-      // Dados de uma data especifica: calcular pontos por colocacao + kills
-      return (scrimTeamResults || []).map((t: any) => {
+      // Dados de uma data especifica
+      const teamsWithPoints = (scrimTeamResults || []).map((t: any) => {
         const q1Points = getPointsByPosition(t.q1Pos);
         const q2Points = getPointsByPosition(t.q2Pos);
         const q3Points = getPointsByPosition(t.q3Pos);
-        // Buscar kills do time naquela data (soma dos jogadores)
-        const totalPoints = q1Points + q2Points + q3Points; // + kills serao adicionados via playerStats
+        const positionPoints = q1Points + q2Points + q3Points;
+        const teamKills = calcTeamKills(t.teamName);
+
         return {
           id: t.id,
           entityName: t.teamName,
-          points: totalPoints,
-          kills: 0, // sera preenchido abaixo
+          points: positionPoints + teamKills,
+          positionPoints,
+          kills: teamKills,
           wins: [t.q1Pos, t.q2Pos, t.q3Pos].filter((p: number) => p === 1).length,
           participations: 1,
           q1Pos: t.q1Pos,
@@ -89,17 +97,19 @@ export default function Scrims() {
           q2Points,
           q3Points,
         };
-      }).sort((a: any, b: any) => b.points - a.points);
+      });
+
+      return teamsWithPoints.sort((a: any, b: any) => b.points - a.points);
     }
 
-    // Todos os tempos: agregar
+    // Todos os tempos: usar dados ja calculados pelo backend
     return (scrimTeamAllTime || []).map((t: any, i: number) => ({
       id: i,
       entityName: t.teamName,
-      points: 0,
-      kills: 0,
-      wins: 0,
-      participations: t.matches,
+      points: t.totalPoints || 0,
+      kills: t.totalKills || 0,
+      wins: t.wins || 0,
+      participations: t.matches || 0,
       q1Pos: t.avgQ1,
       q2Pos: t.avgQ2,
       q3Pos: t.avgQ3,
@@ -107,60 +117,41 @@ export default function Scrims() {
       q2Points: 0,
       q3Points: 0,
     }));
-  }, [tab, isAllTime, scrimTeamResults, scrimTeamAllTime]);
+  }, [tab, isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime]);
 
   const historicoJogadores = useMemo(() => {
     if (tab !== "historico-jogadores") return [];
 
     if (!isAllTime) {
-      // Dados de uma data especifica
       return (scrimPlayerStats || []).map((p: any) => ({
         id: p.id,
         entityName: p.playerName,
-        points: p.totalKills, // kills = pontos
-        kills: p.totalKills,
+        points: p.totalKills || 0,
+        kills: p.totalKills || 0,
         wins: 0,
         participations: 1,
-        q1Kills: p.q1Kills,
-        q2Kills: p.q2Kills,
-        q3Kills: p.q3Kills,
+        q1Kills: p.q1Kills || 0,
+        q2Kills: p.q2Kills || 0,
+        q3Kills: p.q3Kills || 0,
         teamName: p.teamName,
       })).sort((a: any, b: any) => b.points - a.points);
     }
 
-    // Todos os tempos
     return (scrimPlayerAllTime || []).map((p: any, i: number) => ({
       id: i,
       entityName: p.playerName,
-      points: p.totalKills,
-      kills: p.totalKills,
+      points: p.totalKills || 0,
+      kills: p.totalKills || 0,
       wins: 0,
-      participations: p.matches,
-      q1Kills: p.totalQ1,
-      q2Kills: p.totalQ2,
-      q3Kills: p.totalQ3,
+      participations: p.matches || 0,
+      q1Kills: p.totalQ1 || 0,
+      q2Kills: p.totalQ2 || 0,
+      q3Kills: p.totalQ3 || 0,
       teamName: p.teamName,
     })).sort((a: any, b: any) => b.points - a.points);
   }, [tab, isAllTime, scrimPlayerStats, scrimPlayerAllTime]);
 
-  // Combinar kills dos jogadores para os times (apenas quando filtrado por data)
-  const historicoTimesComKills = useMemo(() => {
-    if (tab !== "historico-times" || isAllTime) return historicoTimes;
-
-    // Calcular kills por time somando jogadores da mesma data
-    const teamKills: Record<string, number> = {};
-    (scrimPlayerStats || []).forEach((p: any) => {
-      teamKills[p.teamName] = (teamKills[p.teamName] || 0) + p.totalKills;
-    });
-
-    return historicoTimes.map((t: any) => ({
-      ...t,
-      kills: teamKills[t.entityName] || 0,
-      points: t.points + (teamKills[t.entityName] || 0),
-    })).sort((a: any, b: any) => b.points - a.points);
-  }, [historicoTimes, tab, isAllTime, scrimPlayerStats]);
-
-  const data = tab === "historico-times" ? historicoTimesComKills : historicoJogadores;
+  const data = tab === "historico-times" ? historicoTimes : historicoJogadores;
 
   const rankColors = [
     "border-l-yellow-400",
@@ -368,7 +359,7 @@ export default function Scrims() {
                         <span className="flex items-center justify-center gap-1"><Target className="w-3 h-3" /> Kills</span>
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                        <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Booyahs</span>
+                        <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Wins</span>
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">Scrims</th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
@@ -398,17 +389,17 @@ export default function Scrims() {
                           </td>
                         )}
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm font-bold text-red-400">{r.points}</span>
+                          <span className="text-sm font-bold text-red-400">{r.points ?? 0}</span>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.kills}</td>
-                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.wins}</td>
-                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.participations}</td>
+                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.kills ?? 0}</td>
+                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.wins ?? 0}</td>
+                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.participations ?? 0}</td>
                         <td className="px-4 py-3 text-center text-sm text-[#8a8a9e] font-mono">
                           {tab === "historico-times" && !isAllTime
                             ? `${r.q1Pos}(${r.q1Points}) / ${r.q2Pos}(${r.q2Points}) / ${r.q3Pos}(${r.q3Points})`
                             : tab === "historico-times" && isAllTime
                             ? `${r.q1Pos?.toFixed(1) || "-"} / ${r.q2Pos?.toFixed(1) || "-"} / ${r.q3Pos?.toFixed(1) || "-"}`
-                            : `${r.q1Kills || 0} / ${r.q2Kills || 0} / ${r.q3Kills || 0}`
+                            : `${r.q1Kills ?? 0} / ${r.q2Kills ?? 0} / ${r.q3Kills ?? 0}`
                           }
                         </td>
                       </tr>
