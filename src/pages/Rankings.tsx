@@ -15,13 +15,12 @@ import {
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
 
-// Sistema de pontuação por posição (atualizado)
+// Sistema de pontuação por posição
 const POSITION_POINTS: Record<number, number> = {
   1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7, 7: 6, 8: 5,
   9: 4, 10: 3, 11: 2, 12: 1, 13: 1, 14: 0, 15: 0,
 };
 
-// Pontos por kill
 const KILL_POINTS = 1;
 
 interface TeamStats {
@@ -39,16 +38,18 @@ interface TeamStats {
   totalPoints: number;
 }
 
-export default function XTreinos() {
+type SortByType = "total" | "kills" | "pos";
+
+export default function Rankings() {
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-05");
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [sortBy, setSortBy] = useState<<"total" | "kills" | "pos">("total");
+  const [sortBy, setSortBy] = useState<SortByType>("total");
 
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
   const { data: scheduleList } = trpc.xtreinos.schedule.list.useQuery();
 
-  // Extrair meses disponíveis dos dados
+  // Extrair meses disponíveis
   const availableMonths = useMemo(() => {
     if (!allResults) return [];
     const months = new Set<string>();
@@ -58,7 +59,7 @@ export default function XTreinos() {
     return Array.from(months).sort();
   }, [allResults]);
 
-  // Extrair datas disponíveis do mês selecionado
+  // Extrair datas disponíveis
   const availableDates = useMemo(() => {
     if (!allResults || !selectedMonth) return [];
     const dates = new Set<string>();
@@ -74,7 +75,6 @@ export default function XTreinos() {
 
     const statsMap = new Map<string, TeamStats>();
 
-    // Primeiro, processar resultados (colocações)
     allResults.forEach((r) => {
       if (selectedMonth && !r.date?.startsWith(selectedMonth)) return;
       if (selectedDate && r.date !== selectedDate) return;
@@ -105,7 +105,6 @@ export default function XTreinos() {
       });
     });
 
-    // Depois, processar kills dos jogadores
     allPlayerStats.forEach((p) => {
       if (selectedMonth && !p.date?.startsWith(selectedMonth)) return;
       if (selectedDate && p.date !== selectedDate) return;
@@ -143,7 +142,6 @@ export default function XTreinos() {
     return Array.from(statsMap.values());
   }, [allResults, allPlayerStats, selectedMonth, selectedDate]);
 
-  // Ordenar
   const sortedStats = useMemo(() => {
     return [...teamStats].sort((a, b) => {
       if (sortBy === "total") return b.totalPoints - a.totalPoints;
@@ -153,7 +151,6 @@ export default function XTreinos() {
     });
   }, [teamStats, sortBy]);
 
-  // Stats do mês (acumulado)
   const monthStats = useMemo(() => {
     if (!teamStats.length) return null;
     return {
@@ -190,18 +187,16 @@ export default function XTreinos() {
 
   return (
     <MainLayout>
-      {/* Header */}
-      <div className="bg-[#12121a] border-b border-[#2a2a3a]">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
+        {/* Header */}
+        <div className="bg-[#12121a] border-b border-[#2a2a3a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-12 mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Dumbbell className="w-8 h-8 text-red-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">XTreinos Underground</h1>
           </div>
           <p className="text-[#8a8a9e]">Classificação completa — Pontos por posição + Pontos por kill</p>
         </div>
-      </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
         {/* Filtros */}
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
@@ -211,7 +206,6 @@ export default function XTreinos() {
             </div>
 
             <div className="flex flex-wrap gap-3 flex-1">
-              {/* Filtro de Mês */}
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#5a5a6e]" />
                 <select
@@ -228,7 +222,6 @@ export default function XTreinos() {
                 </select>
               </div>
 
-              {/* Filtro de Dia */}
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#5a5a6e]" />
                 <select
@@ -245,12 +238,11 @@ export default function XTreinos() {
                 </select>
               </div>
 
-              {/* Ordenação */}
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#5a5a6e]" />
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "total" | "kills" | "pos")}
+                  onChange={(e) => setSortBy(e.target.value as SortByType)}
                   className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50 min-w-[160px]"
                 >
                   <option value="total">Ordenar: Total</option>
@@ -260,7 +252,6 @@ export default function XTreinos() {
               </div>
             </div>
 
-            {/* Limpar filtros */}
             {(selectedDate || sortBy !== "total") && (
               <button
                 onClick={() => { setSelectedDate(""); setSortBy("total"); }}
@@ -467,7 +458,7 @@ export default function XTreinos() {
               Pontuação por Kill
             </h4>
             <p className="text-[#8a8a9e] text-xs">
-              Cada kill vale <span className="font-bold text-red-400">{KILL_POINTS} ponto</span>.<<br />
+              Cada kill vale <span className="font-bold text-red-400">{KILL_POINTS} ponto</span>.<br />
               Total de kills do time × {KILL_POINTS} = Pontos de Kill
             </p>
           </div>

@@ -49,6 +49,8 @@ interface TeamStats {
   totalPoints: number;
 }
 
+type SortByType = "total" | "kills" | "pos";
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PARTE 2: COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -112,7 +114,7 @@ export default function AdminXTreinos() {
   // ─── Estado: Filtros da Aba Ranking (copiado da página normal) ───
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-05");
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [sortBy, setSortBy] = useState<"total" | "kills" | "pos">("total");
+  const [sortBy, setSortBy] = useState<SortByType>("total");
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // PARTE 3: QUERIES tRPC
@@ -1308,7 +1310,7 @@ export default function AdminXTreinos() {
                     <select
                       value={sortBy}
                       onChange={(e) =>
-                        setSortBy(e.target.value as "total" | "kills" | "pos")
+                        setSortBy(e.target.value as SortByType)
                       }
                       className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50 min-w-[160px]"
                     >
