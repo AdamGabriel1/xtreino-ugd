@@ -1,5 +1,5 @@
 import { getDb } from "../api/queries/connection.js";
-import { admins, settings } from "./schema.js";
+import { admins, settings, xtreinos, xtreinoTeams, teams, seedRuns } from "./schema.js";
 import { eq } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
 
@@ -20,6 +20,24 @@ function upsertSettings(db: ReturnType<typeof getDb>, data: typeof settings.$inf
   const existing = db.select().from(settings).limit(1).get();
   if (!existing) {
     db.insert(settings).values(data).run();
+    return true;
+  }
+  return false;
+}
+
+function upsertXtreino(db: ReturnType<typeof getDb>, data: typeof xtreinos.$inferInsert) {
+  const existing = db.select().from(xtreinos).where(eq(xtreinos.name, data.name)).get();
+  if (!existing) {
+    db.insert(xtreinos).values(data).run();
+    return true;
+  }
+  return false;
+}
+
+function upsertTeam(db: ReturnType<typeof getDb>, data: typeof teams.$inferInsert) {
+  const existing = db.select().from(teams).where(eq(teams.name, data.name)).get();
+  if (!existing) {
+    db.insert(teams).values(data).run();
     return true;
   }
   return false;
@@ -53,6 +71,82 @@ export function seed() {
     whatsappTemplate: "{{ORG_NAME}} \n\nPLATAFORMA: MOBILE \n\nMODO: {{MODALITY}} \n\n{{DATE}}\n\nHORARIOS:\nMX {{TIME_MX}}\nBR {{TIME_BR}}\n\nSLOTS | EQUIPES:\n{{TEAMS_LIST}}\n\nRESERVAS:\n{{RESERVES_LIST}}\n\nDISCORD: {{DISCORD}}\nWHATSAPP: {{WHATSAPP}}\n\n@todos",
   });
   console.log(`[SEED] Settings ${settingsCreated ? "created" : "already exists"}`);
+
+  // --- Teams (equipes que participam dos xtreinos) ---
+  const teamsData = [
+    { name: "UGD Threat", tag: "UGD" },
+    { name: "UGD Royal", tag: "UGD" },
+    { name: "UGD Light", tag: "UGD" },
+    { name: "RED", tag: "RED" },
+    { name: "RED Magic BR", tag: "RED" },
+    { name: "CMF", tag: "CMF" },
+    { name: "KOV", tag: "KOV" },
+    { name: "LMF", tag: "LMF" },
+    { name: "INF", tag: "INF" },
+    { name: "Eternity", tag: "ETE" },
+    { name: "FURY", tag: "FURY" },
+    { name: "Λつつ", tag: "Λつつ" },
+    { name: "ODS", tag: "ODS" },
+    { name: "Misturado", tag: "MIX" },
+    { name: "Time I", tag: "TI" },
+    { name: "Time E", tag: "TE" },
+  ];
+
+  let teamsCount = 0;
+  for (const teamData of teamsData) {
+    if (upsertTeam(db, teamData)) teamsCount++;
+  }
+  console.log(`[SEED] ${teamsCount} teams created`);
+
+  // --- XTreinos Históricos da Underground ---
+  const xtreinosData = [
+    {
+      name: "XTreino Underground - 30/04",
+      date: "2026-04-30",
+      timeBr: "21:00",
+      modality: "squad",
+      maxTeams: 20,
+      status: "finalizado",
+    },
+    {
+      name: "XTreino Underground - 07/05",
+      date: "2026-05-07",
+      timeBr: "21:00",
+      modality: "squad",
+      maxTeams: 20,
+      status: "finalizado",
+    },
+    {
+      name: "XTreino Underground - 19/05",
+      date: "2026-05-19",
+      timeBr: "21:00",
+      modality: "squad",
+      maxTeams: 20,
+      status: "finalizado",
+    },
+    {
+      name: "XTreino Underground - 21/05",
+      date: "2026-05-21",
+      timeBr: "21:00",
+      modality: "squad",
+      maxTeams: 20,
+      status: "finalizado",
+    },
+  ];
+
+  let xtreinosCount = 0;
+  for (const xtData of xtreinosData) {
+    if (upsertXtreino(db, xtData)) xtreinosCount++;
+  }
+  console.log(`[SEED] ${xtreinosCount} xtreinos created`);
+
+  // --- Seed run tracking ---
+  const seedName = "initial-v1";
+  const existingSeed = db.select().from(seedRuns).where(eq(seedRuns.seedName, seedName)).get();
+  if (!existingSeed) {
+    db.insert(seedRuns).values({ seedName }).run();
+    console.log(`[SEED] Seed run '${seedName}' recorded`);
+  }
 
   console.log("[SEED] Initial seed completed successfully!");
 }
