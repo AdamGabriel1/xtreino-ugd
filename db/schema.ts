@@ -173,3 +173,25 @@ export const rankings = sqliteTable("rankings", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+export const scrimResults = sqliteTable("scrim_results", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  q1Pos: integer("q1_pos"),
+  q2Pos: integer("q2_pos"),
+  q3Pos: integer("q3_pos"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const scrimPlayerStats = sqliteTable("scrim_player_stats", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  playerName: text("player_name").notNull(),
+  q1Kills: integer("q1_kills").notNull().default(0),
+  q2Kills: integer("q2_kills").notNull().default(0),
+  q3Kills: integer("q3_kills").notNull().default(0),
+  totalKills: integer("total_kills").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
