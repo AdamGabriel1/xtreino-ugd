@@ -4,7 +4,7 @@ import { hashSync } from "bcryptjs";
 
 export function seed() {
   const db = getDb();
-  console.log("Seeding database...");
+  console.log("[SEED] Starting...");
 
   // Create default admin
   db.insert(admins).values({
@@ -12,7 +12,7 @@ export function seed() {
     passwordHash: hashSync("admin123", 10),
     role: "super",
   }).run();
-  console.log("Created admin user (admin/admin123)");
+  console.log("[SEED] Admin created (admin/admin123)");
 
   // Create default settings
   db.insert(settings).values({
@@ -25,7 +25,7 @@ export function seed() {
     primaryColor: "#ff3b3b",
     whatsappTemplate: "{{ORG_NAME}} \n\nPLATAFORMA: MOBILE \n\nMODO: {{MODALITY}} \n\n{{DATE}}\n\nHORARIOS:\nMX {{TIME_MX}}\nBR {{TIME_BR}}\n\nSLOTS | EQUIPES:\n{{TEAMS_LIST}}\n\nRESERVAS:\n{{RESERVES_LIST}}\n\nDISCORD: {{DISCORD}}\nWHATSAPP: {{WHATSAPP}}\n\n@todos",
   }).run();
-  console.log("Created default settings");
+  console.log("[SEED] Settings created");
 
   // Create teams
   const teamsData = [
@@ -41,7 +41,7 @@ export function seed() {
   for (const team of teamsData) {
     db.insert(teams).values(team).run();
   }
-  console.log("Created 8 teams");
+  console.log("[SEED] 8 teams created");
 
   // Create players
   const playersData = [
@@ -67,7 +67,7 @@ export function seed() {
   for (const player of playersData) {
     db.insert(players).values(player).run();
   }
-  console.log("Created 18 players");
+  console.log("[SEED] 18 players created");
 
   // Create championships
   const championshipsData = [
@@ -111,7 +111,7 @@ export function seed() {
   for (const champ of championshipsData) {
     db.insert(championships).values(champ).run();
   }
-  console.log("Created 3 championships");
+  console.log("[SEED] 3 championships created");
 
   // Create xtreinos
   const xtreinosData = [
@@ -155,7 +155,7 @@ export function seed() {
   for (const xt of xtreinosData) {
     db.insert(xtreinos).values(xt).run();
   }
-  console.log("Created 3 xtreinos");
+  console.log("[SEED] 3 xtreinos created");
 
   // Create rankings
   const rankingsData = [
@@ -179,18 +179,25 @@ export function seed() {
   for (const rank of rankingsData) {
     db.insert(rankings).values(rank).run();
   }
-  console.log("Created rankings");
+  console.log("[SEED] Rankings created");
 
-  console.log("Seed completed successfully!");
+  console.log("[SEED] Completed successfully!");
 }
 
-try {
-  seed();
-} catch (err) {
-  console.error("Seed failed:", err);
-  process.exit(1);
-}
+export function seedMinimal() {
+  const db = getDb();
+  console.log("[SEED-MINIMAL] Creating admin and settings only...");
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seed();
+  db.insert(admins).values({
+    username: "admin",
+    passwordHash: hashSync("admin123", 10),
+    role: "super",
+  }).run();
+
+  db.insert(settings).values({
+    orgName: "Devils Mobile League",
+    primaryColor: "#ff3b3b",
+  }).run();
+
+  console.log("[SEED-MINIMAL] Done!");
 }
