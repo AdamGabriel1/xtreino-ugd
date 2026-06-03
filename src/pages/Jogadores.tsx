@@ -1,32 +1,106 @@
 import { useState } from "react";
-import { UserCircle, Search, Target, TrendingUp, Gamepad2, Calendar, Award } from "lucide-react";
+import { UserCircle, Search, Trophy, Medal, Target, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
+
+type SortField = "xtreinoKills" | "xtreinoParticipations" | "avgKills";
+type SortDir = "asc" | "desc";
+
+interface PlayerWithStats {
+  id: number;
+  nickname: string;
+  uid: string | null;
+  discord: string | null;
+  teamId: number | null;
+  kills: number;
+  deaths: number;
+  wins: number;
+  matches: number;
+  xtreinoKills: number | null;
+  xtreinoParticipations: number | null;
+  avgKills: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function Jogadores() {
   const [search, setSearch] = useState("");
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
+  const [sortField, setSortField] = useState<SortField>("xtreinoKills");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const { data: playersList } = trpc.players.list.useQuery(search ? { search } : undefined);
   const { data: playerDetail } = trpc.players.getById.useQuery(
     { id: selectedPlayer! },
     { enabled: !!selectedPlayer }
   );
+  const { data: teamsList } = trpc.teams.list.useQuery();
 
-  const kd = (kills: number, deaths: number) => {
-    if (deaths === 0) return kills > 0 ? kills.toString() : "0";
-    return (kills / deaths).toFixed(2);
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(sortDir === "desc" ? "asc" : "desc");
+    } else {
+      setSortField(field);
+      setSortDir("desc");
+    }
   };
+
+  const enrichedPlayers: PlayerWithStats[] = (playersList ?? []).map(p => {
+    const avgKills = p.xtreinoParticipations && p.xtreinoParticipations > 0
+      ? Math.round((p.xtreinoKills ?? 0) / p.xtreinoParticipations)
+      : 0;
+    return {
+      ...p,
+      avgKills,
+    };
+  });
+
+  const sortedPlayers = [...enrichedPlayers].sort((a, b) => {
+    const aVal = a[sortField] ?? 0;
+    const bVal = b[sortField] ?? 0;
+    return sortDir === "desc" ? bVal - aVal : aVal - bVal;
+  });
+
+  const getTeamName = (teamId: number | null) => {
+    if (!teamId) return "Sem equipe";
+    return teamsList?.find(t => t.id === teamId)?.name ?? "Sem equipe";
+  };
+
+  const getRankIcon = (index: number) => {
+    if (index === 0) return <Trophy className="w-5 h-5 text-yellow-400" />;
+    if (index === 1) return <Medal className="w-5 h-5 text-gray-300" />;
+    if (index === 2) return <Medal className="w-5 h-5 text-amber-600" />;
+    return <span className="w-5 text-center text-sm font-bold text-[#5a5a6e]">{index + 1}</span>;
+  };
+
+  const getRankStyle = (index: number) => {
+    if (index === 0) return "bg-gradient-to-r from-yellow-500/10 to-transparent border-l-2 border-yellow-400";
+    if (index === 1) return "bg-gradient-to-r from-gray-400/10 to-transparent border-l-2 border-gray-300";
+    if (index === 2) return "bg-gradient-to-r from-amber-600/10 to-transparent border-l-2 border-amber-600";
+    return "hover:bg-[#1a1a24]";
+  };
+
+  const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className="flex items-center gap-1 text-xs font-medium text-[#5a5a6e] uppercase hover:text-[#f0f0f5] transition-colors"
+    >
+      {label}
+      {sortField === field && (
+        sortDir === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />
+      )}
+    </button>
+  );
 
   return (
     <MainLayout>
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
           <div className="flex items-center gap-3 mb-2">
-            <UserCircle className="w-8 h-8 text-[#006400]" />
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Jogadores</h1>
+            <Trophy className="w-8 h-8 text-[#006400]" />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Ranking de Jogadores</h1>
           </div>
-          <p className="text-[#8a8a9e]">Estatisticas e perfis dos jogadores</p>
+          <p className="text-[#8a8a9e]">Estatísticas dos xtreinos da Underground</p>
         </div>
       </div>
 
@@ -34,7 +108,7 @@ export default function Jogadores() {
         {!selectedPlayer ? (
           <>
             {/* Search */}
-            <div className="relative max-w-md mb-8">
+            <div className="relative max-w-md mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" />
               <input
                 type="text"
@@ -45,44 +119,100 @@ export default function Jogadores() {
               />
             </div>
 
-            {/* Players Table */}
+            {/* Top 3 Podium */}
+            {sortedPlayers.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {sortedPlayers.slice(0, 3).map((p, i) => (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedPlayer(p.id)}
+                    className={`rounded-xl border border-[#2a2a3a] p-6 cursor-pointer transition-all hover:-translate-y-1 ${
+                      i === 0 ? "bg-gradient-to-b from-yellow-500/10 to-[#12121a] border-yellow-400/30" :
+                      i === 1 ? "bg-gradient-to-b from-gray-400/10 to-[#12121a] border-gray-300/30" :
+                      "bg-gradient-to-b from-amber-600/10 to-[#12121a] border-amber-600/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                        i === 0 ? "bg-yellow-400/20 text-yellow-400" :
+                        i === 1 ? "bg-gray-300/20 text-gray-300" :
+                        "bg-amber-600/20 text-amber-600"
+                      }`}>
+                        {i + 1}º
+                      </div>
+                      <UserCircle className={`w-8 h-8 ${
+                        i === 0 ? "text-yellow-400/50" :
+                        i === 1 ? "text-gray-300/50" :
+                        "text-amber-600/50"
+                      }`} />
+                    </div>
+                    <h3 className="text-lg font-bold text-[#f0f0f5] mb-1">{p.nickname}</h3>
+                    <p className="text-sm text-[#8a8a9e] mb-3">{getTeamName(p.teamId)}</p>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-xs text-[#5a5a6e]">Kills XT</p>
+                        <p className={`text-2xl font-bold ${
+                          i === 0 ? "text-yellow-400" :
+                          i === 1 ? "text-gray-300" :
+                          "text-amber-600"
+                        }`}>{p.xtreinoKills ?? 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#5a5a6e]">Partic.</p>
+                        <p className="text-lg font-bold text-[#f0f0f5]">{p.xtreinoParticipations ?? 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Ranking Table */}
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[#2a2a3a]">
-                      <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">#</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">Nickname</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">Rank</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">Jogador</th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">Equipe</th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">K/D</th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">Kills</th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">Partidas</th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">XTreinos</th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">Kills XT</th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">Win Rate</th>
+                      <th className="px-6 py-4 text-center">
+                        <SortHeader field="xtreinoKills" label="Kills XT" />
+                      </th>
+                      <th className="px-6 py-4 text-center">
+                        <SortHeader field="xtreinoParticipations" label="XTreinos" />
+                      </th>
+                      <th className="px-6 py-4 text-center">
+                        <SortHeader field="avgKills" label="Média" />
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2a2a3a]">
-                    {playersList?.map((p, i) => {
-                      const winRate = p.matches > 0 ? ((p.wins / p.matches) * 100).toFixed(1) : "0";
-                      return (
-                        <tr
-                          key={p.id}
-                          onClick={() => setSelectedPlayer(p.id)}
-                          className="hover:bg-[#1a1a24] cursor-pointer transition-colors"
-                        >
-                          <td className="px-6 py-4 text-sm font-bold text-[#5a5a6e]">{i + 1}</td>
-                          <td className="px-6 py-4 text-sm font-bold text-[#f0f0f5]">{p.nickname}</td>
-                          <td className="px-6 py-4 text-sm text-[#8a8a9e]">{p.teamId ? `Equipe ${p.teamId}` : "Sem equipe"}</td>
-                          <td className="px-6 py-4 text-sm text-center text-[#006400] font-medium">{kd(p.kills, p.deaths)}</td>
-                          <td className="px-6 py-4 text-sm text-center text-[#8a8a9e]">{p.kills}</td>
-                          <td className="px-6 py-4 text-sm text-center text-[#8a8a9e]">{p.matches}</td>
-                          <td className="px-6 py-4 text-sm text-center text-[#8a8a9e]">{p.xtreinoParticipations ?? 0}</td>
-                          <td className="px-6 py-4 text-sm text-center text-[#006400] font-medium">{p.xtreinoKills ?? 0}</td>
-                          <td className="px-6 py-4 text-sm text-center text-green-400">{winRate}%</td>
-                        </tr>
-                      );
-                    })}
+                    {sortedPlayers.map((p, i) => (
+                      <tr
+                        key={p.id}
+                        onClick={() => setSelectedPlayer(p.id)}
+                        className={`cursor-pointer transition-colors ${getRankStyle(i)}`}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            {getRankIcon(i)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-[#006400]/10 flex items-center justify-center">
+                              <UserCircle className="w-4 h-4 text-[#006400]" />
+                            </div>
+                            <span className="text-sm font-bold text-[#f0f0f5]">{p.nickname}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-[#8a8a9e]">{getTeamName(p.teamId)}</td>
+                        <td className="px-6 py-4 text-sm text-center font-bold text-[#006400]">{p.xtreinoKills ?? 0}</td>
+                        <td className="px-6 py-4 text-sm text-center text-[#8a8a9e]">{p.xtreinoParticipations ?? 0}</td>
+                        <td className="px-6 py-4 text-sm text-center text-[#8a8a9e]">{p.avgKills}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -93,9 +223,9 @@ export default function Jogadores() {
           <div>
             <button
               onClick={() => setSelectedPlayer(null)}
-              className="mb-6 text-sm text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors"
+              className="mb-6 text-sm text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors flex items-center gap-2"
             >
-              &larr; Voltar
+              <ChevronDown className="w-4 h-4 rotate-90" /> Voltar ao ranking
             </button>
 
             {playerDetail && (
@@ -125,53 +255,30 @@ export default function Jogadores() {
                       <Target className="w-5 h-5 text-[#006400]" />
                       <span className="text-xs text-[#5a5a6e]">K/D Ratio</span>
                     </div>
-                    <p className="text-2xl font-bold text-[#f0f0f5]">{kd(playerDetail.kills, playerDetail.deaths)}</p>
+                    <p className="text-2xl font-bold text-[#f0f0f5]">
+                      {playerDetail.deaths > 0 ? (playerDetail.kills / playerDetail.deaths).toFixed(2) : playerDetail.kills}
+                    </p>
                   </div>
                   <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5">
                     <div className="flex items-center gap-2 mb-2">
                       <Target className="w-5 h-5 text-[#006400]" />
-                      <span className="text-xs text-[#5a5a6e]">Kills</span>
+                      <span className="text-xs text-[#5a5a6e]">Kills Geral</span>
                     </div>
                     <p className="text-2xl font-bold text-[#f0f0f5]">{playerDetail.kills}</p>
                   </div>
                   <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="w-5 h-5 text-green-400" />
-                      <span className="text-xs text-[#5a5a6e]">Vitorias</span>
+                      <Trophy className="w-5 h-5 text-[#006400]" />
+                      <span className="text-xs text-[#5a5a6e]">Kills XT</span>
                     </div>
-                    <p className="text-2xl font-bold text-[#f0f0f5]">{playerDetail.wins}</p>
+                    <p className="text-2xl font-bold text-[#006400]">{playerDetail.totalXtreinoKills ?? 0}</p>
                   </div>
                   <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Gamepad2 className="w-5 h-5 text-blue-400" />
-                      <span className="text-xs text-[#5a5a6e]">Partidas</span>
+                      <Calendar className="w-5 h-5 text-[#006400]" />
+                      <span className="text-xs text-[#5a5a6e]">XTreinos</span>
                     </div>
-                    <p className="text-2xl font-bold text-[#f0f0f5]">{playerDetail.matches}</p>
-                  </div>
-                </div>
-
-                {/* XTreino Stats */}
-                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Award className="w-5 h-5 text-[#006400]" />
-                    <h3 className="font-bold text-[#f0f0f5]">Estatísticas de XTreino</h3>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="bg-[#1a1a24] rounded-lg p-4">
-                      <p className="text-xs text-[#5a5a6e] mb-1">Participações</p>
-                      <p className="text-xl font-bold text-[#f0f0f5]">{playerDetail.xtreinoParticipations ?? 0}</p>
-                    </div>
-                    <div className="bg-[#1a1a24] rounded-lg p-4">
-                      <p className="text-xs text-[#5a5a6e] mb-1">Total Kills XT</p>
-                      <p className="text-xl font-bold text-[#006400]">{playerDetail.totalXtreinoKills ?? 0}</p>
-                    </div>
-                    <div className="bg-[#1a1a24] rounded-lg p-4">
-                      <p className="text-xs text-[#5a5a6e] mb-1">Melhor XT</p>
-                      <p className="text-xl font-bold text-[#f0f0f5]">{playerDetail.bestXtreinoKills ?? 0} kills</p>
-                      {playerDetail.bestXtreinoDate && (
-                        <p className="text-xs text-[#5a5a6e] mt-1">{playerDetail.bestXtreinoDate}</p>
-                      )}
-                    </div>
+                    <p className="text-2xl font-bold text-[#f0f0f5]">{playerDetail.xtreinoParticipations ?? 0}</p>
                   </div>
                 </div>
 
@@ -210,28 +317,6 @@ export default function Jogadores() {
                     </div>
                   </div>
                 )}
-
-                {/* Win Rate */}
-                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-                  <h3 className="font-bold text-[#f0f0f5] mb-4">Taxa de Vitoria</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 bg-[#1a1a24] rounded-full h-4">
-                      <div
-                        className="bg-green-500 h-4 rounded-full transition-all"
-                        style={{
-                          width: `${playerDetail.matches > 0 ? (playerDetail.wins / playerDetail.matches) * 100 : 0}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-lg font-bold text-green-400">
-                      {playerDetail.matches > 0 ? ((playerDetail.wins / playerDetail.matches) * 100).toFixed(1) : 0}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between mt-2 text-xs text-[#5a5a6e]">
-                    <span>{playerDetail.wins} vitorias</span>
-                    <span>{playerDetail.matches - playerDetail.wins} derrotas</span>
-                  </div>
-                </div>
               </div>
             )}
           </div>

@@ -1,8 +1,28 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Search, X, Check, Target, Award, Calendar } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, Check, Target, Award, Calendar, Trophy, Medal, ChevronDown, ChevronUp } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import AdminLayout from "@/layout/AdminLayout";
 import { toast } from "sonner";
+
+type SortField = "xtreinoKills" | "xtreinoParticipations" | "avgKills";
+type SortDir = "asc" | "desc";
+
+interface PlayerWithStats {
+  id: number;
+  nickname: string;
+  uid: string | null;
+  discord: string | null;
+  teamId: number | null;
+  kills: number;
+  deaths: number;
+  wins: number;
+  matches: number;
+  xtreinoKills: number | null;
+  xtreinoParticipations: number | null;
+  avgKills: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function AdminJogadores() {
   const [search, setSearch] = useState("");
@@ -10,6 +30,8 @@ export default function AdminJogadores() {
   const [editing, setEditing] = useState<number | null>(null);
   const [form, setForm] = useState({ nickname: "", uid: "", discord: "", teamId: "", kills: 0, deaths: 0, wins: 0, matches: 0 });
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
+  const [sortField, setSortField] = useState<SortField>("xtreinoKills");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const utils = trpc.useUtils();
   const { data: playersList } = trpc.players.list.useQuery(search ? { search } : undefined);
@@ -34,7 +56,7 @@ export default function AdminJogadores() {
 
   const resetForm = () => setForm({ nickname: "", uid: "", discord: "", teamId: "", kills: 0, deaths: 0, wins: 0, matches: 0 });
 
-  const handleEdit = (p: NonNullable<typeof playersList>[0]) => {
+  const handleEdit = (p: PlayerWithStats) => {
     setEditing(p.id);
     setForm({ nickname: p.nickname, uid: p.uid ?? "", discord: p.discord ?? "", teamId: p.teamId?.toString() ?? "", kills: p.kills, deaths: p.deaths, wins: p.wins, matches: p.matches });
     setShowForm(true);
@@ -51,6 +73,62 @@ export default function AdminJogadores() {
     }
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(sortDir === "desc" ? "asc" : "desc");
+    } else {
+      setSortField(field);
+      setSortDir("desc");
+    }
+  };
+
+  const enrichedPlayers: PlayerWithStats[] = (playersList ?? []).map(p => {
+    const avgKills = p.xtreinoParticipations && p.xtreinoParticipations > 0
+      ? Math.round((p.xtreinoKills ?? 0) / p.xtreinoParticipations)
+      : 0;
+    return {
+      ...p,
+      avgKills,
+    };
+  });
+
+  const sortedPlayers = [...enrichedPlayers].sort((a, b) => {
+    const aVal = a[sortField] ?? 0;
+    const bVal = b[sortField] ?? 0;
+    return sortDir === "desc" ? bVal - aVal : aVal - bVal;
+  });
+
+  const getTeamName = (teamId: number | null) => {
+    if (!teamId) return "Sem equipe";
+    return teamsList?.find(t => t.id === teamId)?.name ?? "Sem equipe";
+  };
+
+  const getRankIcon = (index: number) => {
+    if (index === 0) return <Trophy className="w-5 h-5 text-yellow-400" />;
+    if (index === 1) return <Medal className="w-5 h-5 text-gray-300" />;
+    if (index === 2) return <Medal className="w-5 h-5 text-amber-600" />;
+    return <span className="w-5 text-center text-sm font-bold text-[#5a5a6e]">{index + 1}</span>;
+  };
+
+  const getRankStyle = (index: number) => {
+    if (index === 0) return "bg-gradient-to-r from-yellow-500/10 to-transparent border-l-2 border-yellow-400";
+    if (index === 1) return "bg-gradient-to-r from-gray-400/10 to-transparent border-l-2 border-gray-300";
+    if (index === 2) return "bg-gradient-to-r from-amber-600/10 to-transparent border-l-2 border-amber-600";
+    return "hover:bg-[#1a1a24]";
+  };
+
+  const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className="flex items-center gap-1 text-xs font-medium text-[#5a5a6e] uppercase hover:text-[#f0f0f5] transition-colors"
+    >
+      {label}
+      {sortField === field && (
+        sortDir === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />
+      )}
+    </button>
+  );
+
   const kd = (kills: number, deaths: number) => {
     if (deaths === 0) return kills > 0 ? kills.toString() : "0";
     return (kills / deaths).toFixed(2);
@@ -61,8 +139,8 @@ export default function AdminJogadores() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#f0f0f5] mb-1">Jogadores</h1>
-            <p className="text-[#8a8a9e] text-sm">Gerencie os jogadores do sistema</p>
+            <h1 className="text-2xl font-bold text-[#f0f0f5] mb-1">Ranking de Jogadores</h1>
+            <p className="text-[#8a8a9e] text-sm">Gerencie e visualize estatísticas dos xtreinos</p>
           </div>
           <button onClick={() => { setShowForm(true); setEditing(null); resetForm(); }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#006400] hover:bg-[#004d00] text-white text-sm font-medium transition-all">
@@ -75,6 +153,54 @@ export default function AdminJogadores() {
           <input type="text" placeholder="Buscar jogador..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[#12121a] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-[#006400]/50" />
         </div>
+
+        {/* Top 3 Podium */}
+        {sortedPlayers.length > 0 && !showForm && !selectedPlayer && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {sortedPlayers.slice(0, 3).map((p, i) => (
+              <div
+                key={p.id}
+                onClick={() => setSelectedPlayer(p.id)}
+                className={`rounded-xl border border-[#2a2a3a] p-6 cursor-pointer transition-all hover:-translate-y-1 ${
+                  i === 0 ? "bg-gradient-to-b from-yellow-500/10 to-[#12121a] border-yellow-400/30" :
+                  i === 1 ? "bg-gradient-to-b from-gray-400/10 to-[#12121a] border-gray-300/30" :
+                  "bg-gradient-to-b from-amber-600/10 to-[#12121a] border-amber-600/30"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                    i === 0 ? "bg-yellow-400/20 text-yellow-400" :
+                    i === 1 ? "bg-gray-300/20 text-gray-300" :
+                    "bg-amber-600/20 text-amber-600"
+                  }`}>
+                    {i + 1}º
+                  </div>
+                  <Target className={`w-8 h-8 ${
+                    i === 0 ? "text-yellow-400/50" :
+                    i === 1 ? "text-gray-300/50" :
+                    "text-amber-600/50"
+                  }`} />
+                </div>
+                <h3 className="text-lg font-bold text-[#f0f0f5] mb-1">{p.nickname}</h3>
+                <p className="text-sm text-[#8a8a9e] mb-3">{getTeamName(p.teamId)}</p>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <p className="text-xs text-[#5a5a6e]">Kills XT</p>
+                    <p className={`text-2xl font-bold ${
+                      i === 0 ? "text-yellow-400" :
+                      i === 1 ? "text-gray-300" :
+                      "text-amber-600"
+                    }`}>{p.xtreinoKills ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#5a5a6e]">Partic.</p>
+                    <p className="text-lg font-bold text-[#f0f0f5]">{p.xtreinoParticipations ?? 0}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {showForm && (
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
@@ -207,34 +333,48 @@ export default function AdminJogadores() {
           </div>
         )}
 
-        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#2a2a3a]">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Nickname</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">UID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Equipe</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">K/D</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">Kills</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">XT Kills</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">XT Partic.</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Acoes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2a2a3a]">
-                {playersList?.map((p) => {
-                  const kd = p.deaths > 0 ? (p.kills / p.deaths).toFixed(2) : p.kills;
-                  const team = teamsList?.find(t => t.id === p.teamId);
-                  return (
-                    <tr key={p.id} className="hover:bg-[#1a1a24]">
-                      <td className="px-6 py-3 text-sm font-medium text-[#f0f0f5]">{p.nickname}</td>
-                      <td className="px-6 py-3 text-sm text-[#8a8a9e] font-mono">{p.uid ?? "-"}</td>
-                      <td className="px-6 py-3 text-sm text-[#8a8a9e]">{team?.name ?? "Sem equipe"}</td>
-                      <td className="px-6 py-3 text-sm text-center text-[#006400] font-medium">{kd}</td>
-                      <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.kills}</td>
-                      <td className="px-6 py-3 text-sm text-center text-[#006400] font-medium">{p.xtreinoKills ?? 0}</td>
+        {/* Ranking Table */}
+        {!showForm && (
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#2a2a3a]">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Rank</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Jogador</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Equipe</th>
+                    <th className="px-6 py-3 text-center">
+                      <SortHeader field="xtreinoKills" label="Kills XT" />
+                    </th>
+                    <th className="px-6 py-3 text-center">
+                      <SortHeader field="xtreinoParticipations" label="XTreinos" />
+                    </th>
+                    <th className="px-6 py-3 text-center">
+                      <SortHeader field="avgKills" label="Média" />
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Acoes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2a2a3a]">
+                  {sortedPlayers.map((p, i) => (
+                    <tr key={p.id} className={`${getRankStyle(i)}`}>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          {getRankIcon(i)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#006400]/10 flex items-center justify-center">
+                            <Target className="w-4 h-4 text-[#006400]" />
+                          </div>
+                          <span className="text-sm font-bold text-[#f0f0f5]">{p.nickname}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-[#8a8a9e]">{getTeamName(p.teamId)}</td>
+                      <td className="px-6 py-3 text-sm text-center font-bold text-[#006400]">{p.xtreinoKills ?? 0}</td>
                       <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.xtreinoParticipations ?? 0}</td>
+                      <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.avgKills}</td>
                       <td className="px-6 py-3">
                         <div className="flex gap-2">
                           <button onClick={() => setSelectedPlayer(p.id)} className="p-1.5 rounded hover:bg-[#006400]/10 text-[#006400] transition-colors" title="Ver stats">
@@ -245,12 +385,12 @@ export default function AdminJogadores() {
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </AdminLayout>
   );
