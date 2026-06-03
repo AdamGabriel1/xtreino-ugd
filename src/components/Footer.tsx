@@ -1,5 +1,5 @@
-import { Link } from "lucide-react";
 import { trpc } from "@/providers/trpc";
+import { Link, useLocation } from "react-router";
 
 export default function Footer() {
   const { data: settings } = trpc.settings.get.useQuery();
