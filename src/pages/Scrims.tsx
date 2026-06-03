@@ -32,24 +32,16 @@ export default function Scrims() {
   // Queries originais
   const { data: scrimsList } = trpc.scrims.list.useQuery();
 
-  // Queries de dados historicos
+  // Queries de dados historicos (sempre buscar para evitar problemas de cache/condicional)
   const { data: availableDates } = trpc.scrims.dates.useQuery();
   const { data: scrimTeamResults } = trpc.scrims.teamResults.useQuery(
-    { date: selectedDate === "all" ? undefined : selectedDate },
-    { enabled: tab === "historico-times" }
+    { date: selectedDate === "all" ? undefined : selectedDate }
   );
   const { data: scrimPlayerStats } = trpc.scrims.playerStats.useQuery(
-    { date: selectedDate === "all" ? undefined : selectedDate },
-    { enabled: tab === "historico-jogadores" || tab === "historico-times" } // <-- IMPORTANTE: tambem buscar para times
+    { date: selectedDate === "all" ? undefined : selectedDate }
   );
-  const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery(
-    undefined,
-    { enabled: tab === "historico-jogadores" && selectedDate === "all" }
-  );
-  const { data: scrimTeamAllTime } = trpc.scrims.teamResultsAllTime.useQuery(
-    undefined,
-    { enabled: tab === "historico-times" && selectedDate === "all" }
-  );
+  const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery();
+  const { data: scrimTeamAllTime } = trpc.scrims.teamResultsAllTime.useQuery();
 
   const modalities = ["", "solo", "duo", "squad", "4v4"];
 

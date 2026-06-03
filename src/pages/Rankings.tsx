@@ -25,24 +25,16 @@ export default function Rankings() {
   const { data: teamRankings } = trpc.rankings.teams.useQuery();
   const { data: playerRankings } = trpc.rankings.players.useQuery();
 
-  // Queries de scrims
+  // Queries de scrims (sempre buscar para evitar problemas de cache/condicional)
   const { data: availableDates } = trpc.scrims.dates.useQuery();
   const { data: scrimTeamResults } = trpc.scrims.teamResults.useQuery(
-    { date: selectedDate === "all" ? undefined : selectedDate },
-    { enabled: tab === "scrims-teams" }
+    { date: selectedDate === "all" ? undefined : selectedDate }
   );
   const { data: scrimPlayerStats } = trpc.scrims.playerStats.useQuery(
-    { date: selectedDate === "all" ? undefined : selectedDate },
-    { enabled: tab === "scrims-players" || tab === "scrims-teams" } // <-- IMPORTANTE: tambem buscar para times
+    { date: selectedDate === "all" ? undefined : selectedDate }
   );
-  const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery(
-    undefined,
-    { enabled: tab === "scrims-players" && selectedDate === "all" }
-  );
-  const { data: scrimTeamAllTime } = trpc.scrims.teamResultsAllTime.useQuery(
-    undefined,
-    { enabled: tab === "scrims-teams" && selectedDate === "all" }
-  );
+  const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery();
+  const { data: scrimTeamAllTime } = trpc.scrims.teamResultsAllTime.useQuery();
 
   const isScrimTab = tab.startsWith("scrims-");
   const isAllTime = selectedDate === "all";
@@ -89,27 +81,21 @@ export default function Rankings() {
       return teamsWithPoints.sort((a: any, b: any) => b.points - a.points);
     }
 
-    // Todos os tempos: agregar com dados reais
-    // Precisamos buscar todos os resultados e jogadores para calcular totais
-    return (scrimTeamAllTime || []).map((t: any, i: number) => {
-      // Buscar todos os resultados deste time para calcular totais
-      // Como nao temos acesso a todos os dados raw aqui, vamos usar a query de allTime
-      // e calcular o que pudermos
-      return {
-        id: i,
-        entityName: t.teamName,
-        points: 0, // Nao temos como calcular sem dados raw — o backend deveria retornar isso
-        kills: 0,
-        wins: 0,
-        participations: t.matches,
-        q1Pos: t.avgQ1,
-        q2Pos: t.avgQ2,
-        q3Pos: t.avgQ3,
-        q1Points: 0,
-        q2Points: 0,
-        q3Points: 0,
-      };
-    });
+    // Todos os tempos: usar dados ja calculados pelo backend
+    return (scrimTeamAllTime || []).map((t: any, i: number) => ({
+      id: i,
+      entityName: t.teamName,
+      points: t.totalPoints ?? 0,
+      kills: t.totalKills ?? 0,
+      wins: t.wins ?? 0,
+      participations: t.matches ?? 0,
+      q1Pos: t.avgQ1,
+      q2Pos: t.avgQ2,
+      q3Pos: t.avgQ3,
+      q1Points: 0,
+      q2Points: 0,
+      q3Points: 0,
+    }));
   }, [tab, isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime]);
 
   const scrimsPlayersData = useMemo(() => {
