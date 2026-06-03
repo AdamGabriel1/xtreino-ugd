@@ -33,15 +33,37 @@ if (env.isProduction) {
     const db = getDb();
     console.log("[BOOT] Database connected");
 
-    // Check if admin exists
-    const adminCheck = db.query.admins.findFirst();
+    // Access raw better-sqlite3 driver
+    // @ts-ignore - $client is internal property
+    const sqlite = db.$client;
 
-    if (!adminCheck) {
-      console.log("[BOOT] Database empty, running seed...");
+    // Check if table exists by querying sqlite_master
+    let tableExists = false;
+    try {
+      // @ts-ignore
+      const result = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='admins'").get();
+      tableExists = !!result;
+    } catch {
+      tableExists = false;
+    }
+
+    console.log("[BOOT] Table exists:", tableExists);
+
+    if (!tableExists) {
+      console.log("[BOOT] Tables not found, running seed...");
       seed();
       console.log("[BOOT] Seed completed successfully!");
     } else {
-      console.log("[BOOT] Database already has data, skipping seed");
+      // Check if admin exists
+      // @ts-ignore
+      const adminCheck = sqlite.prepare("SELECT * FROM admins LIMIT 1").get();
+      if (!adminCheck) {
+        console.log("[BOOT] Tables exist but empty, running seed...");
+        seed();
+        console.log("[BOOT] Seed completed successfully!");
+      } else {
+        console.log("[BOOT] Database already has data, skipping seed");
+      }
     }
   } catch (error) {
     console.error("[BOOT] Database/Seed error:", error);
