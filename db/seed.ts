@@ -287,8 +287,8 @@ export function seedMinimal() {
   console.log(`[SEED-MINIMAL] Admin ${adminCreated ? "created" : "already exists"}`);
 
   const settingsCreated = upsertSettings(db, {
-    orgName: "Devils Mobile League",
-    primaryColor: "#ff3b3b",
+    orgName: "Xtreino Underground",
+    primaryColor: "#006400",
   });
   console.log(`[SEED-MINIMAL] Settings ${settingsCreated ? "created" : "already exists"}`);
 
