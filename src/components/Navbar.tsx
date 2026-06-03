@@ -26,7 +26,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0">
           <img
-            src="/data/logo-xtreino.jpg"
+            src="../../data/logo-xtreino.jpg"
             alt="XTreinos Logo"
             className="w-9 h-9 rounded-lg object-cover"
             draggable={false}
