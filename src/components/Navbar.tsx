@@ -26,7 +26,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0">
           <img
-            src="../data/logo-xtreino.jpg"
+            src="../../data/logo-xtreino.jpg"
             alt="XTreinos Logo"
             className="w-9 h-9 rounded-lg object-cover"
             draggable={false}
@@ -44,7 +44,7 @@ export default function Navbar() {
               to={link.path}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                 isActive(link.path)
-                  ? "text-red-400 bg-red-500/10"
+                  ? "text-[#006400] bg-[#006400]/10"
                   : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
               }`}
             >
@@ -57,7 +57,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             to="/admin/login"
-            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg border border-[#3a3a4e] text-[#8a8a9e] text-sm font-medium hover:border-red-500/50 hover:text-red-400 transition-all duration-150"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg border border-[#3a3a4e] text-[#8a8a9e] text-sm font-medium hover:border-[#006400]/50 hover:text-[#006400] transition-all duration-150"
           >
             <Shield className="w-4 h-4" />
             Área Admin
@@ -86,7 +86,7 @@ export default function Navbar() {
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     isActive(link.path)
-                      ? "text-red-400 bg-red-500/10"
+                      ? "text-[#006400] bg-[#006400]/10"
                       : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
                   }`}
                 >
@@ -98,7 +98,7 @@ export default function Navbar() {
             <Link
               to="/admin/login"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#8a8a9e] hover:text-red-400 hover:bg-[#1a1a24] mt-4 border-t border-[#2a2a3a] pt-4"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#8a8a9e] hover:text-[#006400] hover:bg-[#1a1a24] mt-4 border-t border-[#2a2a3a] pt-4"
             >
               <Shield className="w-5 h-5" />
               Área Admin
