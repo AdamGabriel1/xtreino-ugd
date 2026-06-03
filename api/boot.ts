@@ -12,7 +12,6 @@ import { runSeedIfNeeded } from "../db/seed-runner.js";
 // IMPORTS DOS SEEDS DIARIOS
 // Adicione novos imports aqui conforme for criando seeds
 // ============================================================
-import { seed as seed20260603 } from "../db/seeds/2026-06-03.js";
 import { seed as seedScrimHistorico } from "../db/seeds/scrim-historico.js";
 
 console.log("[BOOT] Starting server...");
@@ -86,7 +85,6 @@ if (env.isProduction) {
     // Adicione novos seeds aqui na ordem cronologica
     // ============================================================
     console.log("[BOOT] Checking daily seeds...");
-    runSeedIfNeeded("daily_2026_06_03", seed20260603);
     runSeedIfNeeded("scrim_historico", seedScrimHistorico);
     // Exemplo futuro:
     // import { seed as seed20260604 } from "../db/seeds/2026-06-04.js";
