@@ -1,7 +1,19 @@
-import { useState } from "react";
-import { BarChart3, Trophy, UserCircle, Users, TrendingUp, Target, Award, Calendar, Filter } from "lucide-react";
+import { useState, useMemo } from "react";
+import { BarChart3, Trophy, UserCircle, Users, TrendingUp, Target, Award, Filter } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
+
+/** Tabela de pontos por colocação */
+const POSITION_POINTS: Record<number, number> = {
+  1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7,
+  7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1,
+  13: 1, 14: 0, 15: 0,
+};
+
+function getPointsByPosition(pos: number | null): number {
+  if (!pos) return 0;
+  return POSITION_POINTS[pos] ?? 0;
+}
 
 type TabType = "teams" | "players" | "scrims-teams" | "scrims-players";
 
@@ -32,62 +44,107 @@ export default function Rankings() {
     { enabled: tab === "scrims-teams" && selectedDate === "all" }
   );
 
-  // Determinar dados atuais
   const isScrimTab = tab.startsWith("scrims-");
   const isAllTime = selectedDate === "all";
 
-  let data: any[] = [];
-  if (tab === "teams") data = teamRankings || [];
-  else if (tab === "players") data = playerRankings || [];
-  else if (tab === "scrims-teams") {
-    data = isAllTime
-      ? (scrimTeamAllTime || []).map((t: any, i: number) => ({
-          id: i,
-          entityName: t.teamName,
-          points: 0,
-          kills: 0,
-          wins: 0,
-          participations: t.matches,
-          kdRatio: `${t.avgQ1?.toFixed(1) || "-"} / ${t.avgQ2?.toFixed(1) || "-"} / ${t.avgQ3?.toFixed(1) || "-"}`,
-          q1Pos: t.avgQ1,
-          q2Pos: t.avgQ2,
-          q3Pos: t.avgQ3,
-        }))
-      : (scrimTeamResults || []).map((t: any) => ({
+  // ============================================================
+  // CALCULAR DADOS DOS SCRIMS COM PONTOS CORRETOS
+  // ============================================================
+
+  const scrimsTeamsData = useMemo(() => {
+    if (tab !== "scrims-teams") return [];
+
+    if (!isAllTime) {
+      // Dados de uma data especifica: calcular pontos por colocacao + kills
+      const teamsWithPoints = (scrimTeamResults || []).map((t: any) => {
+        const q1Points = getPointsByPosition(t.q1Pos);
+        const q2Points = getPointsByPosition(t.q2Pos);
+        const q3Points = getPointsByPosition(t.q3Pos);
+        const positionPoints = q1Points + q2Points + q3Points;
+        return {
           id: t.id,
           entityName: t.teamName,
-          points: 0,
-          kills: 0,
-          wins: 0,
+          positionPoints,
+          kills: 0, // sera preenchido abaixo
+          wins: [t.q1Pos, t.q2Pos, t.q3Pos].filter((p: number) => p === 1).length,
           participations: 1,
-          kdRatio: `${t.q1Pos || "-"} / ${t.q2Pos || "-"} / ${t.q3Pos || "-"}`,
           q1Pos: t.q1Pos,
           q2Pos: t.q2Pos,
           q3Pos: t.q3Pos,
-        }));
-  } else if (tab === "scrims-players") {
-    data = isAllTime
-      ? (scrimPlayerAllTime || []).map((p: any, i: number) => ({
-          id: i,
-          entityName: p.playerName,
-          points: 0,
-          kills: p.totalKills,
-          wins: 0,
-          participations: p.matches,
-          kdRatio: `${p.totalQ1 || 0} / ${p.totalQ2 || 0} / ${p.totalQ3 || 0}`,
-          teamName: p.teamName,
-        }))
-      : (scrimPlayerStats || []).map((p: any) => ({
-          id: p.id,
-          entityName: p.playerName,
-          points: 0,
-          kills: p.totalKills,
-          wins: 0,
-          participations: 1,
-          kdRatio: `${p.q1Kills || 0} / ${p.q2Kills || 0} / ${p.q3Kills || 0}`,
-          teamName: p.teamName,
-        }));
-  }
+          q1Points,
+          q2Points,
+          q3Points,
+        };
+      });
+
+      // Somar kills por time
+      const teamKills: Record<string, number> = {};
+      (scrimPlayerStats || []).forEach((p: any) => {
+        teamKills[p.teamName] = (teamKills[p.teamName] || 0) + p.totalKills;
+      });
+
+      return teamsWithPoints.map((t: any) => ({
+        ...t,
+        kills: teamKills[t.entityName] || 0,
+        points: t.positionPoints + (teamKills[t.entityName] || 0),
+      })).sort((a: any, b: any) => b.points - a.points);
+    }
+
+    // Todos os tempos: agregar
+    return (scrimTeamAllTime || []).map((t: any, i: number) => ({
+      id: i,
+      entityName: t.teamName,
+      points: 0,
+      kills: 0,
+      wins: 0,
+      participations: t.matches,
+      q1Pos: t.avgQ1,
+      q2Pos: t.avgQ2,
+      q3Pos: t.avgQ3,
+      q1Points: 0,
+      q2Points: 0,
+      q3Points: 0,
+    }));
+  }, [tab, isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime]);
+
+  const scrimsPlayersData = useMemo(() => {
+    if (tab !== "scrims-players") return [];
+
+    if (!isAllTime) {
+      return (scrimPlayerStats || []).map((p: any) => ({
+        id: p.id,
+        entityName: p.playerName,
+        points: p.totalKills,
+        kills: p.totalKills,
+        wins: 0,
+        participations: 1,
+        q1Kills: p.q1Kills,
+        q2Kills: p.q2Kills,
+        q3Kills: p.q3Kills,
+        teamName: p.teamName,
+      })).sort((a: any, b: any) => b.points - a.points);
+    }
+
+    return (scrimPlayerAllTime || []).map((p: any, i: number) => ({
+      id: i,
+      entityName: p.playerName,
+      points: p.totalKills,
+      kills: p.totalKills,
+      wins: 0,
+      participations: p.matches,
+      q1Kills: p.totalQ1,
+      q2Kills: p.totalQ2,
+      q3Kills: p.totalQ3,
+      teamName: p.teamName,
+    })).sort((a: any, b: any) => b.points - a.points);
+  }, [tab, isAllTime, scrimPlayerStats, scrimPlayerAllTime]);
+
+  // Determinar dados finais
+  let data: any[] = [];
+  if (tab === "teams") data = teamRankings || [];
+  else if (tab === "players") data = playerRankings || [];
+  else if (tab === "scrims-teams") data = scrimsTeamsData;
+  else if (tab === "scrims-players") data = scrimsPlayersData;
 
   const rankColors = [
     "border-l-yellow-400",
@@ -101,7 +158,6 @@ export default function Rankings() {
     <Award key="3" className="w-5 h-5 text-amber-600" />,
   ];
 
-  // Format date for display
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split("-");
@@ -212,24 +268,24 @@ export default function Rankings() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#2a2a3a]">
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase w-16">Rank</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase w-14">Rank</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">
                     {tab === "players" || tab === "scrims-players" ? "Jogador" : "Equipe"}
                   </th>
                   {isScrimTab && tab === "scrims-players" && (
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#5a5a6e] uppercase">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Time</th>
                   )}
-                  <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
                     <span className="flex items-center justify-center gap-1"><TrendingUp className="w-3 h-3" /> Pontos</span>
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
                     <span className="flex items-center justify-center gap-1"><Target className="w-3 h-3" /> Kills</span>
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                    <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Wins</span>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
+                    <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Booyahs</span>
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">Particip.</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium text-[#5a5a6e] uppercase">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">Scrims</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
                     {isScrimTab ? "Q1 / Q2 / Q3" : "K/D"}
                   </th>
                 </tr>
@@ -240,28 +296,37 @@ export default function Rankings() {
                     key={r.id ?? i}
                     className={`hover:bg-[#1a1a24] transition-colors ${i < 3 ? `border-l-4 ${rankColors[i]}` : ""}`}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       {i < 3 ? (
                         <div className="flex justify-center">{rankIcons[i]}</div>
                       ) : (
                         <span className="text-sm font-bold text-[#5a5a6e] text-center block">{i + 1}</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className="text-sm font-bold text-[#f0f0f5]">{r.entityName}</span>
                     </td>
                     {isScrimTab && tab === "scrims-players" && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="text-xs text-[#5a5a6e]">{r.teamName || "—"}</span>
                       </td>
                     )}
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-3 text-center">
                       <span className="text-sm font-bold text-red-400">{r.points || 0}</span>
                     </td>
-                    <td className="px-6 py-4 text-center text-sm text-[#8a8a9e]">{r.kills ?? 0}</td>
-                    <td className="px-6 py-4 text-center text-sm text-[#8a8a9e]">{r.wins ?? 0}</td>
-                    <td className="px-6 py-4 text-center text-sm text-[#8a8a9e]">{r.participations ?? 0}</td>
-                    <td className="px-6 py-4 text-center text-sm text-[#8a8a9e] font-mono">{r.kdRatio ?? "—"}</td>
+                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.kills ?? 0}</td>
+                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.wins ?? 0}</td>
+                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.participations ?? 0}</td>
+                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e] font-mono">
+                      {tab === "scrims-teams" && !isAllTime
+                        ? `${r.q1Pos}(${r.q1Points}) / ${r.q2Pos}(${r.q2Points}) / ${r.q3Pos}(${r.q3Points})`
+                        : tab === "scrims-teams" && isAllTime
+                        ? `${r.q1Pos?.toFixed(1) || "-"} / ${r.q2Pos?.toFixed(1) || "-"} / ${r.q3Pos?.toFixed(1) || "-"}`
+                        : tab === "scrims-players"
+                        ? `${r.q1Kills || 0} / ${r.q2Kills || 0} / ${r.q3Kills || 0}`
+                        : r.kdRatio ?? "—"
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
