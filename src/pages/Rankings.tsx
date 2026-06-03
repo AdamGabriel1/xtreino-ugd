@@ -1,322 +1,430 @@
 import { useState, useMemo } from "react";
-import { BarChart3, Trophy, UserCircle, Users, TrendingUp, Target, Award, Filter } from "lucide-react";
+import {
+  Dumbbell,
+  Calendar,
+  Clock,
+  Trophy,
+  Target,
+  Filter,
+  TrendingUp,
+  Swords,
+  Medal,
+  BarChart3,
+  Users,
+} from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
 
-/** Tabela de pontos por colocação */
+// Sistema de pontuação por posição (atualizado)
 const POSITION_POINTS: Record<number, number> = {
-  1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7,
-  7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1,
-  13: 1, 14: 0, 15: 0,
+  1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7, 7: 6, 8: 5,
+  9: 4, 10: 3, 11: 2, 12: 1, 13: 1, 14: 0, 15: 0,
 };
 
-function getPointsByPosition(pos: number | null): number {
-  if (!pos) return 0;
-  return POSITION_POINTS[pos] ?? 0;
+// Pontos por kill
+const KILL_POINTS = 1;
+
+interface TeamStats {
+  teamName: string;
+  date: string;
+  q1Pos: number | null;
+  q2Pos: number | null;
+  q3Pos: number | null;
+  q1Kills: number;
+  q2Kills: number;
+  q3Kills: number;
+  totalKills: number;
+  posPoints: number;
+  killPoints: number;
+  totalPoints: number;
 }
 
-type TabType = "teams" | "players" | "scrims-teams" | "scrims-players";
+export default function XTreinos() {
+  const [selectedMonth, setSelectedMonth] = useState<string>("2026-05");
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [sortBy, setSortBy] = useState<<"total" | "kills" | "pos">("total");
 
-export default function Rankings() {
-  const [tab, setTab] = useState<TabType>("teams");
-  const [selectedDate, setSelectedDate] = useState<string>("all");
+  const { data: allResults } = trpc.xtreinos.listResults.useQuery();
+  const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
+  const { data: scheduleList } = trpc.xtreinos.schedule.list.useQuery();
 
-  // Queries originais
-  const { data: teamRankings } = trpc.rankings.teams.useQuery();
-  const { data: playerRankings } = trpc.rankings.players.useQuery();
+  // Extrair meses disponíveis dos dados
+  const availableMonths = useMemo(() => {
+    if (!allResults) return [];
+    const months = new Set<string>();
+    allResults.forEach((r) => {
+      if (r.date) months.add(r.date.substring(0, 7));
+    });
+    return Array.from(months).sort();
+  }, [allResults]);
 
-  // Queries de scrims (sempre buscar para evitar problemas de cache/condicional)
-  const { data: availableDates } = trpc.scrims.dates.useQuery();
-  const { data: scrimTeamResults } = trpc.scrims.teamResults.useQuery(
-    { date: selectedDate === "all" ? undefined : selectedDate }
-  );
-  const { data: scrimPlayerStats } = trpc.scrims.playerStats.useQuery(
-    { date: selectedDate === "all" ? undefined : selectedDate }
-  );
-  const { data: scrimPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery();
-  const { data: scrimTeamAllTime } = trpc.scrims.teamResultsAllTime.useQuery();
+  // Extrair datas disponíveis do mês selecionado
+  const availableDates = useMemo(() => {
+    if (!allResults || !selectedMonth) return [];
+    const dates = new Set<string>();
+    allResults.forEach((r) => {
+      if (r.date && r.date.startsWith(selectedMonth)) dates.add(r.date);
+    });
+    return Array.from(dates).sort();
+  }, [allResults, selectedMonth]);
 
-  const isScrimTab = tab.startsWith("scrims-");
-  const isAllTime = selectedDate === "all";
+  // Consolidar dados por time
+  const teamStats: TeamStats[] = useMemo(() => {
+    if (!allResults || !allPlayerStats) return [];
 
-  // ============================================================
-  // CALCULAR DADOS DOS SCRIMS COM PONTOS CORRETOS
-  // ============================================================
+    const statsMap = new Map<string, TeamStats>();
 
-  const scrimsTeamsData = useMemo(() => {
-    if (tab !== "scrims-teams") return [];
+    // Primeiro, processar resultados (colocações)
+    allResults.forEach((r) => {
+      if (selectedMonth && !r.date?.startsWith(selectedMonth)) return;
+      if (selectedDate && r.date !== selectedDate) return;
 
-    // Calcular kills por time a partir dos dados dos jogadores
-    const calcTeamKills = (teamName: string) => {
-      const playerData = (scrimPlayerStats || []).filter((p: any) => p.teamName === teamName);
-      return playerData.reduce((sum: number, p: any) => sum + (p.totalKills || 0), 0);
-    };
+      const key = `${r.date}-${r.teamName}`;
+      const q1Pos = r.q1Pos ?? 0;
+      const q2Pos = r.q2Pos ?? 0;
+      const q3Pos = r.q3Pos ?? 0;
 
-    if (!isAllTime) {
-      // Dados de uma data especifica
-      const teamsWithPoints = (scrimTeamResults || []).map((t: any) => {
-        const q1Points = getPointsByPosition(t.q1Pos);
-        const q2Points = getPointsByPosition(t.q2Pos);
-        const q3Points = getPointsByPosition(t.q3Pos);
-        const positionPoints = q1Points + q2Points + q3Points;
-        const teamKills = calcTeamKills(t.teamName);
+      const posPoints =
+        (POSITION_POINTS[q1Pos] || 0) +
+        (POSITION_POINTS[q2Pos] || 0) +
+        (POSITION_POINTS[q3Pos] || 0);
 
-        return {
-          id: t.id,
-          entityName: t.teamName,
-          points: positionPoints + teamKills,
-          positionPoints,
-          kills: teamKills,
-          wins: [t.q1Pos, t.q2Pos, t.q3Pos].filter((p: number) => p === 1).length,
-          participations: 1,
-          q1Pos: t.q1Pos,
-          q2Pos: t.q2Pos,
-          q3Pos: t.q3Pos,
-          q1Points,
-          q2Points,
-          q3Points,
-        };
+      statsMap.set(key, {
+        teamName: r.teamName,
+        date: r.date,
+        q1Pos: r.q1Pos,
+        q2Pos: r.q2Pos,
+        q3Pos: r.q3Pos,
+        q1Kills: 0,
+        q2Kills: 0,
+        q3Kills: 0,
+        totalKills: 0,
+        posPoints,
+        killPoints: 0,
+        totalPoints: posPoints,
       });
+    });
 
-      return teamsWithPoints.sort((a: any, b: any) => b.points - a.points);
-    }
+    // Depois, processar kills dos jogadores
+    allPlayerStats.forEach((p) => {
+      if (selectedMonth && !p.date?.startsWith(selectedMonth)) return;
+      if (selectedDate && p.date !== selectedDate) return;
 
-    // Todos os tempos: usar dados ja calculados pelo backend
-    return (scrimTeamAllTime || []).map((t: any, i: number) => ({
-      id: i,
-      entityName: t.teamName,
-      points: t.totalPoints ?? 0,
-      kills: t.totalKills ?? 0,
-      wins: t.wins ?? 0,
-      participations: t.matches ?? 0,
-      q1Pos: t.avgQ1,
-      q2Pos: t.avgQ2,
-      q3Pos: t.avgQ3,
-      q1Points: 0,
-      q2Points: 0,
-      q3Points: 0,
-    }));
-  }, [tab, isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime]);
+      const key = `${p.date}-${p.teamName}`;
+      const existing = statsMap.get(key);
 
-  const scrimsPlayersData = useMemo(() => {
-    if (tab !== "scrims-players") return [];
+      const killPoints = (p.totalKills || 0) * KILL_POINTS;
 
-    if (!isAllTime) {
-      return (scrimPlayerStats || []).map((p: any) => ({
-        id: p.id,
-        entityName: p.playerName,
-        points: p.totalKills || 0,
-        kills: p.totalKills || 0,
-        wins: 0,
-        participations: 1,
-        q1Kills: p.q1Kills || 0,
-        q2Kills: p.q2Kills || 0,
-        q3Kills: p.q3Kills || 0,
-        teamName: p.teamName,
-      })).sort((a: any, b: any) => b.points - a.points);
-    }
+      if (existing) {
+        existing.q1Kills += p.q1Kills || 0;
+        existing.q2Kills += p.q2Kills || 0;
+        existing.q3Kills += p.q3Kills || 0;
+        existing.totalKills += p.totalKills || 0;
+        existing.killPoints += killPoints;
+        existing.totalPoints = existing.posPoints + existing.killPoints;
+      } else {
+        statsMap.set(key, {
+          teamName: p.teamName,
+          date: p.date,
+          q1Pos: null,
+          q2Pos: null,
+          q3Pos: null,
+          q1Kills: p.q1Kills || 0,
+          q2Kills: p.q2Kills || 0,
+          q3Kills: p.q3Kills || 0,
+          totalKills: p.totalKills || 0,
+          posPoints: 0,
+          killPoints,
+          totalPoints: killPoints,
+        });
+      }
+    });
 
-    return (scrimPlayerAllTime || []).map((p: any, i: number) => ({
-      id: i,
-      entityName: p.playerName,
-      points: p.totalKills || 0,
-      kills: p.totalKills || 0,
-      wins: 0,
-      participations: p.matches || 0,
-      q1Kills: p.totalQ1 || 0,
-      q2Kills: p.totalQ2 || 0,
-      q3Kills: p.totalQ3 || 0,
-      teamName: p.teamName,
-    })).sort((a: any, b: any) => b.points - a.points);
-  }, [tab, isAllTime, scrimPlayerStats, scrimPlayerAllTime]);
+    return Array.from(statsMap.values());
+  }, [allResults, allPlayerStats, selectedMonth, selectedDate]);
 
-  // Determinar dados finais
-  let data: any[] = [];
-  if (tab === "teams") data = teamRankings || [];
-  else if (tab === "players") data = playerRankings || [];
-  else if (tab === "scrims-teams") data = scrimsTeamsData;
-  else if (tab === "scrims-players") data = scrimsPlayersData;
+  // Ordenar
+  const sortedStats = useMemo(() => {
+    return [...teamStats].sort((a, b) => {
+      if (sortBy === "total") return b.totalPoints - a.totalPoints;
+      if (sortBy === "kills") return b.totalKills - a.totalKills;
+      if (sortBy === "pos") return b.posPoints - a.posPoints;
+      return 0;
+    });
+  }, [teamStats, sortBy]);
 
-  const rankColors = [
-    "border-l-yellow-400",
-    "border-l-gray-300",
-    "border-l-amber-600",
-  ];
+  // Stats do mês (acumulado)
+  const monthStats = useMemo(() => {
+    if (!teamStats.length) return null;
+    return {
+      totalTeams: new Set(teamStats.map((s) => s.teamName)).size,
+      totalKills: teamStats.reduce((sum, s) => sum + s.totalKills, 0),
+      totalPosPoints: teamStats.reduce((sum, s) => sum + s.posPoints, 0),
+      totalKillPoints: teamStats.reduce((sum, s) => sum + s.killPoints, 0),
+      totalPoints: teamStats.reduce((sum, s) => sum + s.totalPoints, 0),
+    };
+  }, [teamStats]);
 
-  const rankIcons = [
-    <Trophy key="1" className="w-5 h-5 text-yellow-400" />,
-    <Award key="2" className="w-5 h-5 text-gray-300" />,
-    <Award key="3" className="w-5 h-5 text-amber-600" />,
-  ];
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const [year, month, day] = dateStr.split("-");
-    const monthNames = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    return `${day} ${monthNames[parseInt(month)]}`;
+  const getPosColor = (pos: number | null) => {
+    if (!pos) return "text-[#5a5a6e]";
+    if (pos === 1) return "text-yellow-400 font-bold";
+    if (pos === 2) return "text-gray-300 font-bold";
+    if (pos === 3) return "text-amber-500 font-bold";
+    return "text-[#8a8a9e]";
   };
 
-  const getTitle = () => {
-    if (tab === "teams") return "Rankings Gerais — Equipes";
-    if (tab === "players") return "Rankings Gerais — Jogadores";
-    if (tab === "scrims-teams") return `Scrims — Times ${isAllTime ? "(Todos os Tempos)" : formatDate(selectedDate)}`;
-    if (tab === "scrims-players") return `Scrims — Jogadores ${isAllTime ? "(Todos os Tempos)" : formatDate(selectedDate)}`;
-    return "Rankings";
+  const getPosBg = (pos: number | null) => {
+    if (!pos) return "";
+    if (pos === 1) return "bg-yellow-500/10";
+    if (pos === 2) return "bg-gray-400/10";
+    if (pos === 3) return "bg-amber-500/10";
+    return "";
+  };
+
+  const getRankStyle = (index: number) => {
+    if (index === 0) return "bg-yellow-500/5 border-l-2 border-yellow-500";
+    if (index === 1) return "bg-gray-400/5 border-l-2 border-gray-400";
+    if (index === 2) return "bg-amber-500/5 border-l-2 border-amber-500";
+    return "border-l-2 border-transparent";
   };
 
   return (
     <MainLayout>
+      {/* Header */}
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
           <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-red-400" />
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Rankings</h1>
+            <Dumbbell className="w-8 h-8 text-red-400" />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">XTreinos Underground</h1>
           </div>
-          <p className="text-[#8a8a9e]">{getTitle()}</p>
+          <p className="text-[#8a8a9e]">Classificação completa — Pontos por posição + Pontos por kill</p>
         </div>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            onClick={() => { setTab("teams"); setSelectedDate("all"); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              tab === "teams"
-                ? "bg-red-500 text-white"
-                : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            Equipes
-          </button>
-          <button
-            onClick={() => { setTab("players"); setSelectedDate("all"); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              tab === "players"
-                ? "bg-red-500 text-white"
-                : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
-            }`}
-          >
-            <UserCircle className="w-4 h-4" />
-            Jogadores
-          </button>
-          <button
-            onClick={() => { setTab("scrims-teams"); setSelectedDate("all"); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              tab === "scrims-teams"
-                ? "bg-red-500 text-white"
-                : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
-            }`}
-          >
-            <Trophy className="w-4 h-4" />
-            Scrims — Times
-          </button>
-          <button
-            onClick={() => { setTab("scrims-players"); setSelectedDate("all"); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              tab === "scrims-players"
-                ? "bg-red-500 text-white"
-                : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
-            }`}
-          >
-            <Target className="w-4 h-4" />
-            Scrims — Jogadores
-          </button>
-        </div>
+        {/* Filtros */}
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+            <div className="flex items-center gap-2 text-[#8a8a9e]">
+              <Filter className="w-4 h-4" />
+              <span className="text-sm font-medium">Filtros:</span>
+            </div>
 
-        {/* Filtro de Data (apenas para abas de scrims) */}
-        {isScrimTab && (
-          <div className="flex items-center gap-3 mb-6 p-4 bg-[#1a1a24] rounded-xl border border-[#2a2a3a]">
-            <Filter className="w-4 h-4 text-[#5a5a6e]" />
-            <span className="text-sm text-[#8a8a9e]">Filtrar por data:</span>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-[#12121a] text-[#f0f0f5] text-sm px-4 py-2 rounded-lg border border-[#2a2a3a] focus:outline-none focus:border-red-500 transition-colors"
-            >
-              <option value="all">Todos os tempos</option>
-              {availableDates?.map((date) => (
-                <option key={date} value={date}>
-                  {formatDate(date)}
-                </option>
-              ))}
-            </select>
-            {selectedDate !== "all" && (
+            <div className="flex flex-wrap gap-3 flex-1">
+              {/* Filtro de Mês */}
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#5a5a6e]" />
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => { setSelectedMonth(e.target.value); setSelectedDate(""); }}
+                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50 min-w-[140px]"
+                >
+                  {availableMonths.map((m) => (
+                    <option key={m} value={m}>
+                      {m.split("-")[1]}/{m.split("-")[0]}
+                    </option>
+                  ))}
+                  {!availableMonths.length && <option value="">Carregando...</option>}
+                </select>
+              </div>
+
+              {/* Filtro de Dia */}
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#5a5a6e]" />
+                <select
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50 min-w-[140px]"
+                >
+                  <option value="">Todos os dias</option>
+                  {availableDates.map((d) => (
+                    <option key={d} value={d}>
+                      {d.split("-")[2]}/{d.split("-")[1]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Ordenação */}
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-[#5a5a6e]" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "total" | "kills" | "pos")}
+                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50 min-w-[160px]"
+                >
+                  <option value="total">Ordenar: Total</option>
+                  <option value="kills">Ordenar: Kills</option>
+                  <option value="pos">Ordenar: Posição</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Limpar filtros */}
+            {(selectedDate || sortBy !== "total") && (
               <button
-                onClick={() => setSelectedDate("all")}
+                onClick={() => { setSelectedDate(""); setSortBy("total"); }}
                 className="text-xs text-red-400 hover:text-red-300 transition-colors"
               >
-                Limpar filtro
+                Limpar filtros
               </button>
             )}
           </div>
+        </div>
+
+        {/* Cards de resumo */}
+        {monthStats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-blue-400" />
+                <span className="text-xs text-[#5a5a6e] uppercase">Equipes</span>
+              </div>
+              <p className="text-2xl font-bold text-[#f0f0f5]">{monthStats.totalTeams}</p>
+            </div>
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Swords className="w-4 h-4 text-red-400" />
+                <span className="text-xs text-[#5a5a6e] uppercase">Total Kills</span>
+              </div>
+              <p className="text-2xl font-bold text-red-400">{monthStats.totalKills}</p>
+            </div>
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs text-[#5a5a6e] uppercase">Pts Posição</span>
+              </div>
+              <p className="text-2xl font-bold text-yellow-400">{monthStats.totalPosPoints}</p>
+            </div>
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-green-400" />
+                <span className="text-xs text-[#5a5a6e] uppercase">Total Geral</span>
+              </div>
+              <p className="text-2xl font-bold text-green-400">{monthStats.totalPoints}</p>
+            </div>
+          </div>
         )}
 
-        {/* Rankings Table */}
+        {/* Tabela Principal */}
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
+            <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+              <Medal className="w-5 h-5 text-yellow-400" />
+              Classificação {selectedDate ? `— ${selectedDate.split("-")[2]}/${selectedDate.split("-")[1]}` : `— ${selectedMonth.split("-")[1]}/${selectedMonth.split("-")[0]}`}
+            </h3>
+            <span className="text-xs text-[#5a5a6e]">
+              {sortedStats.length} registros
+            </span>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#2a2a3a]">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase w-14">Rank</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">
-                    {tab === "players" || tab === "scrims-players" ? "Jogador" : "Equipe"}
-                  </th>
-                  {isScrimTab && tab === "scrims-players" && (
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Time</th>
+                <tr className="border-b border-[#2a2a3a] bg-[#0a0a0f]">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase w-12">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Equipe</th>
+                  {!selectedDate && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Data</th>
                   )}
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                    <span className="flex items-center justify-center gap-1"><TrendingUp className="w-3 h-3" /> Pontos</span>
+                    <span className="flex items-center justify-center gap-1">
+                      Q1 <span className="text-[#3a3a4e]">Pos</span>
+                    </span>
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                    <span className="flex items-center justify-center gap-1"><Target className="w-3 h-3" /> Kills</span>
+                    <span className="flex items-center justify-center gap-1">
+                      Q2 <span className="text-[#3a3a4e]">Pos</span>
+                    </span>
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                    <span className="flex items-center justify-center gap-1"><Trophy className="w-3 h-3" /> Wins</span>
+                    <span className="flex items-center justify-center gap-1">
+                      Q3 <span className="text-[#3a3a4e]">Pos</span>
+                    </span>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">Scrims</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase bg-yellow-500/5">
+                    <Trophy className="w-3 h-3 inline mr-1 text-yellow-400" />
+                    Pts Pos
+                  </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
-                    {isScrimTab ? "Q1 / Q2 / Q3" : "K/D"}
+                    <Target className="w-3 h-3 inline mr-1 text-red-400" />
+                    Kills
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase bg-red-500/5">
+                    <Swords className="w-3 h-3 inline mr-1 text-red-400" />
+                    Pts Kill
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase bg-green-500/5">
+                    <BarChart3 className="w-3 h-3 inline mr-1 text-green-400" />
+                    Total
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2a3a]">
-                {data?.map((r, i) => (
+                {sortedStats.map((team, index) => (
                   <tr
-                    key={r.id ?? i}
-                    className={`hover:bg-[#1a1a24] transition-colors ${i < 3 ? `border-l-4 ${rankColors[i]}` : ""}`}
+                    key={`${team.date}-${team.teamName}`}
+                    className={`hover:bg-[#1a1a24] transition-colors ${getRankStyle(index)}`}
                   >
-                    <td className="px-4 py-3">
-                      {i < 3 ? (
-                        <div className="flex justify-center">{rankIcons[i]}</div>
-                      ) : (
-                        <span className="text-sm font-bold text-[#5a5a6e] text-center block">{i + 1}</span>
-                      )}
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                        index === 0 ? "bg-yellow-500/20 text-yellow-400" :
+                        index === 1 ? "bg-gray-400/20 text-gray-300" :
+                        index === 2 ? "bg-amber-500/20 text-amber-500" :
+                        "text-[#5a5a6e]"
+                      }`}>
+                        {index + 1}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm font-bold text-[#f0f0f5]">{r.entityName}</span>
+                      <p className="text-sm font-bold text-[#f0f0f5]">{team.teamName}</p>
                     </td>
-                    {isScrimTab && tab === "scrims-players" && (
-                      <td className="px-4 py-3">
-                        <span className="text-xs text-[#5a5a6e]">{r.teamName || "—"}</span>
+                    {!selectedDate && (
+                      <td className="px-4 py-3 text-sm text-[#8a8a9e]">
+                        {team.date.split("-")[2]}/{team.date.split("-")[1]}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-sm font-bold text-red-400">{r.points ?? 0}</span>
+                    <td className={`px-4 py-3 text-center ${getPosBg(team.q1Pos)}`}>
+                      <span className={`text-sm font-medium ${getPosColor(team.q1Pos)}`}>
+                        {team.q1Pos ?? "-"}
+                      </span>
+                      {team.q1Pos && team.q1Pos <= 3 && (
+                        <span className="ml-1 text-xs">
+                          {team.q1Pos === 1 ? "🥇" : team.q1Pos === 2 ? "🥈" : "🥉"}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.kills ?? 0}</td>
-                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.wins ?? 0}</td>
-                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.participations ?? 0}</td>
-                    <td className="px-4 py-3 text-center text-sm text-[#8a8a9e] font-mono">
-                      {tab === "scrims-teams" && !isAllTime
-                        ? `${r.q1Pos}(${r.q1Points}) / ${r.q2Pos}(${r.q2Points}) / ${r.q3Pos}(${r.q3Points})`
-                        : tab === "scrims-teams" && isAllTime
-                        ? `${r.q1Pos?.toFixed(1) || "-"} / ${r.q2Pos?.toFixed(1) || "-"} / ${r.q3Pos?.toFixed(1) || "-"}`
-                        : tab === "scrims-players"
-                        ? `${r.q1Kills ?? 0} / ${r.q2Kills ?? 0} / ${r.q3Kills ?? 0}`
-                        : r.kdRatio ?? "—"
-                      }
+                    <td className={`px-4 py-3 text-center ${getPosBg(team.q2Pos)}`}>
+                      <span className={`text-sm font-medium ${getPosColor(team.q2Pos)}`}>
+                        {team.q2Pos ?? "-"}
+                      </span>
+                      {team.q2Pos && team.q2Pos <= 3 && (
+                        <span className="ml-1 text-xs">
+                          {team.q2Pos === 1 ? "🥇" : team.q2Pos === 2 ? "🥈" : "🥉"}
+                        </span>
+                      )}
+                    </td>
+                    <td className={`px-4 py-3 text-center ${getPosBg(team.q3Pos)}`}>
+                      <span className={`text-sm font-medium ${getPosColor(team.q3Pos)}`}>
+                        {team.q3Pos ?? "-"}
+                      </span>
+                      {team.q3Pos && team.q3Pos <= 3 && (
+                        <span className="ml-1 text-xs">
+                          {team.q3Pos === 1 ? "🥇" : team.q3Pos === 2 ? "🥈" : "🥉"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center bg-yellow-500/5">
+                      <span className="text-sm font-bold text-yellow-400">{team.posPoints}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-sm text-[#8a8a9e]">{team.totalKills}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center bg-red-500/5">
+                      <span className="text-sm font-bold text-red-400">{team.killPoints}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center bg-green-500/5">
+                      <span className="text-lg font-bold text-green-400">{team.totalPoints}</span>
                     </td>
                   </tr>
                 ))}
@@ -324,13 +432,84 @@ export default function Rankings() {
             </table>
           </div>
 
-          {(!data || data.length === 0) && (
-            <div className="text-center py-16 text-[#5a5a6e]">
-              <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>Nenhum dado disponivel para o filtro selecionado</p>
+          {sortedStats.length === 0 && (
+            <div className="px-6 py-16 text-center">
+              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-[#2a2a3a]" />
+              <p className="text-[#5a5a6e] text-lg font-medium">Nenhum resultado encontrado</p>
+              <p className="text-[#3a3a4e] text-sm mt-1">
+                {selectedDate
+                  ? "Nenhum dado para esta data"
+                  : "Nenhum dado para este mês"}
+              </p>
             </div>
           )}
         </div>
+
+        {/* Legenda */}
+        <div className="mt-6 grid md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+            <h4 className="font-bold text-[#f0f0f5] mb-3 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              Pontuação por Posição
+            </h4>
+            <div className="grid grid-cols-5 gap-x-2 gap-y-1 text-xs">
+              {Object.entries(POSITION_POINTS).map(([pos, pts]) => (
+                <div key={pos} className="flex justify-between text-[#8a8a9e]">
+                  <span>{pos}º</span>
+                  <span className="font-bold text-yellow-400">{pts}pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+            <h4 className="font-bold text-[#f0f0f5] mb-3 flex items-center gap-2">
+              <Target className="w-4 h-4 text-red-400" />
+              Pontuação por Kill
+            </h4>
+            <p className="text-[#8a8a9e] text-xs">
+              Cada kill vale <span className="font-bold text-red-400">{KILL_POINTS} ponto</span>.<<br />
+              Total de kills do time × {KILL_POINTS} = Pontos de Kill
+            </p>
+          </div>
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+            <h4 className="font-bold text-[#f0f0f5] mb-3 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-green-400" />
+              Cálculo do Total
+            </h4>
+            <p className="text-[#8a8a9e] text-xs">
+              <span className="text-yellow-400">Pts Posição</span> + <span className="text-red-400">Pts Kill</span> = <span className="text-green-400 font-bold">Total</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Agenda */}
+        {scheduleList && scheduleList.length > 0 && (
+          <div className="mt-6 bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2a2a3a]">
+              <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-400" />
+                Próximos Xtreinos
+              </h3>
+            </div>
+            <div className="divide-y divide-[#2a2a3a]">
+              {scheduleList
+                .filter((s) => s.status === "scheduled")
+                .slice(0, 5)
+                .map((s) => (
+                  <div key={s.id} className="flex items-center justify-between px-6 py-3">
+                    <div className="flex items-center gap-4">
+                      <span className="w-2 h-2 rounded-full bg-blue-400" />
+                      <span className="text-sm text-[#f0f0f5]">{s.date}</span>
+                      <span className="text-xs text-[#5a5a6e]">{s.dayOfWeek}</span>
+                    </div>
+                    <span className="text-sm text-[#8a8a9e] flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {s.timeBr}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
