@@ -1,4 +1,4 @@
-import { Gamepad2 } from "lucide-react";
+import { Link } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 
 export default function Footer() {
@@ -9,15 +9,17 @@ export default function Footer() {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#006400] to-[#004d00] flex items-center justify-center">
-              <Gamepad2 className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <p className="text-[#f0f0f5] font-semibold text-sm">
-                {settings?.orgName ?? "XTreinos Mobile"}
-              </p>
-              <p className="text-[#5a5a6e] text-xs">Todos os direitos reservados</p>
-            </div>
+            <Link to="/" className="flex items-center gap-3 shrink-0">
+              <img
+                src="/logo-xtreino.jpg"
+                alt="XTreinos Logo"
+                className="w-9 h-9 rounded-lg object-cover"
+                draggable={false}
+              />
+              <span className="font-bold text-lg text-[#f0f0f5] hidden sm:block">
+                {settings?.orgName ?? "XTreinos"}
+              </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-4">
