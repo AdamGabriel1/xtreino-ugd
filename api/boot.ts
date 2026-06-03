@@ -9,10 +9,10 @@ import { seed, seedMinimal } from "../db/seed.js";
 import { runSeedIfNeeded } from "../db/seed-runner.js";
 
 // ============================================================
-// IMPORTS DOS SEEDS DIARIOS
-// Adicione novos imports aqui conforme for criando seeds
+// IMPORTS DOS SEEDS
 // ============================================================
-import { seed as seedScrimHistorico } from "../db/seeds/scrim-historico.js";
+import { seed as seedXtreinoHistorico } from "../db/seeds/xtreino-historico.js";
+import { seed as seedXtreinoSchedule } from "../db/seeds/xtreino-schedule.js";
 
 console.log("[BOOT] Starting server...");
 
@@ -40,11 +40,9 @@ if (env.isProduction) {
     const db = getDb();
     console.log("[BOOT] Database connected");
 
-    // Access raw better-sqlite3 driver
     // @ts-ignore - $client is internal property
     const sqlite = db.$client;
 
-    // Check if table exists by querying sqlite_master
     let tableExists = false;
     try {
       // @ts-ignore
@@ -57,17 +55,10 @@ if (env.isProduction) {
     console.log("[BOOT] Table 'admins' exists:", tableExists);
 
     if (!tableExists) {
-      // ========================================================
-      // PRIMEIRA VEZ: tabelas nao existem
-      // Roda seed inicial (idempotente) + registra no seed_runs
-      // ========================================================
       console.log("[BOOT] Tables not found, running initial seed...");
       seed();
       console.log("[BOOT] Initial seed completed successfully!");
     } else {
-      // ========================================================
-      // TABELAS JA EXISTEM: verifica se precisa de seed inicial
-      // ========================================================
       // @ts-ignore
       const adminCheck = sqlite.prepare("SELECT * FROM admins LIMIT 1").get();
       if (!adminCheck) {
@@ -80,21 +71,24 @@ if (env.isProduction) {
     }
 
     // ============================================================
-    // SEEDS DIARIOS
-    // Sempre executa (com controle via seed_runs)
-    // Adicione novos seeds aqui na ordem cronologica
+    // SEEDS ESPECÍFICOS (com controle via seed_runs)
     // ============================================================
-    console.log("[BOOT] Checking daily seeds...");
-    runSeedIfNeeded("scrim_historico", seedScrimHistorico);
-    // Exemplo futuro:
-    // import { seed as seed20260604 } from "../db/seeds/2026-06-04.js";
-    // runSeedIfNeeded("daily_2026_06_04", seed20260604);
+    console.log("[BOOT] Checking specific seeds...");
+
+    // Seed dos dados históricos do xtreino (antigos dados da Red Devils)
+    runSeedIfNeeded("xtreino_historico", seedXtreinoHistorico);
+
+    // Seed do agendamento de xtreinos (seg-sex, 21h BRT)
+    runSeedIfNeeded("xtreino_schedule", seedXtreinoSchedule);
+
+    // Futuros seeds:
+    // runSeedIfNeeded("scrim_historico", seedScrimHistorico);
+    // runSeedIfNeeded("campeonato_historico", seedCampeonatoHistorico);
 
     console.log("[BOOT] All seeds processed");
 
   } catch (error) {
     console.error("[BOOT] Database/Seed error:", error);
-    // Fallback: tenta minimal seed
     try {
       console.log("[BOOT] Trying minimal seed as fallback...");
       seedMinimal();

@@ -21,7 +21,7 @@ export const admins = sqliteTable("admins", {
 
 export const settings = sqliteTable("settings", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  orgName: text("org_name").notNull().default("Devils Mobile League"),
+  orgName: text("org_name").notNull().default("Underground"),
   orgLogo: text("org_logo"),
   orgBanner: text("org_banner"),
   discordLink: text("discord_link"),
@@ -105,12 +105,15 @@ export const matches = sqliteTable("matches", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// XTREINOS - Treinos da Underground (Seg-Sex, 21h BRT)
+// ============================================================
 export const xtreinos = sqliteTable("xtreinos", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   date: text("date").notNull(),
   timeMx: text("time_mx"),
-  timeBr: text("time_br"),
+  timeBr: text("time_br").notNull().default("21:00"),
   modality: text("modality").notNull(),
   maxTeams: integer("max_teams").notNull().default(20),
   rules: text("rules"),
@@ -130,6 +133,53 @@ export const xtreinoTeams = sqliteTable("xtreino_teams", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// RESULTADOS DO XTREINO (Colocações por time/quadrimestre)
+// ============================================================
+export const xtreinoResults = sqliteTable("xtreino_results", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  xtreinoId: integer("xtreino_id", { mode: "number" }),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  q1Pos: integer("q1_pos"),
+  q2Pos: integer("q2_pos"),
+  q3Pos: integer("q3_pos"),
+  totalPoints: integer("total_points"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================
+// ESTATÍSTICAS DOS JOGADORES NO XTREINO
+// ============================================================
+export const xtreinoPlayerStats = sqliteTable("xtreino_player_stats", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  xtreinoId: integer("xtreino_id", { mode: "number" }),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  playerName: text("player_name").notNull(),
+  q1Kills: integer("q1_kills").notNull().default(0),
+  q2Kills: integer("q2_kills").notNull().default(0),
+  q3Kills: integer("q3_kills").notNull().default(0),
+  totalKills: integer("total_kills").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================
+// AGENDAMENTO DE XTREINOS (Recorrente Seg-Sex, 21h BRT)
+// ============================================================
+export const xtreinoSchedule = sqliteTable("xtreino_schedule", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  date: text("date").notNull().unique(),
+  dayOfWeek: text("day_of_week").notNull(),
+  timeBr: text("time_br").notNull().default("21:00"),
+  status: text("status").notNull().default("scheduled"),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================
+// SCRIMS - Dados separados (ainda sem dados)
+// ============================================================
 export const scrims = sqliteTable("scrims", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
@@ -140,6 +190,59 @@ export const scrims = sqliteTable("scrims", {
   modality: text("modality"),
   status: text("status").notNull().default("agendado"),
   result: text("result"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const scrimResults = sqliteTable("scrim_results", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  scrimId: integer("scrim_id", { mode: "number" }),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  q1Pos: integer("q1_pos"),
+  q2Pos: integer("q2_pos"),
+  q3Pos: integer("q3_pos"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const scrimPlayerStats = sqliteTable("scrim_player_stats", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  scrimId: integer("scrim_id", { mode: "number" }),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  playerName: text("player_name").notNull(),
+  q1Kills: integer("q1_kills").notNull().default(0),
+  q2Kills: integer("q2_kills").notNull().default(0),
+  q3Kills: integer("q3_kills").notNull().default(0),
+  totalKills: integer("total_kills").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================
+// CAMPEONATOS - Resultados separados
+// ============================================================
+export const campeonatoResults = sqliteTable("campeonato_results", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  championshipId: integer("championship_id", { mode: "number" }).notNull(),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  q1Pos: integer("q1_pos"),
+  q2Pos: integer("q2_pos"),
+  q3Pos: integer("q3_pos"),
+  finalPos: integer("final_pos"),
+  totalPoints: integer("total_points"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const campeonatoPlayerStats = sqliteTable("campeonato_player_stats", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  championshipId: integer("championship_id", { mode: "number" }).notNull(),
+  date: text("date").notNull(),
+  teamName: text("team_name").notNull(),
+  playerName: text("player_name").notNull(),
+  q1Kills: integer("q1_kills").notNull().default(0),
+  q2Kills: integer("q2_kills").notNull().default(0),
+  q3Kills: integer("q3_kills").notNull().default(0),
+  totalKills: integer("total_kills").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -160,11 +263,15 @@ export const registrations = sqliteTable("registrations", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// RANKINGS - Separados por tipo (xtreino, campeonato, scrim)
+// ============================================================
 export const rankings = sqliteTable("rankings", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   entityType: text("entity_type").notNull(),
   entityId: integer("entity_id", { mode: "number" }).notNull(),
   entityName: text("entity_name").notNull(),
+  rankType: text("rank_type").notNull().default("xtreino"),
   points: integer("points").notNull().default(0),
   kills: integer("kills").notNull().default(0),
   wins: integer("wins").notNull().default(0),
@@ -172,26 +279,4 @@ export const rankings = sqliteTable("rankings", {
   kdRatio: real("kd_ratio"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-});
-
-export const scrimResults = sqliteTable("scrim_results", {
-  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  date: text("date").notNull(),
-  teamName: text("team_name").notNull(),
-  q1Pos: integer("q1_pos"),
-  q2Pos: integer("q2_pos"),
-  q3Pos: integer("q3_pos"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-});
-
-export const scrimPlayerStats = sqliteTable("scrim_player_stats", {
-  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  date: text("date").notNull(),
-  teamName: text("team_name").notNull(),
-  playerName: text("player_name").notNull(),
-  q1Kills: integer("q1_kills").notNull().default(0),
-  q2Kills: integer("q2_kills").notNull().default(0),
-  q3Kills: integer("q3_kills").notNull().default(0),
-  totalKills: integer("total_kills").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
