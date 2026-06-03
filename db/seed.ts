@@ -94,12 +94,12 @@ export function seed() {
   // --- Settings ---
   const settingsCreated = upsertSettings(db, {
     orgName: "Xtreino Underground",
-    discordLink: "https://discord.gg/devils",
-    whatsappLink: "https://wa.me/5511999999999",
+    discordLink: "https://discord.gg/QpvaHxzPW",
+    whatsappLink: "https://chat.whatsapp.com/Ks4fDFnA7eBHk9ULHuHyzm",
     defaultRules: "1. Respeitar todos os participantes\n2. Proibido uso de cheats/hacks\n3. Pontualidade obrigatoria\n4. Decisoes da staff sao finais",
     defaultTimesMx: "5:00 PM",
     defaultTimesBr: "8:00 PM",
-    primaryColor: "#ff3b3b",
+    primaryColor: "#006400",
     whatsappTemplate: "{{ORG_NAME}} \n\nPLATAFORMA: MOBILE \n\nMODO: {{MODALITY}} \n\n{{DATE}}\n\nHORARIOS:\nMX {{TIME_MX}}\nBR {{TIME_BR}}\n\nSLOTS | EQUIPES:\n{{TEAMS_LIST}}\n\nRESERVAS:\n{{RESERVES_LIST}}\n\nDISCORD: {{DISCORD}}\nWHATSAPP: {{WHATSAPP}}\n\n@todos",
   });
   console.log(`[SEED] Settings ${settingsCreated ? "created" : "already exists"}`);
