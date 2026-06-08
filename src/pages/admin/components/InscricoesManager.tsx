@@ -1,60 +1,101 @@
-// ============================================================
-// COMPONENTE: Gerenciador de Inscrições de Times
-// ============================================================
-
 import { useState, useMemo } from "react";
-import { Plus, Trash2, Pin, PinOff, Users } from "lucide-react";
+import { Plus, Trash2, Users, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
-import type { XTreino, TeamRegistration } from "../types";
+
+export interface InscricaoEquipe {
+  id: number;
+  xtreinoId: number;
+  teamName: string;
+  status: "confirmed" | "reserve" | "pending" | "cancelled";
+  registeredBy: string | null;
+  registeredAt: string | null;
+  players: string[];
+  position: number;
+}
+
+export interface XtreinoEvento {
+  id: number;
+  name: string;
+  date: string;
+  status: string;
+  maxTeams: number;
+  timeBr?: string | null;
+  timeMx?: string | null;
+  modality?: string | null;
+  whatsappLink?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
 
 interface InscricoesManagerProps {
-  xtreino: XTreino;
-  registrations: TeamRegistration[];
+  xtreino: XtreinoEvento;
+  inscricoes: InscricaoEquipe[];
   fixedTeams: string[];
   allTeams: Array<{ id: number; name: string; tag: string }> | undefined;
-  onRegister: (data: { teamId: number; isReserve: boolean }) => void;
-  onUnregister: (data: { teamId: number }) => void;
-  onToggleFixed: (data: { teamId: number; isReserve: boolean }) => void;
+  onRegister: (data: { teamName: string; players: string[]; registeredBy?: string }) => void;
+  onCancel: (data: { teamName: string }) => void;
+  onRemove: (data: { teamName: string }) => void;
   isPending: boolean;
+  isAdmin?: boolean;
 }
 
 export function InscricoesManager({
   xtreino,
-  registrations,
+  inscricoes,
   fixedTeams,
   allTeams,
   onRegister,
-  onUnregister,
-  onToggleFixed,
+  onCancel,
+  onRemove,
   isPending,
+  isAdmin = false,
 }: InscricoesManagerProps) {
   const [newTeamName, setNewTeamName] = useState("");
   const [selectedExistingTeam, setSelectedExistingTeam] = useState("");
   const [isNewTeam, setIsNewTeam] = useState(false);
+  const [playerInputs, setPlayerInputs] = useState<string[]>(["", "", "", ""]);
 
   const fixedSet = useMemo(() => new Set(fixedTeams), [fixedTeams]);
 
   const confirmedTeams = useMemo(() => {
-    return registrations
+    return inscricoes
       .filter((r) => r.status === "confirmed")
       .sort((a, b) => a.position - b.position);
-  }, [registrations]);
+  }, [inscricoes]);
 
-  const reserveTeams = useMemo(() => {
-    return registrations
-      .filter((r) => r.status === "reserve")
+  const pendingTeams = useMemo(() => {
+    return inscricoes
+      .filter((r) => r.status === "pending")
       .sort((a, b) => a.position - b.position);
-  }, [registrations]);
+  }, [inscricoes]);
+
+  const cancelledTeams = useMemo(() => {
+    return inscricoes
+      .filter((r) => r.status === "cancelled")
+      .sort((a, b) => a.position - b.position);
+  }, [inscricoes]);
 
   const availableTeams = useMemo(() => {
     if (!allTeams) return [];
-    const registeredIds = new Set(registrations.map((r) => {
-      // Encontra o teamId pelo teamName
-      const team = allTeams.find((t) => t.name === r.teamName);
-      return team?.id;
-    }).filter(Boolean));
-    return allTeams.filter((t) => !registeredIds.has(t.id));
-  }, [allTeams, registrations]);
+    const registeredNames = new Set(inscricoes.map((r) => r.teamName));
+    return allTeams.filter((t) => !registeredNames.has(t.name));
+  }, [allTeams, inscricoes]);
+
+  const handleAddPlayerInput = () => {
+    setPlayerInputs([...playerInputs, ""]);
+  };
+
+  const handlePlayerInputChange = (index: number, value: string) => {
+    const newInputs = [...playerInputs];
+    newInputs[index] = value;
+    setPlayerInputs(newInputs);
+  };
+
+  const handleRemovePlayerInput = (index: number) => {
+    if (playerInputs.length > 1) {
+      setPlayerInputs(playerInputs.filter((_, i) => i !== index));
+    }
+  };
 
   const handleAddTeam = () => {
     const teamName = isNewTeam ? newTeamName.trim() : selectedExistingTeam;
@@ -63,165 +104,258 @@ export function InscricoesManager({
       return;
     }
 
-    // Encontra o team pelo nome para pegar o id
-    const team = allTeams?.find((t) => t.name === teamName);
-    if (!team) {
-      toast.error("Time não encontrado na base de dados");
+    const players = playerInputs.map(p => p.trim()).filter(p => p.length > 0);
+    if (players.length === 0) {
+      toast.error("Adicione pelo menos um jogador");
       return;
     }
 
-    const isFixed = fixedSet.has(teamName);
-    onRegister({ teamId: team.id, isReserve: !isFixed });
+    if (players.length > 6) {
+      toast.error("Máximo de 6 jogadores por equipe");
+      return;
+    }
+
+    onRegister({ teamName, players });
     setNewTeamName("");
     setSelectedExistingTeam("");
     setIsNewTeam(false);
+    setPlayerInputs(["", "", "", ""]);
   };
 
-  const handleRemove = (teamName: string) => {
-    const team = allTeams?.find((t) => t.name === teamName);
-    if (!team) return;
-    if (confirm(`Remover "${teamName}" da lista?`)) {
-      onUnregister({ teamId: team.id });
+  const handleCancel = (teamName: string) => {
+    if (confirm(`Cancelar inscrição de "${teamName}"?`)) {
+      onCancel({ teamName });
     }
   };
 
-  const handleToggleFixedGlobal = (teamName: string) => {
-    const team = allTeams?.find((t) => t.name === teamName);
-    if (!team) return;
-    const currentlyFixed = fixedSet.has(teamName);
-    onToggleFixed({ teamId: team.id, isReserve: currentlyFixed });
+  const handleRemove = (teamName: string) => {
+    if (confirm(`Remover "${teamName}" permanentemente?`)) {
+      onRemove({ teamName });
+    }
   };
+
+  const isXtreinoAberto = xtreino.status === "aberto";
+  const vagasRestantes = (xtreino.maxTeams || 12) - confirmedTeams.length;
 
   return (
     <div className="space-y-6">
-      {/* Adicionar Time */}
+      {/* Header do Xtreino */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-        <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-red-400" />
-          Adicionar Time
-        </h3>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          {isNewTeam ? (
-            <input
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Nome do novo time..."
-              className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-            />
-          ) : (
-            <select
-              value={selectedExistingTeam}
-              onChange={(e) => setSelectedExistingTeam(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-            >
-              <option value="">Selecione um time...</option>
-              {availableTeams.map((team) => (
-                <option key={team.id} value={team.name}>
-                  {team.name} {fixedSet.has(team.name) ? "📌" : "🎫"}
-                </option>
-              ))}
-            </select>
-          )}
-
-          <button
-            onClick={() => setIsNewTeam(!isNewTeam)}
-            className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm hover:text-[#f0f0f5] transition-all"
-          >
-            {isNewTeam ? "Usar existente" : "Novo time"}
-          </button>
-
-          <button
-            onClick={handleAddTeam}
-            disabled={isPending}
-            className="px-6 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
-          >
-            {isPending ? "..." : "Adicionar"}
-          </button>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-bold text-[#f0f0f5]">
+            Xtreino #{xtreino.id} — {xtreino.date}
+          </h2>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+            xtreino.status === "aberto"
+              ? "bg-green-500/10 text-green-400 border-green-500/20"
+              : xtreino.status === "fechado"
+              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+              : xtreino.status === "em_andamento"
+              ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+              : "bg-gray-500/10 text-gray-400 border-gray-500/20"
+          }`}>
+            {xtreino.status === "em_andamento" ? "EM ANDAMENTO" : xtreino.status.toUpperCase()}
+          </span>
+        </div>
+        <div className="flex items-center gap-4 text-sm text-[#8a8a9e]">
+          <span>📌 {confirmedTeams.filter(t => fixedSet.has(t.teamName)).length} fixos</span>
+          <span>🎫 {confirmedTeams.filter(t => !fixedSet.has(t.teamName)).length} temporários</span>
+          <span className={vagasRestantes <= 2 ? "text-red-400 font-medium" : ""}>
+            {confirmedTeams.length}/{xtreino.maxTeams || 12} vagas preenchidas
+            {vagasRestantes > 0 && ` (${vagasRestantes} restantes)`}
+          </span>
         </div>
       </div>
+
+      {/* Adicionar Time */}
+      {isXtreinoAberto && (
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
+          <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+            <Plus className="w-4 h-4 text-red-400" />
+            Inscrever Equipe
+          </h3>
+
+          <div className="space-y-4">
+            {/* Seleção do Time */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {isNewTeam ? (
+                <input
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  placeholder="Nome do novo time..."
+                  className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                />
+              ) : (
+                <select
+                  value={selectedExistingTeam}
+                  onChange={(e) => setSelectedExistingTeam(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                >
+                  <option value="">Selecione um time...</option>
+                  {availableTeams.map((team) => (
+                    <option key={team.id} value={team.name}>
+                      {team.name} {fixedSet.has(team.name) ? "📌" : "🎫"}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <button
+                onClick={() => setIsNewTeam(!isNewTeam)}
+                className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm hover:text-[#f0f0f5] transition-all"
+              >
+                {isNewTeam ? "Usar existente" : "Novo time"}
+              </button>
+            </div>
+
+            {/* Jogadores */}
+            <div>
+              <label className="block text-sm text-[#8a8a9e] mb-2">Jogadores (1-6)</label>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {playerInputs.map((player, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      value={player}
+                      onChange={(e) => handlePlayerInputChange(index, e.target.value)}
+                      placeholder={`Jogador ${index + 1}`}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                    />
+                    {playerInputs.length > 1 && (
+                      <button
+                        onClick={() => handleRemovePlayerInput(index)}
+                        className="px-2 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-red-400 hover:bg-red-500/10 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {playerInputs.length < 6 && (
+                <button
+                  onClick={handleAddPlayerInput}
+                  className="mt-2 text-sm text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors"
+                >
+                  + Adicionar jogador
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={handleAddTeam}
+              disabled={isPending}
+              className="w-full px-6 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
+            >
+              {isPending ? "Inscrevendo..." : "Inscrever Equipe"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Lista de Confirmados */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
         <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
           <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
             <Users className="w-4 h-4 text-green-400" />
-            Times Confirmados ({confirmedTeams.length}/{xtreino.maxTeams || 10})
+            Confirmados ({confirmedTeams.length}/{xtreino.maxTeams || 12})
           </h3>
         </div>
 
         <div className="divide-y divide-[#2a2a3a]">
-          {confirmedTeams.map((team) => (
+          {confirmedTeams.length === 0 && (
+            <div className="px-6 py-8 text-center text-[#5a5a6e]">
+              <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p>Nenhuma equipe confirmada ainda</p>
+            </div>
+          )}
+
+          {confirmedTeams.map((team, index) => (
             <div
               key={team.id}
-              className="px-6 py-3 flex items-center justify-between hover:bg-[#1a1a24] group"
+              className="px-6 py-4 hover:bg-[#1a1a24] group"
             >
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-mono text-[#5a5a6e] w-6">
-                  {String(team.position).padStart(2, "0")}
-                </span>
-                <span className="text-lg">
-                  {fixedSet.has(team.teamName) ? "📌" : "🎫"}
-                </span>
-                <span className={`text-sm font-medium ${
-                  fixedSet.has(team.teamName) ? "text-[#f0f0f5]" : "text-[#8a8a9e]"
-                }`}>
-                  {team.teamName}
-                </span>
-                {fixedSet.has(team.teamName) && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-                    FIXO
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-mono text-[#5a5a6e] w-6">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                )}
+                  <span className="text-lg">
+                    {fixedSet.has(team.teamName) ? "📌" : "🎫"}
+                  </span>
+                  <div>
+                    <span className={`text-sm font-medium ${
+                      fixedSet.has(team.teamName) ? "text-[#f0f0f5]" : "text-[#8a8a9e]"
+                    }`}>
+                      {team.teamName}
+                    </span>
+                    {fixedSet.has(team.teamName) && (
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                        FIXO
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isXtreinoAberto && (
+                    <button
+                      onClick={() => handleCancel(team.teamName)}
+                      title="Cancelar inscrição"
+                      className="p-1.5 rounded hover:bg-amber-500/10 text-amber-400 transition-all"
+                    >
+                      <Clock className="w-4 h-4" />
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleRemove(team.teamName)}
+                      className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
+                      title="Remover permanentemente"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleToggleFixedGlobal(team.teamName)}
-                  title={fixedSet.has(team.teamName) ? "Remover dos fixos" : "Tornar fixo"}
-                  className={`p-1.5 rounded transition-all ${
-                    fixedSet.has(team.teamName)
-                      ? "hover:bg-yellow-500/10 text-yellow-400"
-                      : "hover:bg-[#2a2a3a] text-[#5a5a6e]"
-                  }`}
-                >
-                  {fixedSet.has(team.teamName) ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={() => handleRemove(team.teamName)}
-                  className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
-                  title="Remover da lista"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              {/* Jogadores da equipe */}
+              <div className="mt-2 ml-12 flex flex-wrap gap-2">
+                {team.players.map((player: string, pi: number) => (
+                  <span
+                    key={pi}
+                    className="text-xs px-2 py-1 rounded bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e]"
+                  >
+                    {player}
+                  </span>
+                ))}
               </div>
             </div>
           ))}
 
           {/* Slots vazios */}
-          {Array.from({ length: Math.max(0, (xtreino.maxTeams || 10) - confirmedTeams.length) }).map((_, i) => (
-            <div key={`empty-${i}`} className="px-6 py-3 flex items-center gap-3 opacity-40">
+          {isXtreinoAberto && Array.from({ length: Math.max(0, (xtreino.maxTeams || 12) - confirmedTeams.length) }).map((_, i) => (
+            <div key={`empty-${i}`} className="px-6 py-3 flex items-center gap-3 opacity-30">
               <span className="text-sm font-mono text-[#5a5a6e] w-6">
                 {String(confirmedTeams.length + i + 1).padStart(2, "0")}
               </span>
               <span className="text-lg">🎫</span>
-              <span className="text-sm text-[#5a5a6e]">-</span>
+              <span className="text-sm text-[#5a5a6e]">Vaga disponível</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Lista de Reservas */}
-      {reserveTeams.length > 0 && (
+      {/* Lista de Pendentes */}
+      {pendingTeams.length > 0 && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
           <div className="px-6 py-4 border-b border-[#2a2a3a]">
             <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-              <Users className="w-4 h-4 text-amber-400" />
-              Reservas ({reserveTeams.length})
+              <Clock className="w-4 h-4 text-amber-400" />
+              Pendentes ({pendingTeams.length})
             </h3>
           </div>
           <div className="divide-y divide-[#2a2a3a]">
-            {reserveTeams.map((team) => (
+            {pendingTeams.map((team) => (
               <div
                 key={team.id}
                 className="px-6 py-3 flex items-center justify-between hover:bg-[#1a1a24] group"
@@ -230,12 +364,41 @@ export function InscricoesManager({
                   <span className="text-lg">🎫</span>
                   <span className="text-sm text-[#8a8a9e]">{team.teamName}</span>
                 </div>
-                <button
-                  onClick={() => handleRemove(team.teamName)}
-                  className="p-1.5 rounded hover:bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleRemove(team.teamName)}
+                      className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lista de Cancelados */}
+      {cancelledTeams.length > 0 && (
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden opacity-60">
+          <div className="px-6 py-4 border-b border-[#2a2a3a]">
+            <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-red-400" />
+              Cancelados ({cancelledTeams.length})
+            </h3>
+          </div>
+          <div className="divide-y divide-[#2a2a3a]">
+            {cancelledTeams.map((team) => (
+              <div
+                key={team.id}
+                className="px-6 py-3 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🎫</span>
+                  <span className="text-sm text-[#5a5a6e] line-through">{team.teamName}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -245,7 +408,7 @@ export function InscricoesManager({
       {/* Gerenciar Times Fixos Globais */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
         <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-          <Pin className="w-4 h-4 text-yellow-400" />
+          <CheckCircle2 className="w-4 h-4 text-yellow-400" />
           Times Fixos da Underground
         </h3>
         <p className="text-sm text-[#5a5a6e] mb-4">
@@ -258,14 +421,8 @@ export function InscricoesManager({
               key={teamName}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm"
             >
-              <Pin className="w-3 h-3" />
+              <CheckCircle2 className="w-3 h-3" />
               {teamName}
-              <button
-                onClick={() => handleToggleFixedGlobal(teamName)}
-                className="hover:text-red-400 transition-colors"
-              >
-                <PinOff className="w-3 h-3" />
-              </button>
             </div>
           ))}
           {fixedTeams.length === 0 && (

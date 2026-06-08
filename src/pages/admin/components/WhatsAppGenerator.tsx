@@ -1,15 +1,35 @@
-// ============================================================
-// COMPONENTE: Gerador de Mensagem WhatsApp
-// ============================================================
-
 import { useState, useMemo } from "react";
 import { Copy, Check, MessageCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import type { XTreino, TeamRegistration } from "../types";
+
+export interface InscricaoEquipe {
+  id: number;
+  xtreinoId: number;
+  teamName: string;
+  status: "confirmed" | "reserve" | "pending" | "cancelled";
+  registeredBy: string | null;
+  registeredAt: string | null;
+  players: string[];
+  position: number;
+}
+
+export interface XtreinoEvento {
+  id: number;
+  name: string;
+  date: string;
+  status: string;
+  maxTeams: number;
+  timeBr?: string | null;
+  timeMx?: string | null;
+  modality?: string | null;
+  whatsappLink?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
 
 interface WhatsAppGeneratorProps {
-  xtreino: XTreino;
-  registrations: TeamRegistration[];
+  xtreino: XtreinoEvento;
+  inscricoes: InscricaoEquipe[];
   fixedTeams: string[];
   settings: {
     orgName?: string | null;
@@ -47,7 +67,7 @@ Grupo do Whatsapp: {{WHATSAPP}}`;
 
 function formatTeamsList(
   teams: Array<{ position: number; name: string; isFixed: boolean }>,
-  maxSlots: number = 10
+  maxSlots: number = 12
 ): string {
   const filled = [...teams];
   for (let i = teams.length + 1; i <= maxSlots; i++) {
@@ -65,46 +85,49 @@ function formatTeamsList(
 }
 
 function parseTimeBr(timeBr: string): { brAr: string; boCl: string; coPe: string; mxNi: string; us: string } {
-  // Converte "21:00" para os horários de cada país
   const [hours, minutes] = timeBr.split(":").map(Number);
-  if (isNaN(hours)) return { brAr: "9:00", boCl: "8:00", coPe: "7:00", mxNi: "6:00", us: "5:00" };
+  if (isNaN(hours)) return { brAr: "21:00", boCl: "20:00", coPe: "19:00", mxNi: "18:00", us: "17:00" };
 
   return {
-    brAr: `${hours}:${String(minutes || 0).padStart(2, "0")}`,
-    boCl: `${hours - 1}:${String(minutes || 0).padStart(2, "0")}`,
-    coPe: `${hours - 2}:${String(minutes || 0).padStart(2, "0")}`,
-    mxNi: `${hours - 3}:${String(minutes || 0).padStart(2, "0")}`,
-    us: `${hours - 4}:${String(minutes || 0).padStart(2, "0")}`,
+    brAr: `${String(hours).padStart(2, "0")}:${String(minutes || 0).padStart(2, "0")}`,
+    boCl: `${String(hours - 1).padStart(2, "0")}:${String(minutes || 0).padStart(2, "0")}`,
+    coPe: `${String(hours - 2).padStart(2, "0")}:${String(minutes || 0).padStart(2, "0")}`,
+    mxNi: `${String(hours - 3).padStart(2, "0")}:${String(minutes || 0).padStart(2, "0")}`,
+    us: `${String(hours - 4).padStart(2, "0")}:${String(minutes || 0).padStart(2, "0")}`,
   };
 }
 
-export function WhatsAppGenerator({ xtreino, registrations, fixedTeams, settings }: WhatsAppGeneratorProps) {
+export function WhatsAppGenerator({ xtreino, inscricoes, fixedTeams, settings }: WhatsAppGeneratorProps) {
   const [copied, setCopied] = useState(false);
   const [customQuedas, setCustomQuedas] = useState(3);
-  const [customDate, setCustomDate] = useState(xtreino.date ? xtreino.date.split("-")[2] + "/" + xtreino.date.split("-")[1] : "");
+  const [customDate, setCustomDate] = useState(
+    xtreino.date ? xtreino.date.split("-")[2] + "/" + xtreino.date.split("-")[1] : ""
+  );
+  const [customModality, setCustomModality] = useState("SQUAD");
 
   const fixedSet = useMemo(() => new Set(fixedTeams), [fixedTeams]);
 
   const confirmedTeams = useMemo(() => {
-    return registrations
+    return inscricoes
       .filter((r) => r.status === "confirmed")
-      .map((r) => ({
-        position: r.position,
+      .map((r, index) => ({
+        position: index + 1,
         name: r.teamName,
         isFixed: fixedSet.has(r.teamName),
-      }))
-      .sort((a, b) => a.position - b.position);
-  }, [registrations, fixedSet]);
+      }));
+  }, [inscricoes, fixedSet]);
 
-  const times = useMemo(() => parseTimeBr(xtreino.timeBr || settings?.defaultTimesBr || "21:00"), [xtreino.timeBr, settings]);
+  const times = useMemo(() => {
+    return parseTimeBr(settings?.defaultTimesBr || "21:00");
+  }, [settings]);
 
   const generatedMessage = useMemo(() => {
-    const teamsList = formatTeamsList(confirmedTeams, xtreino.maxTeams || 10);
+    const teamsList = formatTeamsList(confirmedTeams, xtreino.maxTeams || 12);
 
     return WHATSAPP_TEMPLATE
       .replace(/{{ORG_NAME}}/g, settings?.orgName || "𝙐𝙉𝘿𝙀𝙍𝙂𝙍𝙊𝙐𝙉𝘿")
       .replace(/{{DATE}}/g, customDate)
-      .replace(/{{MODALITY}}/g, xtreino.modality?.toUpperCase() || "𝙎𝙌𝙐𝘼𝘿")
+      .replace(/{{MODALITY}}/g, customModality)
       .replace(/{{QUEDAS}}/g, String(customQuedas))
       .replace(/{{TIME_BR_AR}}/g, times.brAr)
       .replace(/{{TIME_BO_CL}}/g, times.boCl)
@@ -112,8 +135,8 @@ export function WhatsAppGenerator({ xtreino, registrations, fixedTeams, settings
       .replace(/{{TIME_MX_NI}}/g, times.mxNi)
       .replace(/{{TIME_US}}/g, times.us)
       .replace(/{{TEAMS_LIST}}/g, teamsList)
-      .replace(/{{WHATSAPP}}/g, settings?.whatsappLink || xtreino.whatsappLink || "");
-  }, [confirmedTeams, xtreino, settings, customQuedas, customDate, times]);
+      .replace(/{{WHATSAPP}}/g, settings?.whatsappLink || "");
+  }, [confirmedTeams, xtreino, settings, customQuedas, customDate, customModality, times]);
 
   const handleCopy = async () => {
     try {
@@ -160,7 +183,7 @@ export function WhatsAppGenerator({ xtreino, registrations, fixedTeams, settings
       </div>
 
       {/* Configurações rápidas */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm text-[#8a8a9e] mb-1">Data do Evento</label>
           <input
@@ -171,7 +194,7 @@ export function WhatsAppGenerator({ xtreino, registrations, fixedTeams, settings
           />
         </div>
         <div>
-          <label className="block text-sm text-[#8a8a9e] mb-1">Numero de Quedas</label>
+          <label className="block text-sm text-[#8a8a9e] mb-1">Número de Quedas</label>
           <input
             type="number"
             value={customQuedas}
@@ -180,6 +203,18 @@ export function WhatsAppGenerator({ xtreino, registrations, fixedTeams, settings
             max={10}
             className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50"
           />
+        </div>
+        <div>
+          <label className="block text-sm text-[#8a8a9e] mb-1">Modalidade</label>
+          <select
+            value={customModality}
+            onChange={(e) => setCustomModality(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50"
+          >
+            <option value="SQUAD">SQUAD</option>
+            <option value="DUO">DUO</option>
+            <option value="SOLO">SOLO</option>
+          </select>
         </div>
       </div>
 
@@ -195,7 +230,7 @@ export function WhatsAppGenerator({ xtreino, registrations, fixedTeams, settings
       <div className="flex items-center gap-4 text-xs text-[#5a5a6e]">
         <span>📌 {confirmedTeams.filter((t) => t.isFixed).length} fixos</span>
         <span>🎫 {confirmedTeams.filter((t) => !t.isFixed).length} temporários</span>
-        <span>{confirmedTeams.length}/{xtreino.maxTeams || 10} confirmados</span>
+        <span>{confirmedTeams.length}/{xtreino.maxTeams || 12} confirmados</span>
       </div>
     </div>
   );

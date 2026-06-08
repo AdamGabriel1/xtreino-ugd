@@ -292,3 +292,35 @@ export const teamRegistrations = sqliteTable("team_registrations", {
   status: text("status").default("confirmed"), // "confirmed" | "reserve" | "cancelled"
   registeredAt: text("registered_at"),
 });
+
+export const xtreinoEventos = sqliteTable("xtreino_eventos", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(),
+  status: text("status", {
+    enum: ["aberto", "fechado", "em_andamento", "finalizado"],
+  }).notNull().default("aberto"),
+  maxTeams: integer("max_teams").notNull().default(12),
+  createdAt: text("created_at"),
+  updatedAt: text("updated_at"),
+});
+
+export const xtreinoInscricoes = sqliteTable("xtreino_inscricoes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  xtreinoId: integer("xtreino_id")
+    .notNull()
+    .references(() => xtreinoEventos.id, { onDelete: "cascade" }),
+  teamName: text("team_name").notNull(),
+  status: text("status", {
+    enum: ["confirmada", "pendente", "cancelada"],
+  }).notNull().default("confirmada"),
+  registeredBy: text("registered_by"),
+  registeredAt: text("registered_at"),
+});
+
+export const xtreinoInscricoesJogadores = sqliteTable("xtreino_inscricoes_jogadores", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  inscricaoId: integer("inscricao_id")
+    .notNull()
+    .references(() => xtreinoInscricoes.id, { onDelete: "cascade" }),
+  playerName: text("player_name").notNull(),
+});

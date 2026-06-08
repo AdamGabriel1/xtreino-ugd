@@ -1,7 +1,3 @@
-// ============================================================
-// PÁGINA PRINCIPAL: Admin XTreinos (refatorada)
-// ============================================================
-
 import { useState } from "react";
 import { CalendarDays, Target, BarChart3, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -120,6 +116,10 @@ export default function AdminXTreinos() {
     { enabled: selectedXtForInscricoes !== null }
   );
 
+  // Buscar registrations para o xtreino selecionado
+  const { data: registrationsList } = trpc.registrations.list.useQuery();
+  const xtRegistrations = registrationsList?.filter(r => r.xtreinoId === selectedXtForInscricoes) || [];
+
   // --- Helpers: cast dados do tRPC para os tipos strictos ---
   const castXTreinos = (data: typeof xtreinosList): import("./types").XTreino[] | undefined => {
     if (!data) return undefined;
@@ -233,7 +233,6 @@ export default function AdminXTreinos() {
       toast.error("Time e data sao obrigatorios");
       return;
     }
-    // 🆕 Usa o xtreinoId selecionado se o form não tiver
     const xtreinoId = selectedXtForResults ?? resultForm.xtreinoId;
     if (!xtreinoId) {
       toast.error("Selecione um xtreino primeiro");
@@ -263,7 +262,6 @@ export default function AdminXTreinos() {
       toast.error("Jogador, time e data sao obrigatorios");
       return;
     }
-    // 🆕 Usa o xtreinoId selecionado se o form não tiver
     const xtreinoId = selectedXtForPlayers ?? playerForm.xtreinoId;
     if (!xtreinoId) {
       toast.error("Selecione um xtreino primeiro");
@@ -340,7 +338,19 @@ export default function AdminXTreinos() {
     ? (safeXtDetailPlayers ? { playerStats: safeXtDetailPlayers.playerStats ?? [] } : undefined)
     : undefined;
 
-  const inscricoesRegistrations = safeXtDetailInscricoes?.registrations ?? [];
+  const normalizeRegistrations = (arr: any[] | undefined) => {
+    if (!arr) return [];
+    return arr.map((r) => ({
+      ...r,
+      // ensure position exists (InscricaoEquipe requires position)
+      position: (r as any).position ?? 0,
+    }));
+  };
+
+  const inscricoesRegistrations =
+    safeXtDetailInscricoes?.registrations
+      ? normalizeRegistrations(safeXtDetailInscricoes.registrations)
+      : normalizeRegistrations(xtRegistrations);
 
   return (
     <AdminLayout>
