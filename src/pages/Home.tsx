@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
 type RankCategory = "xtreino" | "campeonato" | "scrim";
 
