@@ -8,7 +8,7 @@ import { xtreinoSchedule } from "../schema.js";
  * Gera agendamento para o mês atual + próximo mês
  */
 
-export function seed() {
+export function seedXtreinoSchedule() {
   const db = getDb();
   console.log("[SEED XTREINO-SCHEDULE] Starting...");
 

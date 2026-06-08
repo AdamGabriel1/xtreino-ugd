@@ -40,7 +40,7 @@ export default function AdminCampeonatos() {
     else create.mutate(form);
   };
 
-  const statusColors: Record<string, string> = { ativo: "bg-green-500/10 text-green-400", em_breve: "bg-blue-500/10 text-blue-400", encerrado: "bg-red-500/10 text-red-400" };
+  const statusColors: Record<string, string> = { ativo: "bg-green-500/10 text-green-400", em_breve: "bg-blue-500/10 text-blue-400", encerrado: "bg-green-500/10 text-green-400" };
   const statusLabels: Record<string, string> = { ativo: "Ativo", em_breve: "Em Breve", encerrado: "Encerrado" };
 
   return (
@@ -52,7 +52,7 @@ export default function AdminCampeonatos() {
             <p className="text-[#8a8a9e] text-sm">Gerencie os campeonatos</p>
           </div>
           <button onClick={() => { setShowForm(true); setEditing(null); resetForm(); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all">
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all">
             <Plus className="w-4 h-4" /> Novo Campeonato
           </button>
         </div>
@@ -67,57 +67,57 @@ export default function AdminCampeonatos() {
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Nome *</label>
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Modalidade</label>
                 <select value={form.modality} onChange={(e) => setForm({ ...form, modality: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50">
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50">
                   <option value="solo">Solo</option><option value="duo">Duo</option><option value="squad">Squad</option><option value="4v4">4v4</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Formato</label>
                 <select value={form.format} onChange={(e) => setForm({ ...form, format: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50">
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50">
                   <option value="grupos">Fase de Grupos</option><option value="mata_mata">Mata-Mata</option><option value="eliminacao_simples">Eliminacao Simples</option><option value="eliminacao_dupla">Eliminacao Dupla</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Status</label>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50">
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50">
                   <option value="em_breve">Em Breve</option><option value="ativo">Ativo</option><option value="encerrado">Encerrado</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Data Inicio</label>
                 <input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Data Fim</label>
                 <input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Premiacao</label>
                 <input value={form.prizePool} onChange={(e) => setForm({ ...form, prizePool: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-[#8a8a9e] mb-1">Max Equipes</label>
                 <input type="number" value={form.maxTeams} onChange={(e) => setForm({ ...form, maxTeams: parseInt(e.target.value) || 16 })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm text-[#8a8a9e] mb-1">Regras</label>
                 <textarea value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} rows={3}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" />
               </div>
               <div className="flex items-end">
                 <button type="submit" disabled={create.isPending || update.isPending}
-                  className="px-6 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50">
+                  className="px-6 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all disabled:opacity-50">
                   {create.isPending || update.isPending ? "Salvando..." : <span className="flex items-center gap-1"><Check className="w-4 h-4" /> Salvar</span>}
                 </button>
               </div>
@@ -149,7 +149,7 @@ export default function AdminCampeonatos() {
                     <td className="px-6 py-3">
                       <div className="flex gap-2">
                         <button onClick={() => handleEdit(c)} className="p-1.5 rounded hover:bg-blue-500/10 text-blue-400"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={() => { if (confirm("Remover?")) remove.mutate({ id: c.id }); }} className="p-1.5 rounded hover:bg-red-500/10 text-red-400"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => { if (confirm("Remover?")) remove.mutate({ id: c.id }); }} className="p-1.5 rounded hover:bg-green-500/10 text-green-400"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>

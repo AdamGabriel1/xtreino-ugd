@@ -5,14 +5,18 @@ import { appRouter } from "./router.js";
 import { createContext } from "./context.js";
 import { env } from "./lib/env.js";
 import { getDb } from "./queries/connection.js";
-import { seed, seedMinimal } from "../db/seed.js";
 import { runSeedIfNeeded } from "../db/seed-runner.js";
 
 // ============================================================
-// IMPORTS DOS SEEDS
+// IMPORTS DOS SEEDS (único ponto de entrada)
 // ============================================================
-import { seed as seedXtreinoHistorico } from "../db/seeds/xtreino-historico.js";
-import { seed as seedXtreinoSchedule } from "../db/seeds/xtreino-schedule.js";
+import {
+  seed,
+  seedMinimal,
+  seedLogos,
+  seedXtreinoHistorico,
+  seedXtreinoSchedule,
+} from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
 
@@ -80,6 +84,9 @@ if (env.isProduction) {
 
     // Seed do agendamento de xtreinos (seg-sex, 21h BRT)
     runSeedIfNeeded("xtreino_schedule", seedXtreinoSchedule);
+
+    // Seed das logos das equipes (só se ainda não tiver)
+    runSeedIfNeeded("logos", seedLogos);
 
     // Futuros seeds:
     // runSeedIfNeeded("scrim_historico", seedScrimHistorico);

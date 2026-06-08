@@ -11,7 +11,7 @@ import { xtreinoResults, xtreinoPlayerStats } from "../schema.js";
  * Datas históricas: Abril 30, Maio 7, Maio 19, Maio 21
  */
 
-export function seed() {
+export function seedXtreinoHistorico() {
   const db = getDb();
   console.log("[SEED XTREINO-HISTORICO] Starting...");
 
