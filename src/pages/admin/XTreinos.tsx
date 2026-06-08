@@ -110,13 +110,6 @@ export default function AdminXTreinos() {
 
   const statusColors: Record<string, string> = { aberto: "bg-blue-500/10 text-blue-400", encerrado: "bg-red-500/10 text-red-400", cancelado: "bg-gray-500/10 text-gray-400" };
 
-  const getPosColor = (pos: number) => {
-    if (pos === 1) return "text-yellow-400";
-    if (pos === 2) return "text-gray-300";
-    if (pos === 3) return "text-amber-600";
-    return "text-[#8a8a9e]";
-  };
-
   return (
     <AdminLayout>
       <div className="space-y-6">
