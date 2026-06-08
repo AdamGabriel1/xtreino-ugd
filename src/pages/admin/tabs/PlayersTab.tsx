@@ -3,13 +3,12 @@
 // ============================================================
 
 import { Plus } from "lucide-react";
-import type { XTreino, PlayerStat, PlayerFormData } from "../types.js";
+import type { XTreino, PlayerStat, PlayerFormData } from "../types";
 import { PlayerForm } from "../components/PlayerForm";
 
 interface PlayersTabProps {
   xtreinosList: XTreino[] | undefined;
   allPlayerStats: PlayerStat[] | undefined;
-  xtDetail: { playerStats?: PlayerStat[] } | null | undefined;
   selectedXt: number | null;
   showForm: boolean;
   form: PlayerFormData;
@@ -24,7 +23,6 @@ interface PlayersTabProps {
 export function PlayersTab({
   xtreinosList,
   allPlayerStats,
-  xtDetail,
   selectedXt,
   showForm,
   form,
@@ -35,10 +33,10 @@ export function PlayersTab({
   onSubmit,
   onFormChange,
 }: PlayersTabProps) {
-  // Mesma lógica do ResultsTab
+  // FILTRO SIMPLES: se selecionou xtreino, filtra por xtreinoId
   const stats = selectedXt
-    ? (xtDetail?.playerStats ?? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
-    : (allPlayerStats ?? []);
+    ? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? []
+    : allPlayerStats ?? [];
 
   return (
     <>
@@ -88,7 +86,7 @@ export function PlayersTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a3a]">
-              {stats?.map((p) => (
+              {stats.map((p) => (
                 <tr key={p.id} className="hover:bg-[#1a1a24]">
                   <td className="px-6 py-3 text-sm text-[#8a8a9e]">{p.date}</td>
                   <td className="px-6 py-3 text-sm font-medium text-[#f0f0f5]">{p.playerName}</td>
@@ -102,7 +100,7 @@ export function PlayersTab({
             </tbody>
           </table>
         </div>
-        {!stats?.length && (
+        {!stats.length && (
           <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
             Nenhuma estatistica registrada
           </div>

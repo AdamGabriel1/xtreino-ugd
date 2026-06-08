@@ -111,9 +111,6 @@ export default function AdminXTreinos() {
       ...x,
       modality: x.modality as Modality,
       status: x.status as XTreinoStatus,
-      results: (x as any).results,
-      playerStats: (x as any).playerStats,
-      registrations: (x as any).registrations,
     }));
   };
 
@@ -291,18 +288,6 @@ export default function AdminXTreinos() {
   const safePlayerStats = castPlayerStats(allPlayerStats);
   const safeSchedule = castSchedule(scheduleList);
 
-  // Para ResultsTab e PlayersTab, precisamos do xtreino com results/playerStats
-  const selectedXtResults = selectedXtForResults
-    ? { results: safeResults?.filter((r) => r.xtreinoId === selectedXtForResults) }
-    : undefined;
-
-  const selectedXtPlayers = selectedXtForPlayers
-    ? { playerStats: safePlayerStats?.filter((p) => p.xtreinoId === selectedXtForPlayers) }
-    : undefined;
-
-  // Inscrições: montar a partir dos dados disponíveis
-  const registrations = [] as import("./types.js").TeamRegistration[];
-
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -364,7 +349,6 @@ export default function AdminXTreinos() {
           <ResultsTab
             xtreinosList={safeXTreinos}
             allResults={safeResults}
-            xtDetail={selectedXtResults}
             selectedXt={selectedXtForResults}
             showForm={showResultForm}
             form={resultForm}
@@ -385,7 +369,6 @@ export default function AdminXTreinos() {
           <PlayersTab
             xtreinosList={safeXTreinos}
             allPlayerStats={safePlayerStats}
-            xtDetail={selectedXtPlayers}
             selectedXt={selectedXtForPlayers}
             showForm={showPlayerForm}
             form={playerForm}

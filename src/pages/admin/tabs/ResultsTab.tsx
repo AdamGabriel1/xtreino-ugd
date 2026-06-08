@@ -3,13 +3,12 @@
 // ============================================================
 
 import { Plus } from "lucide-react";
-import type { XTreino, XTreinoResult, ResultFormData } from "../types.js";
+import type { XTreino, XTreinoResult, ResultFormData } from "../types";
 import { ResultForm } from "../components/ResultForm";
 
 interface ResultsTabProps {
   xtreinosList: XTreino[] | undefined;
   allResults: XTreinoResult[] | undefined;
-  xtDetail: { results?: XTreinoResult[] } | null | undefined;
   selectedXt: number | null;
   showForm: boolean;
   form: ResultFormData;
@@ -24,7 +23,6 @@ interface ResultsTabProps {
 export function ResultsTab({
   xtreinosList,
   allResults,
-  xtDetail,
   selectedXt,
   showForm,
   form,
@@ -35,12 +33,10 @@ export function ResultsTab({
   onSubmit,
   onFormChange,
 }: ResultsTabProps) {
-  // Se um xtreino está selecionado e temos xtDetail com results, usa ele
-  // Senão, se um xtreino está selecionado, filtra allResults por xtreinoId
-  // Senão, mostra allResults (todos)
+  // FILTRO SIMPLES: se selecionou xtreino, filtra por xtreinoId
   const results = selectedXt
-    ? (xtDetail?.results ?? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? [])
-    : (allResults ?? []);
+    ? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? []
+    : allResults ?? [];
 
   return (
     <>
@@ -89,7 +85,7 @@ export function ResultsTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a3a]">
-              {results?.map((r) => (
+              {results.map((r) => (
                 <tr key={r.id} className="hover:bg-[#1a1a24]">
                   <td className="px-6 py-3 text-sm text-[#8a8a9e]">{r.date}</td>
                   <td className="px-6 py-3 text-sm font-medium text-[#f0f0f5]">{r.teamName}</td>
@@ -110,7 +106,7 @@ export function ResultsTab({
             </tbody>
           </table>
         </div>
-        {!results?.length && (
+        {!results.length && (
           <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
             Nenhum resultado registrado
           </div>
