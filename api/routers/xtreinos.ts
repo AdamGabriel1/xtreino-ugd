@@ -8,6 +8,7 @@ import {
   xtreinoPlayerStats,
   xtreinoSchedule,
   teams,
+  settings,
 } from "../../db/schema.js";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
@@ -36,7 +37,7 @@ export const xtreinosRouter = createRouter({
     }),
 
   // ============================================================
-  // OBTER XTREINO POR ID (com times e resultados)
+  // OBTER XTREINO POR ID (com times, resultados e inscrições)
   // ============================================================
   getById: publicQuery
     .input(z.object({ id: z.number() }))
@@ -50,7 +51,7 @@ export const xtreinosRouter = createRouter({
 
       if (!xtreino) return null;
 
-      // Times inscritos
+      // 🆕 Times inscritos (com dados completos do time)
       const xTeams = db
         .select()
         .from(xtreinoTeams)
@@ -187,7 +188,7 @@ export const xtreinosRouter = createRouter({
     }),
 
   // ============================================================
-  // ADICIONAR TIME AO XTREINO
+  // 🆕 ADICIONAR TIME AO XTREINO (com verificação de slot)
   // ============================================================
   addTeam: adminQuery
     .input(
@@ -203,13 +204,44 @@ export const xtreinosRouter = createRouter({
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
+
+      // Verificar se time já está inscrito
+      const existing = db
+        .select()
+        .from(xtreinoTeams)
+        .where(
+          and(
+            eq(xtreinoTeams.xtreinoId, input.xtreinoId),
+            eq(xtreinoTeams.teamId, input.teamId)
+          )
+        )
+        .get();
+
+      if (existing) throw new Error("Time já inscrito neste xtreino");
+
+      // Contar times confirmados para definir slot
+      const confirmed = db
+        .select()
+        .from(xtreinoTeams)
+        .where(
+          and(
+            eq(xtreinoTeams.xtreinoId, input.xtreinoId),
+            eq(xtreinoTeams.isReserve, false)
+          )
+        )
+        .all();
+
+      const isReserve = input.isReserve ?? (confirmed.length >= 10);
+      const slotNumber = input.slotNumber ?? (confirmed.length + 1);
+
       db.insert(xtreinoTeams).values({
         xtreinoId: input.xtreinoId,
         teamId: input.teamId,
-        isReserve: input.isReserve ?? false,
-        slotNumber: input.slotNumber,
+        isReserve,
+        slotNumber,
       }).run();
-      return { success: true };
+
+      return { success: true, isReserve, slotNumber };
     }),
 
   // ============================================================
@@ -236,6 +268,39 @@ export const xtreinosRouter = createRouter({
           )
         )
         .run();
+      return { success: true };
+    }),
+
+  // ============================================================
+  // 🆕 ATUALIZAR SLOT/RESERVA DO TIME
+  // ============================================================
+  updateTeamSlot: adminQuery
+    .input(
+      z.object({
+        xtreinoId: z.number(),
+        teamId: z.number(),
+        slotNumber: z.number().optional(),
+        isReserve: z.boolean().optional(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      const { xtreinoId, teamId, ...data } = input;
+
+      db
+        .update(xtreinoTeams)
+        .set(data)
+        .where(
+          and(
+            eq(xtreinoTeams.xtreinoId, xtreinoId),
+            eq(xtreinoTeams.teamId, teamId)
+          )
+        )
+        .run();
+
       return { success: true };
     }),
 

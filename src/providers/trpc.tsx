@@ -7,11 +7,20 @@ import type { ReactNode } from "react";
 
 export const trpc = createTRPCReact<AppRouter>();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000,        // 30 segundos para evitar re-fetch excessivo
+      refetchOnWindowFocus: false, // Não recarrega ao voltar para a aba
+    },
+  },
+});
+
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       url: "/api/trpc",
+      // 🆕 tRPC v11: transformer vai DENTRO do link, não no createClient!
       transformer: superjson,
       headers() {
         const token = localStorage.getItem("adminToken");

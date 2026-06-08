@@ -281,3 +281,14 @@ export const rankings = sqliteTable("rankings", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+// --- 🆕 NOVO: Tabela de inscrições de times ---
+export const teamRegistrations = sqliteTable("team_registrations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  xtreinoId: integer("xtreino_id").notNull(),
+  teamName: text("team_name").notNull(),
+  isFixed: integer("is_fixed", { mode: "boolean" }).default(false),
+  position: integer("position").default(0),
+  status: text("status").default("confirmed"), // "confirmed" | "reserve" | "cancelled"
+  registeredAt: text("registered_at"),
+});
