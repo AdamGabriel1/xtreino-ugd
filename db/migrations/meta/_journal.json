@@ -15,6 +15,13 @@
       "when": 1780926874456,
       "tag": "0001_open_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1780950456011,
+      "tag": "0002_mighty_makkari",
+      "breakpoints": true
     }
   ]
 }
