@@ -460,6 +460,8 @@ export default function AdminXTreinos() {
             fixedTeams={fixedTeams}
             allTeams={allTeams as Array<{ id: number; name: string; tag: string }> | undefined}
             settings={settings}
+            selectedXt={selectedXtForInscricoes}
+            onSelectXt={setSelectedXtForInscricoes}
             onRegister={({ xtreinoId, teamId, isReserve }) => {
               registerTeam.mutate({ xtreinoId, teamId, isReserve });
             }}

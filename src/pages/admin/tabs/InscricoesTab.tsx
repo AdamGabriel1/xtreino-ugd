@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { Users, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
-import type { XTreino, TeamRegistration } from "../types.js";
+import type { XTreino, TeamRegistration } from "../types";
 import { InscricoesManager } from "../components/InscricoesManager";
 import { WhatsAppGenerator } from "../components/WhatsAppGenerator";
 
@@ -19,6 +19,8 @@ interface InscricoesTabProps {
     defaultTimesBr?: string | null;
     defaultTimesMx?: string | null;
   } | null | undefined;
+  selectedXt: number | null;
+  onSelectXt: (id: number | null) => void;
   onRegister: (data: { xtreinoId: number; teamId: number; isReserve: boolean }) => void;
   onUnregister: (data: { xtreinoId: number; teamId: number }) => void;
   onToggleFixed: (data: { xtreinoId: number; teamId: number; isReserve: boolean }) => void;
@@ -31,16 +33,17 @@ export function InscricoesTab({
   fixedTeams,
   allTeams,
   settings,
+  selectedXt,
+  onSelectXt,
   onRegister,
   onUnregister,
   onToggleFixed,
   isPending,
 }: InscricoesTabProps) {
-  const [selectedXtId, setSelectedXtId] = useState<number | null>(null);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
 
-  const selectedXt = xtreinosList?.find((x) => x.id === selectedXtId);
-  const xtRegistrations = registrations?.filter((r) => r.xtreinoId === selectedXtId) || [];
+  const selectedXtData = xtreinosList?.find((x) => x.id === selectedXt);
+  const xtRegistrations = registrations?.filter((r) => r.xtreinoId === selectedXt) || [];
 
   return (
     <div className="space-y-6">
@@ -51,10 +54,10 @@ export function InscricoesTab({
           Selecionar XTreino
         </h3>
         <select
-          value={selectedXtId ?? ""}
+          value={selectedXt ?? ""}
           onChange={(e) => {
             const id = e.target.value ? parseInt(e.target.value) : null;
-            setSelectedXtId(id);
+            onSelectXt(id);
             setShowWhatsApp(false);
           }}
           className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
@@ -68,7 +71,7 @@ export function InscricoesTab({
         </select>
       </div>
 
-      {selectedXt && (
+      {selectedXtData && (
         <>
           {/* Toggle WhatsApp */}
           <button
@@ -86,7 +89,7 @@ export function InscricoesTab({
 
           {showWhatsApp && (
             <WhatsAppGenerator
-              xtreino={selectedXt}
+              xtreino={selectedXtData}
               registrations={xtRegistrations}
               fixedTeams={fixedTeams}
               settings={settings}
@@ -95,19 +98,19 @@ export function InscricoesTab({
 
           {/* Gerenciador de Inscrições */}
           <InscricoesManager
-            xtreino={selectedXt}
+            xtreino={selectedXtData}
             registrations={xtRegistrations}
             fixedTeams={fixedTeams}
             allTeams={allTeams}
-            onRegister={(data) => onRegister({ xtreinoId: selectedXt.id, ...data })}
-            onUnregister={(data) => onUnregister({ xtreinoId: selectedXt.id, ...data })}
-            onToggleFixed={(data) => onToggleFixed({ xtreinoId: selectedXt.id, ...data })}
+            onRegister={(data) => onRegister({ xtreinoId: selectedXtData.id, ...data })}
+            onUnregister={(data) => onUnregister({ xtreinoId: selectedXtData.id, ...data })}
+            onToggleFixed={(data) => onToggleFixed({ xtreinoId: selectedXtData.id, ...data })}
             isPending={isPending}
           />
         </>
       )}
 
-      {!selectedXt && (
+      {!selectedXtData && (
         <div className="text-center py-12 text-[#5a5a6e]">
           <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
           <p>Selecione um xtreino para gerenciar inscrições</p>
