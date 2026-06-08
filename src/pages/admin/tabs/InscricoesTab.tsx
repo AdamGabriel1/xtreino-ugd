@@ -12,16 +12,16 @@ interface InscricoesTabProps {
   xtreinosList: XTreino[] | undefined;
   registrations: TeamRegistration[] | undefined;
   fixedTeams: string[];
-  allTeams: Array<{ name: string; tag: string }> | undefined;
+  allTeams: Array<{ id: number; name: string; tag: string }> | undefined;
   settings: {
     orgName?: string | null;
     whatsappLink?: string | null;
     defaultTimesBr?: string | null;
     defaultTimesMx?: string | null;
   } | null | undefined;
-  onRegister: (data: { xtreinoId: number; teamName: string; isFixed: boolean }) => void;
-  onUnregister: (data: { xtreinoId: number; teamName: string }) => void;
-  onToggleFixed: (data: { teamName: string; isFixed: boolean }) => void;
+  onRegister: (data: { xtreinoId: number; teamId: number; isReserve: boolean }) => void;
+  onUnregister: (data: { xtreinoId: number; teamId: number }) => void;
+  onToggleFixed: (data: { xtreinoId: number; teamId: number; isReserve: boolean }) => void;
   isPending: boolean;
 }
 
@@ -99,9 +99,9 @@ export function InscricoesTab({
             registrations={xtRegistrations}
             fixedTeams={fixedTeams}
             allTeams={allTeams}
-            onRegister={onRegister}
-            onUnregister={onUnregister}
-            onToggleFixed={onToggleFixed}
+            onRegister={(data) => onRegister({ xtreinoId: selectedXt.id, ...data })}
+            onUnregister={(data) => onUnregister({ xtreinoId: selectedXt.id, ...data })}
+            onToggleFixed={(data) => onToggleFixed({ xtreinoId: selectedXt.id, ...data })}
             isPending={isPending}
           />
         </>

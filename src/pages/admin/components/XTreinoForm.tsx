@@ -3,7 +3,7 @@
 // ============================================================
 
 import { X, Check } from "lucide-react";
-import { XTreinoFormData, XTreinoStatus, Modality } from "../types";
+import type { XTreinoFormData, XTreinoStatus, Modality } from "../types";
 
 interface XTreinoFormProps {
   form: XTreinoFormData;

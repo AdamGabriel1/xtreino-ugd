@@ -3,7 +3,7 @@
 // ============================================================
 
 import { Plus } from "lucide-react";
-import { XTreino, PlayerStat, PlayerFormData } from "../types";
+import type { XTreino, PlayerStat, PlayerFormData } from "../types.js";
 import { PlayerForm } from "../components/PlayerForm";
 
 interface PlayersTabProps {
@@ -35,7 +35,10 @@ export function PlayersTab({
   onSubmit,
   onFormChange,
 }: PlayersTabProps) {
-  const stats = selectedXt ? xtDetail?.playerStats : allPlayerStats;
+  // Mesma lógica do ResultsTab
+  const stats = selectedXt
+    ? (xtDetail?.playerStats ?? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
+    : (allPlayerStats ?? []);
 
   return (
     <>

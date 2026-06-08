@@ -301,7 +301,7 @@ export default function AdminXTreinos() {
     : undefined;
 
   // Inscrições: montar a partir dos dados disponíveis
-  const registrations = [] as import("./types").TeamRegistration[];
+  const registrations = [] as import("./types.js").TeamRegistration[];
 
   return (
     <AdminLayout>
@@ -420,48 +420,22 @@ export default function AdminXTreinos() {
           />
         )}
 
-        {/* TAB: INSCRIÇÕES (NOVO) */}
+        {/* TAB: INSCRIÇÕES */}
         {activeTab === "inscricoes" && (
           <InscricoesTab
             xtreinosList={safeXTreinos}
-            registrations={registrations}
+            registrations={[]}
             fixedTeams={fixedTeams}
-            allTeams={allTeams}
+            allTeams={allTeams as Array<{ id: number; name: string; tag: string }> | undefined}
             settings={settings}
-            onRegister={(data) => {
-              const team = allTeams?.find((t) => t.name === data.teamName);
-              if (!team) {
-                toast.error("Time não encontrado");
-                return;
-              }
-              registerTeam.mutate({
-                xtreinoId: data.xtreinoId,
-                teamId: 0, // ⚠️ Ajuste conforme seu schema
-                isReserve: !data.isFixed,
-              });
+            onRegister={({ xtreinoId, teamId, isReserve }) => {
+              registerTeam.mutate({ xtreinoId, teamId, isReserve });
             }}
-            onUnregister={(data) => {
-              const team = allTeams?.find((t) => t.name === data.teamName);
-              if (!team) {
-                toast.error("Time não encontrado");
-                return;
-              }
-              unregisterTeam.mutate({
-                xtreinoId: data.xtreinoId,
-                teamId: 0, // ⚠️ Ajuste conforme seu schema
-              });
+            onUnregister={({ xtreinoId, teamId }) => {
+              unregisterTeam.mutate({ xtreinoId, teamId });
             }}
-            onToggleFixed={(data) => {
-              const team = allTeams?.find((t) => t.name === data.teamName);
-              if (!team) {
-                toast.error("Time não encontrado");
-                return;
-              }
-              toggleFixedTeam.mutate({
-                xtreinoId: 0, // ⚠️ Ajuste conforme seu fluxo
-                teamId: 0, // ⚠️ Ajuste conforme seu schema
-                isReserve: !data.isFixed,
-              });
+            onToggleFixed={({ xtreinoId, teamId, isReserve }) => {
+              toggleFixedTeam.mutate({ xtreinoId, teamId, isReserve });
             }}
             isPending={
               registerTeam.isPending || unregisterTeam.isPending || toggleFixedTeam.isPending

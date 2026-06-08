@@ -3,7 +3,7 @@
 // ============================================================
 
 import { X, Check } from "lucide-react";
-import { PlayerFormData } from "../types";
+import type { PlayerFormData } from "../types";
 
 interface PlayerFormProps {
   form: PlayerFormData;

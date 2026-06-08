@@ -3,7 +3,7 @@
 // ============================================================
 
 import { X, Check } from "lucide-react";
-import { ScheduleFormData, ScheduleStatus } from "../types";
+import type { ScheduleFormData, ScheduleStatus } from "../types";
 
 interface ScheduleFormProps {
   form: ScheduleFormData;

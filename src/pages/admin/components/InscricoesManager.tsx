@@ -3,18 +3,18 @@
 // ============================================================
 
 import { useState, useMemo } from "react";
-import { Plus, Trash2, Pin, PinOff, ArrowUp, ArrowDown, Users } from "lucide-react";
+import { Plus, Trash2, Pin, PinOff, Users } from "lucide-react";
 import { toast } from "sonner";
-import { XTreino, TeamRegistration } from "../types";
+import type { XTreino, TeamRegistration } from "../types";
 
 interface InscricoesManagerProps {
   xtreino: XTreino;
   registrations: TeamRegistration[];
   fixedTeams: string[];
-  allTeams: Array<{ name: string; tag: string }> | undefined;
-  onRegister: (data: { xtreinoId: number; teamName: string; isFixed: boolean }) => void;
-  onUnregister: (data: { xtreinoId: number; teamName: string }) => void;
-  onToggleFixed: (data: { teamName: string; isFixed: boolean }) => void;
+  allTeams: Array<{ id: number; name: string; tag: string }> | undefined;
+  onRegister: (data: { teamId: number; isReserve: boolean }) => void;
+  onUnregister: (data: { teamId: number }) => void;
+  onToggleFixed: (data: { teamId: number; isReserve: boolean }) => void;
   isPending: boolean;
 }
 
@@ -48,8 +48,12 @@ export function InscricoesManager({
 
   const availableTeams = useMemo(() => {
     if (!allTeams) return [];
-    const registeredNames = new Set(registrations.map((r) => r.teamName));
-    return allTeams.filter((t) => !registeredNames.has(t.name));
+    const registeredIds = new Set(registrations.map((r) => {
+      // Encontra o teamId pelo teamName
+      const team = allTeams.find((t) => t.name === r.teamName);
+      return team?.id;
+    }).filter(Boolean));
+    return allTeams.filter((t) => !registeredIds.has(t.id));
   }, [allTeams, registrations]);
 
   const handleAddTeam = () => {
@@ -59,22 +63,33 @@ export function InscricoesManager({
       return;
     }
 
+    // Encontra o team pelo nome para pegar o id
+    const team = allTeams?.find((t) => t.name === teamName);
+    if (!team) {
+      toast.error("Time não encontrado na base de dados");
+      return;
+    }
+
     const isFixed = fixedSet.has(teamName);
-    onRegister({ xtreinoId: xtreino.id, teamName, isFixed });
+    onRegister({ teamId: team.id, isReserve: !isFixed });
     setNewTeamName("");
     setSelectedExistingTeam("");
     setIsNewTeam(false);
   };
 
   const handleRemove = (teamName: string) => {
+    const team = allTeams?.find((t) => t.name === teamName);
+    if (!team) return;
     if (confirm(`Remover "${teamName}" da lista?`)) {
-      onUnregister({ xtreinoId: xtreino.id, teamName });
+      onUnregister({ teamId: team.id });
     }
   };
 
   const handleToggleFixedGlobal = (teamName: string) => {
+    const team = allTeams?.find((t) => t.name === teamName);
+    if (!team) return;
     const currentlyFixed = fixedSet.has(teamName);
-    onToggleFixed({ teamName, isFixed: !currentlyFixed });
+    onToggleFixed({ teamId: team.id, isReserve: currentlyFixed });
   };
 
   return (
@@ -102,7 +117,7 @@ export function InscricoesManager({
             >
               <option value="">Selecione um time...</option>
               {availableTeams.map((team) => (
-                <option key={team.name} value={team.name}>
+                <option key={team.id} value={team.name}>
                   {team.name} {fixedSet.has(team.name) ? "📌" : "🎫"}
                 </option>
               ))}
@@ -136,7 +151,7 @@ export function InscricoesManager({
         </div>
 
         <div className="divide-y divide-[#2a2a3a]">
-          {confirmedTeams.map((team, index) => (
+          {confirmedTeams.map((team) => (
             <div
               key={team.id}
               className="px-6 py-3 flex items-center justify-between hover:bg-[#1a1a24] group"

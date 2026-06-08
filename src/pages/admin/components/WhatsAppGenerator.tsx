@@ -5,7 +5,7 @@
 import { useState, useMemo } from "react";
 import { Copy, Check, MessageCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { XTreino, TeamRegistration } from "../types";
+import type { XTreino, TeamRegistration } from "../types";
 
 interface WhatsAppGeneratorProps {
   xtreino: XTreino;

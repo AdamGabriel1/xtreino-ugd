@@ -2,9 +2,8 @@
 // TAB: Resultados
 // ============================================================
 
-import { useState } from "react";
 import { Plus } from "lucide-react";
-import type { XTreino, XTreinoResult, ResultFormData } from "../types";
+import type { XTreino, XTreinoResult, ResultFormData } from "../types.js";
 import { ResultForm } from "../components/ResultForm";
 
 interface ResultsTabProps {
@@ -36,7 +35,12 @@ export function ResultsTab({
   onSubmit,
   onFormChange,
 }: ResultsTabProps) {
-  const results = selectedXt ? xtDetail?.results : allResults;
+  // Se um xtreino está selecionado e temos xtDetail com results, usa ele
+  // Senão, se um xtreino está selecionado, filtra allResults por xtreinoId
+  // Senão, mostra allResults (todos)
+  const results = selectedXt
+    ? (xtDetail?.results ?? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? [])
+    : (allResults ?? []);
 
   return (
     <>

@@ -3,7 +3,7 @@
 // ============================================================
 
 import { X, Check } from "lucide-react";
-import { ResultFormData } from "../types";
+import type { ResultFormData } from "../types";
 
 interface ResultFormProps {
   form: ResultFormData;
