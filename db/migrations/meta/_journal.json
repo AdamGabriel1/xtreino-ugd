@@ -8,6 +8,13 @@
       "when": 1780420575532,
       "tag": "0000_dizzy_monster_badoon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1780926874456,
+      "tag": "0001_open_electro",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { getDb } from "../../api/queries/connection.js";
 import { admins, settings, xtreinos, teams, players, seedRuns } from "../schema.js";
 import { eq } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
+import { WHATSAPP_TEMPLATE } from "./whatsapp-template.js";
 
 // ============================================================
 // HELPERS IDEMPOTENTES
@@ -53,6 +54,19 @@ function upsertPlayer(db: ReturnType<typeof getDb>, data: typeof players.$inferI
 }
 
 // ============================================================
+// CONFIGURAÇÃO DE TIMES FIXOS (editável pelo painel admin)
+// ============================================================
+
+// Lista padrão de times fixos da Underground
+// Para alterar: edite no painel admin ou modifique esta lista
+export const DEFAULT_FIXED_TEAMS = [
+  "UGD Threat",
+  "UGD Royal",
+  "UGD LEGENDS",
+  "UGD OLYMPIQUE",
+];
+
+// ============================================================
 // SEED INICIAL (idempotente)
 // ============================================================
 
@@ -70,14 +84,14 @@ export function seed() {
 
   // --- Settings ---
   const settingsCreated = upsertSettings(db, {
-    orgName: "Xtreino Underground",
+    orgName: "𝙐𝙉𝘿𝙀𝙍𝙂𝙍𝙊𝙐𝙉𝘿",
     discordLink: "https://discord.gg/QpvaHxzPW",
     whatsappLink: "https://chat.whatsapp.com/Ks4fDFnA7eBHk9ULHuHyzm",
-    defaultRules: "1. Respeitar todos os participantes\n2. Proibido uso de cheats/hacks\n3. Pontualidade obrigatoria\n4. Decisoes da staff sao finais",
-    defaultTimesMx: "5:00 PM",
-    defaultTimesBr: "8:00 PM",
+    defaultRules: "1. Respeitar todos os participantes\n2. Proibido uso de cheats/hacks\n3. Pontualidade obrigatoria\n4. Decisoes da staff sao finais\n5. SEM AUXILIO DE MIRA\n6. PROIBIDO LANCA GRANADA E LANCA CHAMAS",
+    defaultTimesMx: "6:00",
+    defaultTimesBr: "9:00",
     primaryColor: "#006400",
-    whatsappTemplate: "{{ORG_NAME}} \n\nPLATAFORMA: MOBILE \n\nMODO: {{MODALITY}} \n\n{{DATE}}\n\nHORARIOS:\nMX {{TIME_MX}}\nBR {{TIME_BR}}\n\nSLOTS | EQUIPES:\n{{TEAMS_LIST}}\n\nRESERVAS:\n{{RESERVES_LIST}}\n\nDISCORD: {{DISCORD}}\nWHATSAPP: {{WHATSAPP}}\n\n@todos",
+    whatsappTemplate: WHATSAPP_TEMPLATE,
   });
   console.log(`[SEED] Settings ${settingsCreated ? "created" : "already exists"}`);
 
@@ -108,7 +122,7 @@ export function seed() {
   }
   console.log(`[SEED] ${teamsCount} teams created`);
 
-  // --- XTreinos Históricos da Underground ---
+  // --- XTreinos Historicos da Underground ---
   const xtreinosData = [
     {
       name: "XTreino Underground - 30/04",

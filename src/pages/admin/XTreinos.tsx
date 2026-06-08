@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Check, Trophy, Target, BarChart3, Users, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Target, BarChart3, CalendarDays } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import AdminLayout from "@/layout/AdminLayout";
 import { toast } from "sonner";

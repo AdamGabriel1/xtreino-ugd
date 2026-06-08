@@ -33,6 +33,7 @@ export const settings = sqliteTable("settings", {
   whatsappTemplate: text("whatsapp_template"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  fixedTeamsList: text("fixed_teams_list"),  // <-- ADICIONAR ISSO
 });
 
 export const teams = sqliteTable("teams", {

@@ -84,7 +84,7 @@ export default function AdminDashboard() {
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
           <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
             <h2 className="font-bold text-[#f0f0f5]">Inscricoes Recentes</h2>
-            <Link to="/admin/inscricoes" className="text-sm text-red-400 hover:text-red-300">
+            <Link to="/admin/inscricoes" className="text-sm text-green-400 hover:text-green-300">
               Ver todas
             </Link>
           </div>
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           r.status === "aprovado" ? "bg-green-500/10 text-green-400" :
                           r.status === "pendente" ? "bg-yellow-500/10 text-yellow-400" :
-                          "bg-red-500/10 text-red-400"
+                          "bg-green-500/10 text-green-400"
                         }`}>
                           {r.status === "aprovado" ? "Aprovado" : r.status === "pendente" ? "Pendente" : "Rejeitado"}
                         </span>
