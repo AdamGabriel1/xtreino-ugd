@@ -17,6 +17,9 @@ export function useXTreinos() {
   const { data: settings } = trpc.settings.get.useQuery();
   const { data: allTeams } = trpc.teams.list.useQuery();
 
+  // Query de registrations (ESSENCIAL para a tab de inscrições)
+  const { data: registrationsList } = trpc.registrations.list.useQuery();
+
   // XTreino mutations
   const create = trpc.xtreinos.create.useMutation({
     onSuccess: () => {
@@ -79,9 +82,15 @@ export function useXTreinos() {
     onError: (err) => toast.error(err.message),
   });
 
-  // Registration mutations
-  const registerTeam = trpc.xtreinos.addTeam.useMutation({
+  // ============================================================
+  // REGISTRATION MUTATIONS - usando router "registrations" correto
+  // ============================================================
+
+  const registerTeam = trpc.registrations.register.useMutation({
     onSuccess: () => {
+      // INVALIDAÇÃO ESSENCIAL: registrations.list + xtreinos
+      utils.registrations.list.invalidate();
+      utils.registrations.listByXtreino.invalidate();
       utils.xtreinos.list.invalidate();
       utils.xtreinos.getById.invalidate();
       toast.success("Time inscrito!");
@@ -89,8 +98,10 @@ export function useXTreinos() {
     onError: (err) => toast.error(err.message),
   });
 
-  const unregisterTeam = trpc.xtreinos.removeTeam.useMutation({
+  const unregisterTeam = trpc.registrations.unregister.useMutation({
     onSuccess: () => {
+      utils.registrations.list.invalidate();
+      utils.registrations.listByXtreino.invalidate();
       utils.xtreinos.list.invalidate();
       utils.xtreinos.getById.invalidate();
       toast.success("Time removido da lista!");
@@ -98,10 +109,9 @@ export function useXTreinos() {
     onError: (err) => toast.error(err.message),
   });
 
-  const toggleFixedTeam = trpc.xtreinos.updateTeamSlot.useMutation({
+  const toggleFixedTeam = trpc.registrations.toggleFixed.useMutation({
     onSuccess: () => {
-      utils.xtreinos.list.invalidate();
-      utils.xtreinos.getById.invalidate();
+      utils.registrations.list.invalidate();
       utils.settings.get.invalidate();
       toast.success("Status de time fixo atualizado!");
     },
@@ -123,6 +133,7 @@ export function useXTreinos() {
     utils.xtreinos.listPlayerStats.invalidate();
     utils.xtreinos.schedule.list.invalidate();
     utils.settings.get.invalidate();
+    utils.registrations.list.invalidate();
   }, [utils]);
 
   return {
@@ -133,6 +144,7 @@ export function useXTreinos() {
     scheduleList,
     settings,
     allTeams,
+    registrationsList, // ← EXPORTADO para a tab de inscrições
 
     // Mutations
     create,

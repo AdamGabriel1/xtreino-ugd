@@ -1,31 +1,7 @@
 import { useState, useMemo } from "react";
 import { Copy, Check, MessageCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-
-export interface InscricaoEquipe {
-  id: number;
-  xtreinoId: number;
-  teamName: string;
-  status: "confirmed" | "reserve" | "pending" | "cancelled";
-  registeredBy: string | null;
-  registeredAt: string | null;
-  players: string[];
-  position: number;
-}
-
-export interface XtreinoEvento {
-  id: number;
-  name: string;
-  date: string;
-  status: string;
-  maxTeams: number;
-  timeBr?: string | null;
-  timeMx?: string | null;
-  modality?: string | null;
-  whatsappLink?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
+import type { InscricaoEquipe, XtreinoEvento } from "../../../types/inscricoes";
 
 interface WhatsAppGeneratorProps {
   xtreino: XtreinoEvento;
@@ -109,7 +85,7 @@ export function WhatsAppGenerator({ xtreino, inscricoes, fixedTeams, settings }:
 
   const confirmedTeams = useMemo(() => {
     return inscricoes
-      .filter((r) => r.status === "confirmed")
+      .filter((r) => r.status === "confirmada")
       .map((r, index) => ({
         position: index + 1,
         name: r.teamName,

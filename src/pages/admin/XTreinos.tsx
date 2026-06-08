@@ -30,6 +30,7 @@ export default function AdminXTreinos() {
     scheduleList,
     settings,
     allTeams,
+    registrationsList, // ← NOVO: query de registrations
     create,
     update,
     remove,
@@ -111,14 +112,6 @@ export default function AdminXTreinos() {
     { id: selectedXtForPlayers ?? 0 },
     { enabled: selectedXtForPlayers !== null }
   );
-  const { data: xtDetailInscricoes } = trpc.xtreinos.getById.useQuery(
-    { id: selectedXtForInscricoes ?? 0 },
-    { enabled: selectedXtForInscricoes !== null }
-  );
-
-  // Buscar registrations para o xtreino selecionado
-  const { data: registrationsList } = trpc.registrations.list.useQuery();
-  const xtRegistrations = registrationsList?.filter(r => r.xtreinoId === selectedXtForInscricoes) || [];
 
   // --- Helpers: cast dados do tRPC para os tipos strictos ---
   const castXTreinos = (data: typeof xtreinosList): import("./types").XTreino[] | undefined => {
@@ -328,7 +321,6 @@ export default function AdminXTreinos() {
 
   const safeXtDetailResults = castXtDetail(xtDetailResults);
   const safeXtDetailPlayers = castXtDetail(xtDetailPlayers);
-  const safeXtDetailInscricoes = castXtDetail(xtDetailInscricoes);
 
   const resultsTabDetail = selectedXtForResults
     ? (safeXtDetailResults ? { results: safeXtDetailResults.results ?? [] } : undefined)
@@ -338,19 +330,17 @@ export default function AdminXTreinos() {
     ? (safeXtDetailPlayers ? { playerStats: safeXtDetailPlayers.playerStats ?? [] } : undefined)
     : undefined;
 
+  // Normaliza registrations para o tipo InscricaoEquipe
   const normalizeRegistrations = (arr: any[] | undefined) => {
     if (!arr) return [];
     return arr.map((r) => ({
       ...r,
-      // ensure position exists (InscricaoEquipe requires position)
       position: (r as any).position ?? 0,
     }));
   };
 
-  const inscricoesRegistrations =
-    safeXtDetailInscricoes?.registrations
-      ? normalizeRegistrations(safeXtDetailInscricoes.registrations)
-      : normalizeRegistrations(xtRegistrations);
+  // Usa registrationsList do hook useXTreinos (já vem com players inclusos do backend)
+  const inscricoesRegistrations = normalizeRegistrations(registrationsList);
 
   return (
     <AdminLayout>
@@ -479,14 +469,19 @@ export default function AdminXTreinos() {
             settings={settings}
             selectedXt={selectedXtForInscricoes}
             onSelectXt={setSelectedXtForInscricoes}
-            onRegister={({ xtreinoId, teamId, isReserve }) => {
-              registerTeam.mutate({ xtreinoId, teamId, isReserve });
+            onRegister={({ xtreinoId, teamName, players, isReserve }) => {
+              registerTeam.mutate({ xtreinoId, teamName, players, isReserve });
             }}
-            onUnregister={({ xtreinoId, teamId }) => {
-              unregisterTeam.mutate({ xtreinoId, teamId });
+            onUnregister={({ xtreinoId, teamName }) => {
+              unregisterTeam.mutate({ xtreinoId, teamName });
             }}
-            onToggleFixed={({ xtreinoId, teamId, isReserve }) => {
-              toggleFixedTeam.mutate({ xtreinoId, teamId, isReserve });
+            onCancel={({ xtreinoId, teamName }) => {
+              // Se tiver mutation cancel no useXTreinos, use aqui
+              // Por enquanto usa unregister mesmo
+              unregisterTeam.mutate({ xtreinoId, teamName });
+            }}
+            onToggleFixed={({ teamName }) => {
+              toggleFixedTeam.mutate({ teamName });
             }}
             isPending={
               registerTeam.isPending || unregisterTeam.isPending || toggleFixedTeam.isPending

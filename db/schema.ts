@@ -306,21 +306,19 @@ export const xtreinoEventos = sqliteTable("xtreino_eventos", {
 
 export const xtreinoInscricoes = sqliteTable("xtreino_inscricoes", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id")
-    .notNull()
-    .references(() => xtreinoEventos.id, { onDelete: "cascade" }),
+  xtreinoId: integer("xtreino_id").notNull(),
   teamName: text("team_name").notNull(),
-  status: text("status", {
-    enum: ["confirmada", "pendente", "cancelada"],
-  }).notNull().default("confirmada"),
-  registeredBy: text("registered_by"),
+  status: text("status", { enum: ["confirmada", "reserva", "pendente", "cancelada"] })
+    .notNull()
+    .default("confirmada"),
   registeredAt: text("registered_at"),
+  registeredBy: text("registered_by"),
+  position: integer("position").notNull().default(0),  // ← ADICIONE ESTA LINHA
 });
 
+// A tabela de jogadores já deve existir:
 export const xtreinoInscricoesJogadores = sqliteTable("xtreino_inscricoes_jogadores", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  inscricaoId: integer("inscricao_id")
-    .notNull()
-    .references(() => xtreinoInscricoes.id, { onDelete: "cascade" }),
+  inscricaoId: integer("inscricao_id").notNull(),
   playerName: text("player_name").notNull(),
 });

@@ -3,32 +3,7 @@ import { Users, MessageCircle, ChevronDown, ChevronUp, CalendarPlus, CheckCircle
 import { toast } from "sonner";
 import { InscricoesManager } from "../components/InscricoesManager";
 import { WhatsAppGenerator } from "../components/WhatsAppGenerator";
-
-// Usar o tipo XTreino do seu projeto (compatível com o que XTreinos.tsx passa)
-export interface XtreinoEvento {
-  id: number;
-  name: string;
-  date: string;
-  status: string;
-  maxTeams: number;
-  timeBr?: string | null;
-  timeMx?: string | null;
-  modality?: string | null;
-  whatsappLink?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
-
-export interface InscricaoEquipe {
-  id: number;
-  xtreinoId: number;
-  teamName: string;
-  status: "confirmed" | "reserve" | "pending" | "cancelled";
-  registeredBy: string | null;
-  registeredAt: string | null;
-  players: string[];
-  position: number;
-}
+import type { InscricaoEquipe, XtreinoEvento } from "../../../types/inscricoes";
 
 interface InscricoesTabProps {
   xtreinosList: XtreinoEvento[] | undefined;
@@ -43,9 +18,15 @@ interface InscricoesTabProps {
   } | null | undefined;
   selectedXt: number | null;
   onSelectXt: (id: number | null) => void;
-  onRegister: (data: { xtreinoId: number; teamId: number; isReserve: boolean }) => void;
-  onUnregister: (data: { xtreinoId: number; teamId: number }) => void;
-  onToggleFixed: (data: { xtreinoId: number; teamId: number; isReserve: boolean }) => void;
+  onRegister: (data: {
+    xtreinoId: number;
+    teamName: string;
+    players: string[];
+    isReserve: boolean;
+  }) => void;
+  onUnregister: (data: { xtreinoId: number; teamName: string }) => void;
+  onCancel: (data: { xtreinoId: number; teamName: string }) => void;
+  onToggleFixed: (data: { teamName: string }) => void;
   isPending: boolean;
 }
 
@@ -59,6 +40,7 @@ export function InscricoesTab({
   onSelectXt,
   onRegister,
   onUnregister,
+  onCancel,
   isPending,
 }: InscricoesTabProps) {
   const [showWhatsApp, setShowWhatsApp] = useState(false);
@@ -74,15 +56,13 @@ export function InscricoesTab({
       toast.error("Data é obrigatória");
       return;
     }
-    // Chama xtreinos.create através do hook pai
     toast.success("Use o hook useXTreinos para criar xtreino");
     setNewDate("");
     setNewMaxTeams(12);
     setShowCreateForm(false);
   };
 
-  const handleStatusChange = (id: number, status: string) => {
-    // Chama xtreinos.update através do hook pai
+  const handleStatusChange = (_id: number, status: string) => {
     toast.success(`Status alterado para ${status}`);
   };
 
@@ -92,7 +72,9 @@ export function InscricoesTab({
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
           <h2 className="text-xl font-bold text-[#f0f0f5]">Gerenciar Inscrições</h2>
-          <p className="text-sm text-[#8a8a9e]">Selecione um xtreino para gerenciar as inscrições</p>
+          <p className="text-sm text-[#8a8a9e]">
+            Selecione um xtreino para gerenciar as inscrições
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -127,7 +109,9 @@ export function InscricoesTab({
               />
             </div>
             <div>
-              <label className="block text-sm text-[#8a8a9e] mb-1">Máximo de Equipes</label>
+              <label className="block text-sm text-[#8a8a9e] mb-1">
+                Máximo de Equipes
+              </label>
               <input
                 type="number"
                 value={newMaxTeams}
@@ -183,25 +167,27 @@ export function InscricoesTab({
           <div className="mt-4 flex items-center gap-2">
             <span className="text-sm text-[#8a8a9e]">Status:</span>
             <div className="flex gap-1">
-              {(["aberto", "fechado", "em_andamento", "finalizado"] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => handleStatusChange(selectedXtData.id, status)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                    selectedXtData.status === status
-                      ? status === "aberto"
-                        ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                        : status === "fechado"
-                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : status === "em_andamento"
-                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
-                      : "bg-[#1a1a24] border border-[#2a2a3a] text-[#5a5a6e] hover:text-[#8a8a9e]"
-                  }`}
-                >
-                  {status === "em_andamento" ? "EM ANDAMENTO" : status.toUpperCase()}
-                </button>
-              ))}
+              {(["aberto", "fechado", "em_andamento", "finalizado"] as const).map(
+                (status) => (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusChange(selectedXtData.id, status)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                      selectedXtData.status === status
+                        ? status === "aberto"
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : status === "fechado"
+                          ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          : status === "em_andamento"
+                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                          : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                        : "bg-[#1a1a24] border border-[#2a2a3a] text-[#5a5a6e] hover:text-[#8a8a9e]"
+                    }`}
+                  >
+                    {status === "em_andamento" ? "EM ANDAMENTO" : status.toUpperCase()}
+                  </button>
+                )
+              )}
             </div>
           </div>
         )}
@@ -217,10 +203,16 @@ export function InscricoesTab({
             <div className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
               <span className="font-medium">
-                {showWhatsApp ? "Ocultar Gerador WhatsApp" : "Gerar Mensagem WhatsApp"}
+                {showWhatsApp
+                  ? "Ocultar Gerador WhatsApp"
+                  : "Gerar Mensagem WhatsApp"}
               </span>
             </div>
-            {showWhatsApp ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            {showWhatsApp ? (
+              <ChevronUp className="w-5 h-5" />
+            ) : (
+              <ChevronDown className="w-5 h-5" />
+            )}
           </button>
 
           {showWhatsApp && (
@@ -239,22 +231,24 @@ export function InscricoesTab({
             fixedTeams={fixedTeams}
             allTeams={allTeams}
             onRegister={(data) => {
-              const team = allTeams?.find(t => t.name === data.teamName);
-              if (team) {
-                onRegister({ xtreinoId: selectedXtData.id, teamId: team.id, isReserve: !fixedTeams.includes(data.teamName) });
-              }
+              onRegister({
+                xtreinoId: selectedXtData.id,
+                teamName: data.teamName,
+                players: data.players,
+                isReserve: !fixedTeams.includes(data.teamName),
+              });
             }}
             onCancel={(data) => {
-              const team = allTeams?.find(t => t.name === data.teamName);
-              if (team) {
-                onUnregister({ xtreinoId: selectedXtData.id, teamId: team.id });
-              }
+              onCancel({
+                xtreinoId: selectedXtData.id,
+                teamName: data.teamName,
+              });
             }}
             onRemove={(data) => {
-              const team = allTeams?.find(t => t.name === data.teamName);
-              if (team) {
-                onUnregister({ xtreinoId: selectedXtData.id, teamId: team.id });
-              }
+              onUnregister({
+                xtreinoId: selectedXtData.id,
+                teamName: data.teamName,
+              });
             }}
             isPending={isPending}
             isAdmin={true}

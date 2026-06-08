@@ -1,31 +1,7 @@
 import { useState, useMemo } from "react";
 import { Plus, Trash2, Users, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
-
-export interface InscricaoEquipe {
-  id: number;
-  xtreinoId: number;
-  teamName: string;
-  status: "confirmed" | "reserve" | "pending" | "cancelled";
-  registeredBy: string | null;
-  registeredAt: string | null;
-  players: string[];
-  position: number;
-}
-
-export interface XtreinoEvento {
-  id: number;
-  name: string;
-  date: string;
-  status: string;
-  maxTeams: number;
-  timeBr?: string | null;
-  timeMx?: string | null;
-  modality?: string | null;
-  whatsappLink?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
+import type { InscricaoEquipe, XtreinoEvento } from "../../../types/inscricoes";
 
 interface InscricoesManagerProps {
   xtreino: XtreinoEvento;
@@ -59,19 +35,19 @@ export function InscricoesManager({
 
   const confirmedTeams = useMemo(() => {
     return inscricoes
-      .filter((r) => r.status === "confirmed")
+      .filter((r) => r.status === "confirmada")
       .sort((a, b) => a.position - b.position);
   }, [inscricoes]);
 
   const pendingTeams = useMemo(() => {
     return inscricoes
-      .filter((r) => r.status === "pending")
+      .filter((r) => r.status === "pendente")
       .sort((a, b) => a.position - b.position);
   }, [inscricoes]);
 
   const cancelledTeams = useMemo(() => {
     return inscricoes
-      .filter((r) => r.status === "cancelled")
+      .filter((r) => r.status === "cancelada")
       .sort((a, b) => a.position - b.position);
   }, [inscricoes]);
 
