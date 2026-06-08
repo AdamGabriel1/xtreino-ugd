@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Swords,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
@@ -30,87 +31,33 @@ export default function Home() {
   const { data: playersList } = trpc.players.list.useQuery();
   const { data: settings } = trpc.settings.get.useQuery();
 
-  // Busca todos os rankings
+  // Busca todos os rankings - agora com rankType no input para filtrar no backend
   const {
     data: allTeamRankings,
     isLoading: isLoadingTeamRankings,
     isError: isErrorTeamRankings,
-  } = trpc.rankings.teams.useQuery({ limit: 50 });
+  } = trpc.rankings.teams.useQuery({ 
+    limit: 50,
+    rankType: teamRankType, // Envia o rankType selecionado para o backend filtrar
+  });
+
   const {
     data: allPlayerRankings,
     isLoading: isLoadingPlayerRankings,
     isError: isErrorPlayerRankings,
-  } = trpc.rankings.players.useQuery({ limit: 50 });
+  } = trpc.rankings.players.useQuery({ 
+    limit: 50,
+    rankType: playerRankType, // Envia o rankType selecionado para o backend filtrar
+  });
 
-  // DEBUG: Log para ver o que o backend está retornando
-  // Remova após confirmar que os dados estão corretos
-  console.log("Team Rankings:", allTeamRankings);
-  console.log("Player Rankings:", allPlayerRankings);
-
-  // Filtra no cliente por rankType
-  // Se o backend não enviar rankType, mostramos TODOS os dados em todas as abas
-  // (fallback para não ficar vazio enquanto o backend não é atualizado)
-  const teamRankingsMap = useMemo(() => {
-    if (!allTeamRankings) {
-      return { xtreino: [], campeonato: [], scrim: [] };
-    }
-
-    // Verifica se algum item tem rankType definido
-    const hasRankType = allTeamRankings.some(
-      (r) => r.rankType && r.rankType !== ""
-    );
-
-    if (!hasRankType) {
-      // Se não tem rankType definido, mostra todos em todas as abas
-      return {
-        xtreino: allTeamRankings.slice(0, 5),
-        campeonato: allTeamRankings.slice(0, 5),
-        scrim: allTeamRankings.slice(0, 5),
-      };
-    }
-
-    const byType = (type: RankCategory) =>
-      allTeamRankings
-        .filter((r) => (r.rankType ?? "xtreino") === type)
-        .slice(0, 5);
-
-    return {
-      xtreino: byType("xtreino"),
-      campeonato: byType("campeonato"),
-      scrim: byType("scrim"),
-    };
-  }, [allTeamRankings]);
-
-  const playerRankingsMap = useMemo(() => {
-    if (!allPlayerRankings) {
-      return { xtreino: [], campeonato: [], scrim: [] };
-    }
-
-    // Verifica se algum item tem rankType definido
-    const hasRankType = allPlayerRankings.some(
-      (r) => r.rankType && r.rankType !== ""
-    );
-
-    if (!hasRankType) {
-      // Se não tem rankType definido, mostra todos em todas as abas
-      return {
-        xtreino: allPlayerRankings.slice(0, 5),
-        campeonato: allPlayerRankings.slice(0, 5),
-        scrim: allPlayerRankings.slice(0, 5),
-      };
-    }
-
-    const byType = (type: RankCategory) =>
-      allPlayerRankings
-        .filter((r) => (r.rankType ?? "xtreino") === type)
-        .slice(0, 5);
-
-    return {
-      xtreino: byType("xtreino"),
-      campeonato: byType("campeonato"),
-      scrim: byType("scrim"),
-    };
-  }, [allPlayerRankings]);
+  const utils = trpc.useUtils();
+  const recalculateMutation = trpc.rankings.recalculate.useMutation({
+    onSuccess: () => {
+      // Invalida as queries para recarregar os dados
+      utils.rankings.teams.invalidate();
+      utils.rankings.players.invalidate();
+    },
+  });
 
   const stats = [
     { label: "Equipes", value: teamsList?.length ?? 0, icon: Users },
@@ -166,7 +113,7 @@ export default function Home() {
       points: number;
       kills?: number;
       wins?: number;
-    }>;
+    }> | undefined;
     type: "team" | "player";
     isLoading: boolean;
     isError: boolean;
@@ -188,44 +135,51 @@ export default function Home() {
       );
     }
 
+    if (!rankings || rankings.length === 0) {
+      return (
+        <div className="px-6 py-8 text-center">
+          <p className="text-[#5a5a6e] text-sm mb-3">
+            Sem dados de ranking para este modo
+          </p>
+          <p className="text-[#5a5a6e] text-xs">
+            Adicione resultados de xtreinos, campeonatos ou scrims para gerar o ranking.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="divide-y divide-[#2a2a3a]">
-        {rankings.length > 0 ? (
-          rankings.map((r, i) => (
-            <div
-              key={r.id}
-              className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
+        {rankings.map((r, i) => (
+          <div
+            key={r.id}
+            className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
+          >
+            <span
+              className={`w-8 text-center font-bold ${
+                i === 0
+                  ? "text-yellow-400"
+                  : i === 1
+                    ? "text-gray-300"
+                    : i === 2
+                      ? "text-amber-600"
+                      : "text-[#5a5a6e]"
+              }`}
             >
-              <span
-                className={`w-8 text-center font-bold ${
-                  i === 0
-                    ? "text-yellow-400"
-                    : i === 1
-                      ? "text-gray-300"
-                      : i === 2
-                        ? "text-amber-600"
-                        : "text-[#5a5a6e]"
-                }`}
-              >
-                {i + 1}
-              </span>
-              <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
-                {r.entityName}
-              </span>
-              <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
-              {type === "team" && (
-                <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
-              )}
-              {type === "player" && (
-                <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
-              )}
-            </div>
-          ))
-        ) : (
-          <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
-            Sem dados de ranking para este modo
+              {i + 1}
+            </span>
+            <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
+              {r.entityName}
+            </span>
+            <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
+            {type === "team" && (
+              <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
+            )}
+            {type === "player" && (
+              <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
+            )}
           </div>
-        )}
+        ))}
       </div>
     );
   };
@@ -379,9 +333,23 @@ export default function Home() {
 
       {/* Rankings Preview */}
       <section className="max-w-[1400px] mx-auto px-4 lg:px-8 pb-12">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-1 h-8 bg-red-500 rounded-full" />
-          <h2 className="text-2xl font-bold text-[#f0f0f5]">Rankings</h2>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-2xl font-bold text-[#f0f0f5]">Rankings</h2>
+          </div>
+          <button
+            onClick={() => recalculateMutation.mutate()}
+            disabled={recalculateMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all disabled:opacity-50"
+          >
+            {recalculateMutation.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
+            {recalculateMutation.isPending ? "Recalculando..." : "Recalcular Rankings"}
+          </button>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -405,7 +373,7 @@ export default function Home() {
               </div>
             </div>
             <RankList
-              rankings={teamRankingsMap[teamRankType]}
+              rankings={allTeamRankings}
               type="team"
               isLoading={isLoadingTeamRankings}
               isError={isErrorTeamRankings}
@@ -432,7 +400,7 @@ export default function Home() {
               </div>
             </div>
             <RankList
-              rankings={playerRankingsMap[playerRankType]}
+              rankings={allPlayerRankings}
               type="player"
               isLoading={isLoadingPlayerRankings}
               isError={isErrorPlayerRankings}
