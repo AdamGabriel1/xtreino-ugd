@@ -35,16 +35,9 @@ export function ResultsTab({
   onSubmit,
   onFormChange,
 }: ResultsTabProps) {
-  // Se tem xtDetail com results, usa. Senão, se selecionou xtreino, filtra allResults. Senão, todos.
   const results = selectedXt
     ? (xtDetail?.results ?? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? [])
     : (allResults ?? []);
-
-// Adicione isso temporariamente no ResultsTab, antes do return:
-console.log("selectedXt:", selectedXt);
-console.log("allResults:", allResults);
-console.log("xtDetail:", xtDetail);
-console.log("filtered results:", allResults?.filter((r) => r.xtreinoId === selectedXt));
 
   return (
     <>
@@ -73,6 +66,7 @@ console.log("filtered results:", allResults?.filter((r) => r.xtreinoId === selec
         <ResultForm
           form={form}
           isPending={isPending}
+          selectedXtId={selectedXt}
           onChange={onFormChange}
           onSubmit={onSubmit}
           onClose={onCloseForm}

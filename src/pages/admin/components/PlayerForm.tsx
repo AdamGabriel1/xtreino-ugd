@@ -8,12 +8,13 @@ import type { PlayerFormData } from "../types";
 interface PlayerFormProps {
   form: PlayerFormData;
   isPending: boolean;
+  selectedXtId: number | null;
   onChange: (form: PlayerFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
 
-export function PlayerForm({ form, isPending, onChange, onSubmit, onClose }: PlayerFormProps) {
+export function PlayerForm({ form, isPending, selectedXtId, onChange, onSubmit, onClose }: PlayerFormProps) {
   const updateField = <K extends keyof PlayerFormData>(field: K, value: PlayerFormData[K]) => {
     onChange({ ...form, [field]: value });
   };
@@ -31,9 +32,9 @@ export function PlayerForm({ form, isPending, onChange, onSubmit, onClose }: Pla
           <label className="block text-sm text-[#8a8a9e] mb-1">XTreino ID</label>
           <input
             type="number"
-            value={form.xtreinoId}
-            onChange={(e) => updateField("xtreinoId", parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm"
+            value={selectedXtId ?? form.xtreinoId}
+            readOnly
+            className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm opacity-50"
           />
         </div>
         <div>

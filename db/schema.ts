@@ -127,7 +127,7 @@ export const xtreinos = sqliteTable("xtreinos", {
 
 export const xtreinoTeams = sqliteTable("xtreino_teams", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id", { mode: "number" }).notNull(),
+  xtreinoId: integer("xtreino_id", { mode: "number" }),
   teamId: integer("team_id", { mode: "number" }).notNull(),
   isReserve: integer("is_reserve", { mode: "boolean" }).notNull().default(false),
   slotNumber: integer("slot_number", { mode: "number" }),
@@ -285,7 +285,7 @@ export const rankings = sqliteTable("rankings", {
 // --- 🆕 NOVO: Tabela de inscrições de times ---
 export const teamRegistrations = sqliteTable("team_registrations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id").notNull(),
+  xtreinoId: integer("xtreino_id", { mode: "number" }),
   teamName: text("team_name").notNull(),
   isFixed: integer("is_fixed", { mode: "boolean" }).default(false),
   position: integer("position").default(0),

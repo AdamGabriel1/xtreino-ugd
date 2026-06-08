@@ -106,7 +106,7 @@ export default function AdminXTreinos() {
   const [selectedXtForPlayers, setSelectedXtForPlayers] = useState<number | null>(null);
   const [selectedXtForInscricoes, setSelectedXtForInscricoes] = useState<number | null>(null);
 
-  // 🆕 Buscar detalhes do xtreino selecionado (com results, playerStats, registrations)
+  // Buscar detalhes do xtreino selecionado
   const { data: xtDetailResults } = trpc.xtreinos.getById.useQuery(
     { id: selectedXtForResults ?? 0 },
     { enabled: selectedXtForResults !== null }
@@ -154,7 +154,6 @@ export default function AdminXTreinos() {
     }));
   };
 
-  // Cast do getById para XTreino (com results, playerStats, registrations)
   const castXtDetail = (data: typeof xtDetailResults): import("./types").XTreino | null => {
     if (!data) return null;
     return {
@@ -234,7 +233,13 @@ export default function AdminXTreinos() {
       toast.error("Time e data sao obrigatorios");
       return;
     }
-    addResult.mutate(resultForm);
+    // 🆕 Usa o xtreinoId selecionado se o form não tiver
+    const xtreinoId = selectedXtForResults ?? resultForm.xtreinoId;
+    if (!xtreinoId) {
+      toast.error("Selecione um xtreino primeiro");
+      return;
+    }
+    addResult.mutate({ ...resultForm, xtreinoId });
     setShowResultForm(false);
     resetResultForm();
   };
@@ -258,7 +263,13 @@ export default function AdminXTreinos() {
       toast.error("Jogador, time e data sao obrigatorios");
       return;
     }
-    addPlayerStats.mutate(playerForm);
+    // 🆕 Usa o xtreinoId selecionado se o form não tiver
+    const xtreinoId = selectedXtForPlayers ?? playerForm.xtreinoId;
+    if (!xtreinoId) {
+      toast.error("Selecione um xtreino primeiro");
+      return;
+    }
+    addPlayerStats.mutate({ ...playerForm, xtreinoId });
     setShowPlayerForm(false);
     resetPlayerForm();
   };
@@ -317,22 +328,18 @@ export default function AdminXTreinos() {
   const safePlayerStats = castPlayerStats(allPlayerStats);
   const safeSchedule = castSchedule(scheduleList);
 
-  // Detalhes dos xtreinos selecionados (com results/playerStats/registrations do getById)
   const safeXtDetailResults = castXtDetail(xtDetailResults);
   const safeXtDetailPlayers = castXtDetail(xtDetailPlayers);
   const safeXtDetailInscricoes = castXtDetail(xtDetailInscricoes);
 
-  // Para ResultsTab: xtDetail com results do getById
   const resultsTabDetail = selectedXtForResults
     ? (safeXtDetailResults ? { results: safeXtDetailResults.results ?? [] } : undefined)
     : undefined;
 
-  // Para PlayersTab: xtDetail com playerStats do getById
   const playersTabDetail = selectedXtForPlayers
     ? (safeXtDetailPlayers ? { playerStats: safeXtDetailPlayers.playerStats ?? [] } : undefined)
     : undefined;
 
-  // Para InscricoesTab: registrations do xtreino selecionado
   const inscricoesRegistrations = safeXtDetailInscricoes?.registrations ?? [];
 
   return (

@@ -35,15 +35,9 @@ export function PlayersTab({
   onSubmit,
   onFormChange,
 }: PlayersTabProps) {
-  // Se tem xtDetail com playerStats, usa. Senão, se selecionou xtreino, filtra allPlayerStats. Senão, todos.
   const stats = selectedXt
     ? (xtDetail?.playerStats ?? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
     : (allPlayerStats ?? []);
-
-console.log("selectedXt:", selectedXt);
-console.log("allPlayerStats:", allPlayerStats);
-console.log("xtDetail:", xtDetail);
-console.log("filtered stats:", allPlayerStats?.filter((p) => p.xtreinoId === selectedXt));
 
   return (
     <>
@@ -72,6 +66,7 @@ console.log("filtered stats:", allPlayerStats?.filter((p) => p.xtreinoId === sel
         <PlayerForm
           form={form}
           isPending={isPending}
+          selectedXtId={selectedXt}
           onChange={onFormChange}
           onSubmit={onSubmit}
           onClose={onCloseForm}

@@ -51,7 +51,7 @@ export const xtreinosRouter = createRouter({
 
       if (!xtreino) return null;
 
-      // 🆕 Times inscritos (com dados completos do time)
+      // Times inscritos (com dados completos do time)
       const xTeams = db
         .select()
         .from(xtreinoTeams)
@@ -188,7 +188,7 @@ export const xtreinosRouter = createRouter({
     }),
 
   // ============================================================
-  // 🆕 ADICIONAR TIME AO XTREINO (com verificação de slot)
+  // ADICIONAR TIME AO XTREINO
   // ============================================================
   addTeam: adminQuery
     .input(
@@ -272,7 +272,7 @@ export const xtreinosRouter = createRouter({
     }),
 
   // ============================================================
-  // 🆕 ATUALIZAR SLOT/RESERVA DO TIME
+  // ATUALIZAR SLOT/RESERVA DO TIME
   // ============================================================
   updateTeamSlot: adminQuery
     .input(
@@ -362,7 +362,7 @@ export const xtreinosRouter = createRouter({
     }),
 
   // ============================================================
-  // LISTAR RESULTADOS DO XTREINO POR DATA
+  // LISTAR RESULTADOS DO XTREINO
   // ============================================================
   listResults: publicQuery
     .input(
