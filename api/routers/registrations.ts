@@ -14,22 +14,31 @@ export const registrationsRouter = createRouter({
   // LISTAR INSCRIÇÕES
   // ============================================================
   list: publicQuery.query(() => {
-    const db = getDb();
+    try {
+      const db = getDb();
+      const inscricoes = db.select().from(xtreinoInscricoes).all();
 
-    const inscricoes = db.select().from(xtreinoInscricoes).all();
+      return inscricoes.map((insc) => {
+        try {
+          const jogadores = db
+            .select()
+            .from(xtreinoInscricoesJogadores)
+            .where(eq(xtreinoInscricoesJogadores.inscricaoId, insc.id))
+            .all();
 
-    return inscricoes.map((insc) => {
-      const jogadores = db
-        .select()
-        .from(xtreinoInscricoesJogadores)
-        .where(eq(xtreinoInscricoesJogadores.inscricaoId, insc.id))
-        .all();
-
-      return {
-        ...insc,
-        players: jogadores.map((j) => j.playerName),
-      };
-    });
+          return {
+            ...insc,
+            players: jogadores.map((j) => j.playerName),
+          };
+        } catch (e) {
+          console.error("[registrations.list] Erro ao buscar jogadores:", e);
+          return { ...insc, players: [] };
+        }
+      });
+    } catch (e) {
+      console.error("[registrations.list] Erro geral:", e);
+      throw e;
+    }
   }),
 
   // ============================================================
@@ -38,26 +47,30 @@ export const registrationsRouter = createRouter({
   listByXtreino: publicQuery
     .input(z.object({ xtreinoId: z.number() }))
     .query(({ input }) => {
-      const db = getDb();
-
-      const inscricoes = db
-        .select()
-        .from(xtreinoInscricoes)
-        .where(eq(xtreinoInscricoes.xtreinoId, input.xtreinoId))
-        .all();
-
-      return inscricoes.map((insc) => {
-        const jogadores = db
+      try {
+        const db = getDb();
+        const inscricoes = db
           .select()
-          .from(xtreinoInscricoesJogadores)
-          .where(eq(xtreinoInscricoesJogadores.inscricaoId, insc.id))
+          .from(xtreinoInscricoes)
+          .where(eq(xtreinoInscricoes.xtreinoId, input.xtreinoId))
           .all();
 
-        return {
-          ...insc,
-          players: jogadores.map((j) => j.playerName),
-        };
-      });
+        return inscricoes.map((insc) => {
+          const jogadores = db
+            .select()
+            .from(xtreinoInscricoesJogadores)
+            .where(eq(xtreinoInscricoesJogadores.inscricaoId, insc.id))
+            .all();
+
+          return {
+            ...insc,
+            players: jogadores.map((j) => j.playerName),
+          };
+        });
+      } catch (e) {
+        console.error("[registrations.listByXtreino] Erro:", e);
+        throw e;
+      }
     }),
 
   // ============================================================
@@ -73,99 +86,136 @@ export const registrationsRouter = createRouter({
       })
     )
     .mutation(({ input }) => {
-      const db = getDb();
-      const { xtreinoId, teamName, players, isReserve } = input;
+      console.log("[registrations.register] Input recebido:", JSON.stringify(input));
 
-      // Verifica se o xtreino existe e está aberto
-      const evento = db
-        .select()
-        .from(xtreinoEventos)
-        .where(eq(xtreinoEventos.id, xtreinoId))
-        .get();
+      try {
+        const db = getDb();
+        const { xtreinoId, teamName, players, isReserve } = input;
 
-      if (!evento) throw new Error("Xtreino não encontrado");
-      if (evento.status !== "aberto")
-        throw new Error(`Inscrições ${evento.status}`);
+        // Verifica se o xtreino existe e está aberto
+        console.log("[registrations.register] Buscando xtreino:", xtreinoId);
+        const evento = db
+          .select()
+          .from(xtreinoEventos)
+          .where(eq(xtreinoEventos.id, xtreinoId))
+          .get();
 
-      // Verifica limite de equipes confirmadas
-      const countResult = db
-        .select({ count: sql<number>`count(*)` })
-        .from(xtreinoInscricoes)
-        .where(
-          and(
-            eq(xtreinoInscricoes.xtreinoId, xtreinoId),
-            eq(xtreinoInscricoes.status, "confirmada")
+        if (!evento) {
+          console.error("[registrations.register] Xtreino não encontrado:", xtreinoId);
+          throw new Error("Xtreino não encontrado");
+        }
+        console.log("[registrations.register] Xtreino encontrado:", evento.status);
+
+        if (evento.status !== "aberto") {
+          throw new Error(`Inscrições ${evento.status}`);
+        }
+
+        // Verifica limite de equipes confirmadas
+        console.log("[registrations.register] Verificando limite...");
+        const countResult = db
+          .select({ count: sql<number>`count(*)` })
+          .from(xtreinoInscricoes)
+          .where(
+            and(
+              eq(xtreinoInscricoes.xtreinoId, xtreinoId),
+              eq(xtreinoInscricoes.status, "confirmada")
+            )
           )
-        )
-        .get();
+          .get();
 
-      const totalConfirmadas = countResult?.count ?? 0;
-      if (totalConfirmadas >= evento.maxTeams) {
-        throw new Error("Limite de equipes atingido");
-      }
+        const totalConfirmadas = countResult?.count ?? 0;
+        console.log("[registrations.register] Confirmadas:", totalConfirmadas, "Max:", evento.maxTeams);
 
-      // Verifica se equipe já está inscrita neste xtreino
-      const existing = db
-        .select()
-        .from(xtreinoInscricoes)
-        .where(
-          and(
-            eq(xtreinoInscricoes.xtreinoId, xtreinoId),
-            eq(xtreinoInscricoes.teamName, teamName)
+        if (totalConfirmadas >= evento.maxTeams) {
+          throw new Error("Limite de equipes atingido");
+        }
+
+        // Verifica se equipe já está inscrita neste xtreino
+        console.log("[registrations.register] Verificando duplicata...");
+        const existing = db
+          .select()
+          .from(xtreinoInscricoes)
+          .where(
+            and(
+              eq(xtreinoInscricoes.xtreinoId, xtreinoId),
+              eq(xtreinoInscricoes.teamName, teamName)
+            )
           )
-        )
-        .get();
+          .get();
 
-      if (existing) throw new Error(`Equipe ${teamName} já inscrita`);
+        if (existing) {
+          throw new Error(`Equipe ${teamName} já inscrita`);
+        }
 
-      // Calcula posição (próximo número disponível)
-      const posResult = db
-        .select({ maxPos: sql<number>`max(position)` })
-        .from(xtreinoInscricoes)
-        .where(eq(xtreinoInscricoes.xtreinoId, xtreinoId))
-        .get();
+        // Calcula posição (próximo número disponível)
+        console.log("[registrations.register] Calculando posição...");
+        const posResult = db
+          .select({ maxPos: sql<number>`max(position)` })
+          .from(xtreinoInscricoes)
+          .where(eq(xtreinoInscricoes.xtreinoId, xtreinoId))
+          .get();
 
-      const nextPosition = (posResult?.maxPos ?? 0) + 1;
+        const nextPosition = (posResult?.maxPos ?? 0) + 1;
+        console.log("[registrations.register] Próxima posição:", nextPosition);
 
-      // Insere a equipe (SEM position no .values() - usa default do schema)
-      const inscricao = db
-        .insert(xtreinoInscricoes)
-        .values({
+        // Insere a equipe
+        console.log("[registrations.register] Inserindo inscrição...");
+        const inscricao = db
+          .insert(xtreinoInscricoes)
+          .values({
+            xtreinoId,
+            teamName,
+            status: isReserve ? "pendente" : "confirmada",
+            registeredAt: new Date().toISOString(),
+          })
+          .returning({ id: xtreinoInscricoes.id })
+          .get();
+
+        console.log("[registrations.register] Inscrição criada, ID:", inscricao.id);
+
+        // Atualiza a posição
+        try {
+          db.update(xtreinoInscricoes)
+            .set({ position: nextPosition })
+            .where(eq(xtreinoInscricoes.id, inscricao.id))
+            .run();
+          console.log("[registrations.register] Posição atualizada");
+        } catch (posErr) {
+          console.error("[registrations.register] ERRO ao atualizar posição (coluna pode não existir):", posErr);
+          // Não falha se position não existir - continua sem position
+        }
+
+        // Insere os jogadores
+        if (players.length > 0) {
+          console.log("[registrations.register] Inserindo", players.length, "jogadores...");
+          for (const playerName of players) {
+            try {
+              db.insert(xtreinoInscricoesJogadores)
+                .values({
+                  inscricaoId: inscricao.id,
+                  playerName,
+                })
+                .run();
+            } catch (playerErr) {
+              console.error("[registrations.register] ERRO ao inserir jogador:", playerName, playerErr);
+            }
+          }
+        }
+
+        console.log("[registrations.register] SUCESSO!");
+        return {
+          id: inscricao.id,
           xtreinoId,
           teamName,
           status: isReserve ? "pendente" : "confirmada",
-          registeredAt: new Date().toISOString(),
-        })
-        .returning({ id: xtreinoInscricoes.id })
-        .get();
-
-      // Atualiza a posição manualmente (workaround se não tiver coluna no schema)
-      db.update(xtreinoInscricoes)
-        .set({ position: nextPosition })
-        .where(eq(xtreinoInscricoes.id, inscricao.id))
-        .run();
-
-      // Insere os jogadores na tabela de relacionamento
-      if (players.length > 0) {
-        for (const playerName of players) {
-          db.insert(xtreinoInscricoesJogadores)
-            .values({
-              inscricaoId: inscricao.id,
-              playerName,
-            })
-            .run();
-        }
+          players,
+          position: nextPosition,
+          success: true,
+        };
+      } catch (e) {
+        console.error("[registrations.register] ERRO GERAL:", e);
+        throw e;
       }
-
-      return {
-        id: inscricao.id,
-        xtreinoId,
-        teamName,
-        status: isReserve ? "pendente" : "confirmada",
-        players,
-        position: nextPosition,
-        success: true,
-      };
     }),
 
   // ============================================================
@@ -179,37 +229,42 @@ export const registrationsRouter = createRouter({
       })
     )
     .mutation(({ input }) => {
-      const db = getDb();
-      const { xtreinoId, teamName } = input;
+      try {
+        const db = getDb();
+        const { xtreinoId, teamName } = input;
 
-      const inscricao = db
-        .select()
-        .from(xtreinoInscricoes)
-        .where(
-          and(
-            eq(xtreinoInscricoes.xtreinoId, xtreinoId),
-            eq(xtreinoInscricoes.teamName, teamName)
+        const inscricao = db
+          .select()
+          .from(xtreinoInscricoes)
+          .where(
+            and(
+              eq(xtreinoInscricoes.xtreinoId, xtreinoId),
+              eq(xtreinoInscricoes.teamName, teamName)
+            )
           )
-        )
-        .get();
+          .get();
 
-      if (!inscricao) throw new Error("Inscrição não encontrada");
+        if (!inscricao) throw new Error("Inscrição não encontrada");
 
-      // Remove jogadores primeiro (FK)
-      db.delete(xtreinoInscricoesJogadores)
-        .where(eq(xtreinoInscricoesJogadores.inscricaoId, inscricao.id))
-        .run();
+        // Remove jogadores primeiro (FK)
+        db.delete(xtreinoInscricoesJogadores)
+          .where(eq(xtreinoInscricoesJogadores.inscricaoId, inscricao.id))
+          .run();
 
-      // Remove inscrição
-      db.delete(xtreinoInscricoes)
-        .where(eq(xtreinoInscricoes.id, inscricao.id))
-        .run();
+        // Remove inscrição
+        db.delete(xtreinoInscricoes)
+          .where(eq(xtreinoInscricoes.id, inscricao.id))
+          .run();
 
-      return { success: true, message: `Equipe ${teamName} removida` };
+        return { success: true, message: `Equipe ${teamName} removida` };
+      } catch (e) {
+        console.error("[registrations.unregister] ERRO:", e);
+        throw e;
+      }
     }),
 
   // ============================================================
-  // CANCELAR INSCRIÇÃO (muda status para cancelada)
+  // CANCELAR INSCRIÇÃO
   // ============================================================
   cancel: publicQuery
     .input(
@@ -219,28 +274,33 @@ export const registrationsRouter = createRouter({
       })
     )
     .mutation(({ input }) => {
-      const db = getDb();
-      const { xtreinoId, teamName } = input;
+      try {
+        const db = getDb();
+        const { xtreinoId, teamName } = input;
 
-      const inscricao = db
-        .select()
-        .from(xtreinoInscricoes)
-        .where(
-          and(
-            eq(xtreinoInscricoes.xtreinoId, xtreinoId),
-            eq(xtreinoInscricoes.teamName, teamName)
+        const inscricao = db
+          .select()
+          .from(xtreinoInscricoes)
+          .where(
+            and(
+              eq(xtreinoInscricoes.xtreinoId, xtreinoId),
+              eq(xtreinoInscricoes.teamName, teamName)
+            )
           )
-        )
-        .get();
+          .get();
 
-      if (!inscricao) throw new Error("Inscrição não encontrada");
+        if (!inscricao) throw new Error("Inscrição não encontrada");
 
-      db.update(xtreinoInscricoes)
-        .set({ status: "cancelada" })
-        .where(eq(xtreinoInscricoes.id, inscricao.id))
-        .run();
+        db.update(xtreinoInscricoes)
+          .set({ status: "cancelada" })
+          .where(eq(xtreinoInscricoes.id, inscricao.id))
+          .run();
 
-      return { success: true, message: `Inscrição de ${teamName} cancelada` };
+        return { success: true, message: `Inscrição de ${teamName} cancelada` };
+      } catch (e) {
+        console.error("[registrations.cancel] ERRO:", e);
+        throw e;
+      }
     }),
 
   // ============================================================
@@ -253,56 +313,65 @@ export const registrationsRouter = createRouter({
       })
     )
     .mutation(({ input, ctx }) => {
-      const payload = verifyToken(ctx.adminToken as string);
-      if (!payload) throw new Error("Invalid token");
+      try {
+        const payload = verifyToken(ctx.adminToken as string);
+        if (!payload) throw new Error("Invalid token");
 
-      console.log("Toggle fixed:", input.teamName);
-
-      return { success: true, teamName: input.teamName };
+        console.log("[registrations.toggleFixed]:", input.teamName);
+        return { success: true, teamName: input.teamName };
+      } catch (e) {
+        console.error("[registrations.toggleFixed] ERRO:", e);
+        throw e;
+      }
     }),
 
   // ============================================================
   // MIGRAR HISTÓRICOS
   // ============================================================
   migrarHistoricos: adminQuery.mutation(({ ctx }) => {
-    const payload = verifyToken(ctx.adminToken as string);
-    if (!payload) throw new Error("Invalid token");
+    try {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
 
-    const db = getDb();
+      const db = getDb();
 
-    const eventosHistoricos = [
-      { id: 1, date: "2026-04-30", maxTeams: 12, status: "finalizado" as const },
-      { id: 2, date: "2026-05-07", maxTeams: 12, status: "finalizado" as const },
-      { id: 3, date: "2026-05-19", maxTeams: 12, status: "finalizado" as const },
-      { id: 4, date: "2026-05-21", maxTeams: 12, status: "finalizado" as const },
-    ];
+      const eventosHistoricos = [
+        { id: 1, date: "2026-04-30", maxTeams: 12, status: "finalizado" as const },
+        { id: 2, date: "2026-05-07", maxTeams: 12, status: "finalizado" as const },
+        { id: 3, date: "2026-05-19", maxTeams: 12, status: "finalizado" as const },
+        { id: 4, date: "2026-05-21", maxTeams: 12, status: "finalizado" as const },
+      ];
 
-    const criados = [];
-    for (const evento of eventosHistoricos) {
-      const existing = db
-        .select()
-        .from(xtreinoEventos)
-        .where(eq(xtreinoEventos.id, evento.id))
-        .get();
+      const criados = [];
+      for (const evento of eventosHistoricos) {
+        const existing = db
+          .select()
+          .from(xtreinoEventos)
+          .where(eq(xtreinoEventos.id, evento.id))
+          .get();
 
-      if (!existing) {
-        db.insert(xtreinoEventos)
-          .values({
-            id: evento.id,
-            date: evento.date,
-            status: evento.status,
-            maxTeams: evento.maxTeams,
-            createdAt: new Date().toISOString(),
-          })
-          .run();
-        criados.push(evento);
+        if (!existing) {
+          db.insert(xtreinoEventos)
+            .values({
+              id: evento.id,
+              date: evento.date,
+              status: evento.status,
+              maxTeams: evento.maxTeams,
+              createdAt: new Date().toISOString(),
+            })
+            .run();
+          criados.push(evento);
+        }
       }
-    }
 
-    return {
-      success: true,
-      criados: criados.length,
-      eventos: criados,
-    };
+      return {
+        success: true,
+        criados: criados.length,
+        eventos: criados,
+      };
+    } catch (e) {
+      console.error("[registrations.migrarHistoricos] ERRO:", e);
+      throw e;
+    }
   }),
 });
