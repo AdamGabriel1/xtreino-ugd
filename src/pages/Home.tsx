@@ -8,6 +8,7 @@ import {
   Calendar,
   ChevronRight,
   Swords,
+  Loader2,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
@@ -29,18 +30,50 @@ export default function Home() {
   const { data: playersList } = trpc.players.list.useQuery();
   const { data: settings } = trpc.settings.get.useQuery();
 
-  // Busca todos os rankings (sem filtro de rankType no backend ainda)
-  const { data: allTeamRankings } = trpc.rankings.teams.useQuery({ limit: 50 });
-  const { data: allPlayerRankings } = trpc.rankings.players.useQuery({
-    limit: 50,
-  });
+  // Busca todos os rankings
+  const {
+    data: allTeamRankings,
+    isLoading: isLoadingTeamRankings,
+    isError: isErrorTeamRankings,
+  } = trpc.rankings.teams.useQuery({ limit: 50 });
+  const {
+    data: allPlayerRankings,
+    isLoading: isLoadingPlayerRankings,
+    isError: isErrorPlayerRankings,
+  } = trpc.rankings.players.useQuery({ limit: 50 });
+
+  // DEBUG: Log para ver o que o backend está retornando
+  // Remova após confirmar que os dados estão corretos
+  console.log("Team Rankings:", allTeamRankings);
+  console.log("Player Rankings:", allPlayerRankings);
 
   // Filtra no cliente por rankType
+  // Se o backend não enviar rankType, mostramos TODOS os dados em todas as abas
+  // (fallback para não ficar vazio enquanto o backend não é atualizado)
   const teamRankingsMap = useMemo(() => {
+    if (!allTeamRankings) {
+      return { xtreino: [], campeonato: [], scrim: [] };
+    }
+
+    // Verifica se algum item tem rankType definido
+    const hasRankType = allTeamRankings.some(
+      (r) => r.rankType && r.rankType !== ""
+    );
+
+    if (!hasRankType) {
+      // Se não tem rankType definido, mostra todos em todas as abas
+      return {
+        xtreino: allTeamRankings.slice(0, 5),
+        campeonato: allTeamRankings.slice(0, 5),
+        scrim: allTeamRankings.slice(0, 5),
+      };
+    }
+
     const byType = (type: RankCategory) =>
       allTeamRankings
-        ?.filter((r) => (r.rankType ?? "xtreino") === type)
-        .slice(0, 5) ?? [];
+        .filter((r) => (r.rankType ?? "xtreino") === type)
+        .slice(0, 5);
+
     return {
       xtreino: byType("xtreino"),
       campeonato: byType("campeonato"),
@@ -49,10 +82,29 @@ export default function Home() {
   }, [allTeamRankings]);
 
   const playerRankingsMap = useMemo(() => {
+    if (!allPlayerRankings) {
+      return { xtreino: [], campeonato: [], scrim: [] };
+    }
+
+    // Verifica se algum item tem rankType definido
+    const hasRankType = allPlayerRankings.some(
+      (r) => r.rankType && r.rankType !== ""
+    );
+
+    if (!hasRankType) {
+      // Se não tem rankType definido, mostra todos em todas as abas
+      return {
+        xtreino: allPlayerRankings.slice(0, 5),
+        campeonato: allPlayerRankings.slice(0, 5),
+        scrim: allPlayerRankings.slice(0, 5),
+      };
+    }
+
     const byType = (type: RankCategory) =>
       allPlayerRankings
-        ?.filter((r) => (r.rankType ?? "xtreino") === type)
-        .slice(0, 5) ?? [];
+        .filter((r) => (r.rankType ?? "xtreino") === type)
+        .slice(0, 5);
+
     return {
       xtreino: byType("xtreino"),
       campeonato: byType("campeonato"),
@@ -105,6 +157,8 @@ export default function Home() {
   const RankList = ({
     rankings,
     type,
+    isLoading,
+    isError,
   }: {
     rankings: Array<{
       id: number;
@@ -114,50 +168,71 @@ export default function Home() {
       wins?: number;
     }>;
     type: "team" | "player";
-  }) => (
-    <div className="divide-y divide-[#2a2a3a]">
-      {rankings.length > 0 ? (
-        rankings.map((r, i) => (
-          <div
-            key={r.id}
-            className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
-          >
-            <span
-              className={`w-8 text-center font-bold ${
-                i === 0
-                  ? "text-yellow-400"
-                  : i === 1
-                    ? "text-gray-300"
-                    : i === 2
-                      ? "text-amber-600"
-                      : "text-[#5a5a6e]"
-              }`}
-            >
-              {i + 1}
-            </span>
-            <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
-              {r.entityName}
-            </span>
-            <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
-            {type === "team" && (
-              <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
-            )}
-            {type === "player" && (
-              <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
-            )}
-          </div>
-        ))
-      ) : (
-        <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
-          Sem dados de ranking para este modo
+    isLoading: boolean;
+    isError: boolean;
+  }) => {
+    if (isLoading) {
+      return (
+        <div className="px-6 py-8 flex items-center justify-center gap-2 text-[#5a5a6e] text-sm">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Carregando ranking...
         </div>
-      )}
-    </div>
-  );
+      );
+    }
+
+    if (isError) {
+      return (
+        <div className="px-6 py-8 text-center text-red-400 text-sm">
+          Erro ao carregar ranking. Tente recarregar a página.
+        </div>
+      );
+    }
+
+    return (
+      <div className="divide-y divide-[#2a2a3a]">
+        {rankings.length > 0 ? (
+          rankings.map((r, i) => (
+            <div
+              key={r.id}
+              className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors"
+            >
+              <span
+                className={`w-8 text-center font-bold ${
+                  i === 0
+                    ? "text-yellow-400"
+                    : i === 1
+                      ? "text-gray-300"
+                      : i === 2
+                        ? "text-amber-600"
+                        : "text-[#5a5a6e]"
+                }`}
+              >
+                {i + 1}
+              </span>
+              <span className="flex-1 text-[#f0f0f5] font-medium text-sm">
+                {r.entityName}
+              </span>
+              <span className="text-[#8a8a9e] text-sm">{r.points} pts</span>
+              {type === "team" && (
+                <span className="text-[#5a5a6e] text-xs">{r.wins ?? 0}V</span>
+              )}
+              {type === "player" && (
+                <span className="text-[#5a5a6e] text-xs">{r.kills ?? 0}K</span>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="px-6 py-8 text-center text-[#5a5a6e] text-sm">
+            Sem dados de ranking para este modo
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <MainLayout>
-      {/* Banner Section - Full width responsive banner */}
+      {/* Banner Section */}
       <section className="w-full bg-[#0a0a0f]">
         <div className="w-full max-w-[1920px] mx-auto">
           <img
@@ -332,6 +407,8 @@ export default function Home() {
             <RankList
               rankings={teamRankingsMap[teamRankType]}
               type="team"
+              isLoading={isLoadingTeamRankings}
+              isError={isErrorTeamRankings}
             />
           </div>
 
@@ -357,6 +434,8 @@ export default function Home() {
             <RankList
               rankings={playerRankingsMap[playerRankType]}
               type="player"
+              isLoading={isLoadingPlayerRankings}
+              isError={isErrorPlayerRankings}
             />
           </div>
         </div>

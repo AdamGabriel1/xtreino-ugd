@@ -17,7 +17,6 @@ import {
   TrendingUp,
   Swords,
   Medal,
-  ChevronDown,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import AdminLayout from "@/layout/AdminLayout";
