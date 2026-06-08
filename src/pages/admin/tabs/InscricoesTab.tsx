@@ -28,6 +28,9 @@ interface InscricoesTabProps {
   onCancel: (data: { xtreinoId: number; teamName: string }) => void;
   onToggleFixed: (data: { teamName: string }) => void;
   isPending: boolean;
+  // ← NOVO: mutation para criar xtreino de verdade
+  onCreateEvent?: (data: { date: string; maxTeams: number; status: string }) => void;
+  isCreatingEvent?: boolean;
 }
 
 export function InscricoesTab({
@@ -42,11 +45,14 @@ export function InscricoesTab({
   onUnregister,
   onCancel,
   isPending,
+  onCreateEvent,
+  isCreatingEvent,
 }: InscricoesTabProps) {
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [newMaxTeams, setNewMaxTeams] = useState(12);
+  const [newStatus, setNewStatus] = useState("aberto");
 
   const selectedXtData = xtreinosList?.find((x) => x.id === selectedXt);
   const xtInscricoes = registrations?.filter((r) => r.xtreinoId === selectedXt) || [];
@@ -56,10 +62,21 @@ export function InscricoesTab({
       toast.error("Data é obrigatória");
       return;
     }
-    toast.success("Use o hook useXTreinos para criar xtreino");
-    setNewDate("");
-    setNewMaxTeams(12);
-    setShowCreateForm(false);
+
+    // ← AGORA CHAMA DE VERDADE se onCreateEvent existir
+    if (onCreateEvent) {
+      onCreateEvent({
+        date: newDate,
+        maxTeams: newMaxTeams,
+        status: newStatus,
+      });
+      setNewDate("");
+      setNewMaxTeams(12);
+      setNewStatus("aberto");
+      setShowCreateForm(false);
+    } else {
+      toast.error("Função de criar xtreino não configurada");
+    }
   };
 
   const handleStatusChange = (_id: number, status: string) => {
@@ -94,11 +111,11 @@ export function InscricoesTab({
         </div>
       </div>
 
-      {/* Form de criar xtreino */}
+      {/* Form de criar xtreino - AGORA FUNCIONAL */}
       {showCreateForm && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
           <h3 className="font-bold text-[#f0f0f5] mb-4">Criar Novo Xtreino</h3>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm text-[#8a8a9e] mb-1">Data</label>
               <input
@@ -121,13 +138,25 @@ export function InscricoesTab({
                 className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
               />
             </div>
+            <div>
+              <label className="block text-sm text-[#8a8a9e] mb-1">Status</label>
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+              >
+                <option value="aberto">Aberto</option>
+                <option value="fechado">Fechado</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-2 mt-4">
             <button
               onClick={handleCreateEvent}
-              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+              disabled={isCreatingEvent}
+              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
             >
-              Criar
+              {isCreatingEvent ? "Criando..." : "Criar"}
             </button>
             <button
               onClick={() => setShowCreateForm(false)}

@@ -30,7 +30,7 @@ export default function AdminXTreinos() {
     scheduleList,
     settings,
     allTeams,
-    registrationsList, // ← NOVO: query de registrations
+    registrationsList,
     create,
     update,
     remove,
@@ -330,7 +330,6 @@ export default function AdminXTreinos() {
     ? (safeXtDetailPlayers ? { playerStats: safeXtDetailPlayers.playerStats ?? [] } : undefined)
     : undefined;
 
-  // Normaliza registrations para o tipo InscricaoEquipe
   const normalizeRegistrations = (arr: any[] | undefined) => {
     if (!arr) return [];
     return arr.map((r) => ({
@@ -339,7 +338,6 @@ export default function AdminXTreinos() {
     }));
   };
 
-  // Usa registrationsList do hook useXTreinos (já vem com players inclusos do backend)
   const inscricoesRegistrations = normalizeRegistrations(registrationsList);
 
   return (
@@ -476,13 +474,23 @@ export default function AdminXTreinos() {
               unregisterTeam.mutate({ xtreinoId, teamName });
             }}
             onCancel={({ xtreinoId, teamName }) => {
-              // Se tiver mutation cancel no useXTreinos, use aqui
-              // Por enquanto usa unregister mesmo
               unregisterTeam.mutate({ xtreinoId, teamName });
             }}
             onToggleFixed={({ teamName }) => {
               toggleFixedTeam.mutate({ teamName });
             }}
+            // ← NOVO: passa a mutation de criar xtreino
+            onCreateEvent={({ date, maxTeams, status }) => {
+              create.mutate({
+                name: `Xtreino ${date}`,
+                date,
+                maxTeams,
+                status: status as XTreinoStatus,
+                timeBr: "21:00",
+                modality: "squad" as Modality,
+              });
+            }}
+            isCreatingEvent={create.isPending}
             isPending={
               registerTeam.isPending || unregisterTeam.isPending || toggleFixedTeam.isPending
             }
