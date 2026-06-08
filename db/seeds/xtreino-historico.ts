@@ -1,6 +1,10 @@
 import { getDb } from "../../api/queries/connection.js";
 import { eq, and } from "drizzle-orm";
-import { xtreinoResults, xtreinoPlayerStats } from "../schema.js";
+import {
+  xtreinoResults,
+  xtreinoPlayerStats,
+  rankings,
+} from "../schema.js";
 
 /**
  * Seed de dados históricos do XTREINO da Underground
@@ -238,4 +242,112 @@ export function seedXtreinoHistorico() {
   console.log(`[SEED XTREINO-HISTORICO] ${jogadoresCount} estatísticas de jogadores inseridas`);
 
   console.log("[SEED XTREINO-HISTORICO] Done!");
+
+  // Após inserir os dados, recalcula os rankings automaticamente
+  console.log("[SEED XTREINO-HISTORICO] Recalculando rankings...");
+  recalculateRankings();
+}
+
+/**
+ * Recalcula os rankings baseado nos dados de xtreino, campeonato e scrim
+ * Esta função pode ser chamada manualmente ou após inserir dados
+ */
+export function recalculateRankings() {
+  const db = getDb();
+  console.log("[RECALCULATE] Iniciando recálculo dos rankings...");
+
+  // Delete existing rankings
+  db.delete(rankings).run();
+
+  // --- XTreino Rankings ---
+  const xtResults = db.select().from(xtreinoResults).all();
+  const xtPlayerStats = db.select().from(xtreinoPlayerStats).all();
+
+  const xtTeamMap = new Map<
+    string,
+    { points: number; kills: number; wins: number; participations: number }
+  >();
+  const xtPlayerMap = new Map<
+    string,
+    { points: number; kills: number; wins: number; participations: number }
+  >();
+
+  for (const r of xtResults) {
+    const pts =
+      (r.totalPoints ?? 0) +
+      ((4 - (r.q1Pos ?? 99)) * 10 + (4 - (r.q2Pos ?? 99)) * 10 + (4 - (r.q3Pos ?? 99)) * 10);
+    const existing = xtTeamMap.get(r.teamName) ?? {
+      points: 0,
+      kills: 0,
+      wins: 0,
+      participations: 0,
+    };
+    xtTeamMap.set(r.teamName, {
+      points: existing.points + pts,
+      kills: existing.kills,
+      wins: existing.wins,
+      participations: existing.participations + 1,
+    });
+  }
+
+  for (const p of xtPlayerStats) {
+    const pts = (p.totalKills ?? 0) * 2;
+    const existing = xtPlayerMap.get(p.playerName) ?? {
+      points: 0,
+      kills: 0,
+      wins: 0,
+      participations: 0,
+    };
+    xtPlayerMap.set(p.playerName, {
+      points: existing.points + pts,
+      kills: existing.kills + (p.totalKills ?? 0),
+      wins: existing.wins,
+      participations: existing.participations + 1,
+    });
+  }
+
+  const generateRankingEntityId = (entityType: "team" | "player", entityName: string) =>
+    (Math.abs(
+      `${entityType}:${entityName}`.split("").reduce((acc, char) => acc * 31 + char.charCodeAt(0), 0)
+    ) % 1_000_000_000) + 1;
+
+  // Insert XTreino rankings
+  for (const [name, data] of xtTeamMap) {
+    try {
+      db.insert(rankings).values({
+        entityType: "team",
+        entityId: generateRankingEntityId("team", name),
+        rankType: "xtreino",
+        entityName: name,
+        points: data.points,
+        kills: data.kills,
+        wins: data.wins,
+        participations: data.participations,
+        kdRatio: data.kills > 0 ? parseFloat((data.kills / Math.max(data.participations, 1)).toFixed(2)) : 0,
+      }).run();
+    } catch (e) {
+      console.error(`[RECALCULATE] Erro ao inserir team xtreino ${name}:`, e);
+    }
+  }
+
+  for (const [name, data] of xtPlayerMap) {
+    try {
+      db.insert(rankings).values({
+        entityType: "player",
+        entityId: generateRankingEntityId("player", name),
+        rankType: "xtreino",
+        entityName: name,
+        points: data.points,
+        kills: data.kills,
+        wins: data.wins,
+        participations: data.participations,
+        kdRatio: data.kills > 0 ? parseFloat((data.kills / Math.max(data.participations, 1)).toFixed(2)) : 0,
+      }).run();
+    } catch (e) {
+      console.error(`[RECALCULATE] Erro ao inserir player xtreino ${name}:`, e);
+    }
+  }
+
+  console.log(`[RECALCULATE] ${xtTeamMap.size} equipes e ${xtPlayerMap.size} jogadores de xtreino inseridos`);
+  console.log("[RECALCULATE] Rankings recalculados com sucesso!");
 }

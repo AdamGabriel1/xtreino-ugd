@@ -225,26 +225,37 @@ export const rankingsRouter = createRouter({
       });
     }
 
-    // Insert all rankings
+    const teamIdMap = new Map<string, number>(
+      db.select({ id: teams.id, name: teams.name }).from(teams).all().map((team) => [team.name, team.id])
+    );
+    const playerIdMap = new Map<string, number>(
+      db.select({ id: players.id, nickname: players.nickname }).from(players).all().map((player) => [player.nickname, player.id])
+    );
+
+    // Insert all rankings - usando sql para evitar conflito de ID
     const insertRanking = (
       entityType: "team" | "player",
       rankType: "xtreino" | "campeonato" | "scrim",
       name: string,
       data: { points: number; kills: number; wins: number; participations: number }
     ) => {
-      db.insert(rankings)
-        .values({
-          entityType,
-          rankType,
-          entityId: 0, // placeholder — pode usar hash do nome se precisar de ID único
-          entityName: name,
-          points: data.points,
-          kills: data.kills,
-          wins: data.wins,
-          participations: data.participations,
-          kdRatio: data.kills > 0 ? parseFloat((data.kills / Math.max(data.participations, 1)).toFixed(2)) : 0,
-        })
-        .run();
+      try {
+        db.insert(rankings)
+          .values({
+            entityType,
+            entityId: entityType === "team" ? teamIdMap.get(name) ?? 0 : playerIdMap.get(name) ?? 0,
+            rankType,
+            entityName: name,
+            points: data.points,
+            kills: data.kills,
+            wins: data.wins,
+            participations: data.participations,
+            kdRatio: data.kills > 0 ? parseFloat((data.kills / Math.max(data.participations, 1)).toFixed(2)) : 0,
+          })
+          .run();
+      } catch (e) {
+        console.error(`Erro ao inserir ranking ${entityType} ${rankType} ${name}:`, e);
+      }
     };
 
     for (const [name, data] of xtTeamMap) insertRanking("team", "xtreino", name, data);
@@ -254,6 +265,6 @@ export const rankingsRouter = createRouter({
     for (const [name, data] of scrTeamMap) insertRanking("team", "scrim", name, data);
     for (const [name, data] of scrPlayerMap) insertRanking("player", "scrim", name, data);
 
-    return { success: true };
+    return { success: true, message: "Rankings recalculados com sucesso" };
   }),
 });
