@@ -40,6 +40,12 @@ export function ResultsTab({
     ? (xtDetail?.results ?? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? [])
     : (allResults ?? []);
 
+// Adicione isso temporariamente no ResultsTab, antes do return:
+console.log("selectedXt:", selectedXt);
+console.log("allResults:", allResults);
+console.log("xtDetail:", xtDetail);
+console.log("filtered results:", allResults?.filter((r) => r.xtreinoId === selectedXt));
+
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">

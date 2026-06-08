@@ -40,6 +40,11 @@ export function PlayersTab({
     ? (xtDetail?.playerStats ?? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
     : (allPlayerStats ?? []);
 
+console.log("selectedXt:", selectedXt);
+console.log("allPlayerStats:", allPlayerStats);
+console.log("xtDetail:", xtDetail);
+console.log("filtered stats:", allPlayerStats?.filter((p) => p.xtreinoId === selectedXt));
+
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
