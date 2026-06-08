@@ -6,26 +6,26 @@ import { eq } from "drizzle-orm";
  * Mapeamento manual: nome da equipe → caminho da logo em /public
  * 
  * Adicione ou remova entradas conforme necessário.
- * O caminho deve ser relativo à pasta public (ex: "/logos/ugd.png")
+ * O caminho deve ser relativo à pasta public (ex: "/logos/ugd.jpg")
  */
 const LOGO_MAP: Record<string, string> = {
-  "UGD Threat": "/logos/ugd-threat.png",
-  "UGD Royal": "/logos/ugd-royal.png",
-  "UGD Light": "/logos/ugd-light.png",
-  "RED": "/logos/red.png",
-  "RED Magic BR": "/logos/red-magic-br.png",
-  "CMF": "/logos/cmf.png",
-  "KOV": "/logos/kov.png",
-  "LMF": "/logos/lmf.png",
-  "INF": "/logos/inf.png",
-  "Eternity": "/logos/eternity.png",
-  "FURY": "/logos/fury.png",
-  "Λつつ": "/logos/lambda.png",
-  "ODS": "/logos/ods.png",
-  "Misturado": "/logos/misturado.png",
-  "Time I": "/logos/time-i.png",
-  "Time E": "/logos/time-e.png",
-  "Dev": "/logos/dev.png",
+  "UGD Threat": "/logos/ugd-threat.jpg",
+  "UGD Royal": "/logos/ugd-royal.jpg",
+  "UGD Light": "/logos/ugd-light.jpg",
+  "RED": "/logos/red.jpg",
+  "RED Magic BR": "/logos/red-magic-br.jpg",
+  "CMF": "/logos/cmf.jpg",
+  "KOV": "/logos/kov.jpg",
+  "LMF": "/logos/lmf.jpg",
+  "INF": "/logos/inf.jpg",
+  "Eternity": "/logos/eternity.jpg",
+  "FURY": "/logos/fury.jpg",
+  "Λつつ": "/logos/lambda.jpg",
+  "ODS": "/logos/ods.jpg",
+  "Misturado": "/logos/misturado.jpg",
+  "Time I": "/logos/time-i.jpg",
+  "Time E": "/logos/time-e.jpg",
+  "Dev": "/logos/dev.jpg",
 };
 
 /**
