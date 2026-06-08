@@ -103,7 +103,7 @@ export default function AdminEquipes() {
           </div>
           <button
             onClick={() => { setShowForm(true); setEditing(null); resetForm(); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all"
           >
             <Plus className="w-4 h-4" /> Nova Equipe
           </button>
@@ -117,7 +117,7 @@ export default function AdminEquipes() {
             placeholder="Buscar equipe..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[#12121a] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[#12121a] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-green-500/50"
           />
         </div>
 
@@ -135,15 +135,15 @@ export default function AdminEquipes() {
             <div className="mb-6">
               <label className="block text-sm text-[#8a8a9e] mb-2">Logo da Equipe</label>
               <div className="flex items-center gap-4">
-                <div className="relative w-24 h-24 rounded-xl bg-gradient-to-br from-red-900/30 to-red-600/10 flex items-center justify-center border border-[#2a2a3a] overflow-hidden">
+                <div className="relative w-24 h-24 rounded-xl bg-gradient-to-br from-green-900/30 to-green-600/10 flex items-center justify-center border border-[#2a2a3a] overflow-hidden">
                   {preview ? (
                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <Shield className="w-10 h-10 text-red-400/50" />
+                    <Shield className="w-10 h-10 text-green-400/50" />
                   )}
                   {isUploading && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 text-red-400 animate-spin" />
+                      <Loader2 className="w-6 h-6 text-green-400 animate-spin" />
                     </div>
                   )}
                 </div>
@@ -163,13 +163,13 @@ export default function AdminEquipes() {
                     <button
                       type="button"
                       onClick={clearImage}
-                      className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                      className="text-xs text-green-400 hover:text-green-300 transition-colors"
                     >
                       Remover imagem
                     </button>
                   )}
                   {uploadError && (
-                    <span className="text-xs text-red-400">{uploadError}</span>
+                    <span className="text-xs text-green-400">{uploadError}</span>
                   )}
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function AdminEquipes() {
                   value={form.name} 
                   onChange={(e) => setForm({ ...form, name: e.target.value })} 
                   required
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" 
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" 
                 />
               </div>
               <div>
@@ -191,7 +191,7 @@ export default function AdminEquipes() {
                   value={form.tag} 
                   onChange={(e) => setForm({ ...form, tag: e.target.value })} 
                   required
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" 
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" 
                 />
               </div>
               <div>
@@ -199,7 +199,7 @@ export default function AdminEquipes() {
                 <input 
                   value={form.captainName} 
                   onChange={(e) => setForm({ ...form, captainName: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" 
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" 
                 />
               </div>
               <div>
@@ -207,7 +207,7 @@ export default function AdminEquipes() {
                 <input 
                   value={form.captainDiscord} 
                   onChange={(e) => setForm({ ...form, captainDiscord: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" 
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" 
                 />
               </div>
               <div>
@@ -215,14 +215,14 @@ export default function AdminEquipes() {
                 <input 
                   value={form.whatsapp} 
                   onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50" 
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50" 
                 />
               </div>
               <div className="flex items-end">
                 <button 
                   type="submit" 
                   disabled={create.isPending || update.isPending || isUploading}
-                  className="px-6 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
+                  className="px-6 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all disabled:opacity-50"
                 >
                   {create.isPending || update.isPending ? "Salvando..." : (
                     <span className="flex items-center gap-1">
@@ -252,11 +252,11 @@ export default function AdminEquipes() {
                 {teamsList?.map((team) => (
                   <tr key={team.id} className="hover:bg-[#1a1a24]">
                     <td className="px-6 py-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-900/30 to-red-600/10 flex items-center justify-center overflow-hidden">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-900/30 to-green-600/10 flex items-center justify-center overflow-hidden">
                         {team.logo ? (
                           <img src={team.logo} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <Shield className="w-5 h-5 text-red-400/50" />
+                          <Shield className="w-5 h-5 text-green-400/50" />
                         )}
                       </div>
                     </td>
@@ -273,7 +273,7 @@ export default function AdminEquipes() {
                         </button>
                         <button 
                           onClick={() => { if (confirm("Remover equipe?")) remove.mutate({ id: team.id }); }} 
-                          className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-colors"
+                          className="p-1.5 rounded hover:bg-green-500/10 text-green-400 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

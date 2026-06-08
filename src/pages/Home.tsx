@@ -157,8 +157,21 @@ export default function Home() {
 
   return (
     <MainLayout>
+      {/* Banner Section - Full width responsive banner */}
+      <section className="w-full bg-[#0a0a0f]">
+        <div className="w-full max-w-[1920px] mx-auto">
+          <img
+            src="/banner.jpg"
+            alt="Devils Mobile League Banner"
+            className="w-full h-auto object-cover"
+            style={{ aspectRatio: "2 / 1" }}
+            loading="eager"
+          />
+        </div>
+      </section>
+
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-transparent to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,59,59,0.08)_0%,_transparent_70%)]" />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
