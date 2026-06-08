@@ -46,6 +46,7 @@ export function useXTreinos() {
   const addResult = trpc.xtreinos.addResult.useMutation({
     onSuccess: () => {
       utils.xtreinos.listResults.invalidate();
+      utils.xtreinos.getById.invalidate();
       toast.success("Resultado adicionado!");
     },
     onError: (err) => toast.error(err.message),
@@ -55,6 +56,7 @@ export function useXTreinos() {
   const addPlayerStats = trpc.xtreinos.addPlayerStats.useMutation({
     onSuccess: () => {
       utils.xtreinos.listPlayerStats.invalidate();
+      utils.xtreinos.getById.invalidate();
       toast.success("Stats de jogador adicionadas!");
     },
     onError: (err) => toast.error(err.message),
@@ -77,10 +79,11 @@ export function useXTreinos() {
     onError: (err) => toast.error(err.message),
   });
 
-  // Registration mutations — usando as procedures que EXISTEM no router
+  // Registration mutations
   const registerTeam = trpc.xtreinos.addTeam.useMutation({
     onSuccess: () => {
       utils.xtreinos.list.invalidate();
+      utils.xtreinos.getById.invalidate();
       toast.success("Time inscrito!");
     },
     onError: (err) => toast.error(err.message),
@@ -89,6 +92,7 @@ export function useXTreinos() {
   const unregisterTeam = trpc.xtreinos.removeTeam.useMutation({
     onSuccess: () => {
       utils.xtreinos.list.invalidate();
+      utils.xtreinos.getById.invalidate();
       toast.success("Time removido da lista!");
     },
     onError: (err) => toast.error(err.message),
@@ -97,6 +101,7 @@ export function useXTreinos() {
   const toggleFixedTeam = trpc.xtreinos.updateTeamSlot.useMutation({
     onSuccess: () => {
       utils.xtreinos.list.invalidate();
+      utils.xtreinos.getById.invalidate();
       utils.settings.get.invalidate();
       toast.success("Status de time fixo atualizado!");
     },

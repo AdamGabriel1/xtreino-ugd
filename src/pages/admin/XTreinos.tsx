@@ -6,6 +6,7 @@ import { useState } from "react";
 import { CalendarDays, Target, BarChart3, Users } from "lucide-react";
 import { toast } from "sonner";
 import AdminLayout from "@/layout/AdminLayout";
+import { trpc } from "@/providers/trpc";
 import { useXTreinos } from "../../hooks/useXTreinos.js";
 import type {
   XTreinoFormData,
@@ -100,9 +101,24 @@ export default function AdminXTreinos() {
     notes: "",
   });
 
-  // Selected xtreino for results/players tabs
+  // Selected xtreino for results/players/inscricoes tabs
   const [selectedXtForResults, setSelectedXtForResults] = useState<number | null>(null);
   const [selectedXtForPlayers, setSelectedXtForPlayers] = useState<number | null>(null);
+  const [selectedXtForInscricoes, setSelectedXtForInscricoes] = useState<number | null>(null);
+
+  // 🆕 Buscar detalhes do xtreino selecionado (com results, playerStats, registrations)
+  const { data: xtDetailResults } = trpc.xtreinos.getById.useQuery(
+    { id: selectedXtForResults ?? 0 },
+    { enabled: selectedXtForResults !== null }
+  );
+  const { data: xtDetailPlayers } = trpc.xtreinos.getById.useQuery(
+    { id: selectedXtForPlayers ?? 0 },
+    { enabled: selectedXtForPlayers !== null }
+  );
+  const { data: xtDetailInscricoes } = trpc.xtreinos.getById.useQuery(
+    { id: selectedXtForInscricoes ?? 0 },
+    { enabled: selectedXtForInscricoes !== null }
+  );
 
   // --- Helpers: cast dados do tRPC para os tipos strictos ---
   const castXTreinos = (data: typeof xtreinosList): import("./types").XTreino[] | undefined => {
@@ -136,6 +152,19 @@ export default function AdminXTreinos() {
       ...s,
       status: s.status as ScheduleStatus,
     }));
+  };
+
+  // Cast do getById para XTreino (com results, playerStats, registrations)
+  const castXtDetail = (data: typeof xtDetailResults): import("./types").XTreino | null => {
+    if (!data) return null;
+    return {
+      ...data,
+      modality: (data as any).modality as Modality,
+      status: (data as any).status as XTreinoStatus,
+      results: (data as any).results,
+      playerStats: (data as any).playerStats,
+      registrations: (data as any).registrations,
+    };
   };
 
   // --- Handlers XTreino ---
@@ -288,6 +317,24 @@ export default function AdminXTreinos() {
   const safePlayerStats = castPlayerStats(allPlayerStats);
   const safeSchedule = castSchedule(scheduleList);
 
+  // Detalhes dos xtreinos selecionados (com results/playerStats/registrations do getById)
+  const safeXtDetailResults = castXtDetail(xtDetailResults);
+  const safeXtDetailPlayers = castXtDetail(xtDetailPlayers);
+  const safeXtDetailInscricoes = castXtDetail(xtDetailInscricoes);
+
+  // Para ResultsTab: xtDetail com results do getById
+  const resultsTabDetail = selectedXtForResults
+    ? (safeXtDetailResults ? { results: safeXtDetailResults.results ?? [] } : undefined)
+    : undefined;
+
+  // Para PlayersTab: xtDetail com playerStats do getById
+  const playersTabDetail = selectedXtForPlayers
+    ? (safeXtDetailPlayers ? { playerStats: safeXtDetailPlayers.playerStats ?? [] } : undefined)
+    : undefined;
+
+  // Para InscricoesTab: registrations do xtreino selecionado
+  const inscricoesRegistrations = safeXtDetailInscricoes?.registrations ?? [];
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -349,6 +396,7 @@ export default function AdminXTreinos() {
           <ResultsTab
             xtreinosList={safeXTreinos}
             allResults={safeResults}
+            xtDetail={resultsTabDetail}
             selectedXt={selectedXtForResults}
             showForm={showResultForm}
             form={resultForm}
@@ -369,6 +417,7 @@ export default function AdminXTreinos() {
           <PlayersTab
             xtreinosList={safeXTreinos}
             allPlayerStats={safePlayerStats}
+            xtDetail={playersTabDetail}
             selectedXt={selectedXtForPlayers}
             showForm={showPlayerForm}
             form={playerForm}
@@ -407,7 +456,7 @@ export default function AdminXTreinos() {
         {activeTab === "inscricoes" && (
           <InscricoesTab
             xtreinosList={safeXTreinos}
-            registrations={[]}
+            registrations={inscricoesRegistrations}
             fixedTeams={fixedTeams}
             allTeams={allTeams as Array<{ id: number; name: string; tag: string }> | undefined}
             settings={settings}

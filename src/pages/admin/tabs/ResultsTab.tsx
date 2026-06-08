@@ -9,6 +9,7 @@ import { ResultForm } from "../components/ResultForm";
 interface ResultsTabProps {
   xtreinosList: XTreino[] | undefined;
   allResults: XTreinoResult[] | undefined;
+  xtDetail: { results?: XTreinoResult[] } | null | undefined;
   selectedXt: number | null;
   showForm: boolean;
   form: ResultFormData;
@@ -23,6 +24,7 @@ interface ResultsTabProps {
 export function ResultsTab({
   xtreinosList,
   allResults,
+  xtDetail,
   selectedXt,
   showForm,
   form,
@@ -33,10 +35,10 @@ export function ResultsTab({
   onSubmit,
   onFormChange,
 }: ResultsTabProps) {
-  // FILTRO SIMPLES: se selecionou xtreino, filtra por xtreinoId
+  // Se tem xtDetail com results, usa. Senão, se selecionou xtreino, filtra allResults. Senão, todos.
   const results = selectedXt
-    ? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? []
-    : allResults ?? [];
+    ? (xtDetail?.results ?? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? [])
+    : (allResults ?? []);
 
   return (
     <>

@@ -9,6 +9,7 @@ import { PlayerForm } from "../components/PlayerForm";
 interface PlayersTabProps {
   xtreinosList: XTreino[] | undefined;
   allPlayerStats: PlayerStat[] | undefined;
+  xtDetail: { playerStats?: PlayerStat[] } | null | undefined;
   selectedXt: number | null;
   showForm: boolean;
   form: PlayerFormData;
@@ -23,6 +24,7 @@ interface PlayersTabProps {
 export function PlayersTab({
   xtreinosList,
   allPlayerStats,
+  xtDetail,
   selectedXt,
   showForm,
   form,
@@ -33,10 +35,10 @@ export function PlayersTab({
   onSubmit,
   onFormChange,
 }: PlayersTabProps) {
-  // FILTRO SIMPLES: se selecionou xtreino, filtra por xtreinoId
+  // Se tem xtDetail com playerStats, usa. Senão, se selecionou xtreino, filtra allPlayerStats. Senão, todos.
   const stats = selectedXt
-    ? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? []
-    : allPlayerStats ?? [];
+    ? (xtDetail?.playerStats ?? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
+    : (allPlayerStats ?? []);
 
   return (
     <>
