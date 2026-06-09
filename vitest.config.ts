@@ -20,6 +20,7 @@ export default defineConfig({
       "@apilib": path.resolve(templateRoot, "api/lib"),
       "@queries": path.resolve(templateRoot, "api/queries"),
       "@routers": path.resolve(templateRoot, "api/routers"),
+      "@hooks": path.resolve(templateRoot, "src/hooks"),
     },
   },
   test: {
