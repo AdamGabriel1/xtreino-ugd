@@ -19,63 +19,18 @@ import {
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
+import {
+  useXtreinoCalculations,
+  calcKillPoints,
+} from "../../hooks/useXtreinoCalculations";
 
-type SortField = "xtreinoKills" | "xtreinoParticipations" | "avgKills";
+type SortField = "totalKills" | "participations" | "avgKills" | "q1Kills" | "q2Kills" | "q3Kills";
 type SortDir = "asc" | "desc";
-
-// Interface para os dados do jogador vindo do tRPC
-interface PlayerFromDB {
-  id: number;
-  nickname: string;
-  uid: string | null;
-  discord: string | null;
-  teamId: number | null;
-  kills: number;
-  deaths: number;
-  wins: number;
-  matches: number;
-  xtreinoKills: number | null;
-  xtreinoParticipations: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Interface para stats de xtreino vindo do tRPC (xtreinoPlayerStats)
-interface XtreinoPlayerStat {
-  id: number;
-  xtreinoId: number;
-  date: string;
-  teamName: string;
-  playerName: string;
-  q1Kills: number;
-  q2Kills: number;
-  q3Kills: number;
-  totalKills: number;
-  createdAt: Date;
-}
-
-// Interface enriquecida para exibição
-interface PlayerWithStats {
-  id: number;
-  nickname: string;
-  uid: string | null;
-  discord: string | null;
-  teamId: number | null;
-  kills: number;
-  deaths: number;
-  wins: number;
-  matches: number;
-  xtreinoKills: number;
-  xtreinoParticipations: number;
-  avgKills: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export default function Jogadores() {
   const [search, setSearch] = useState("");
-  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
-  const [sortField, setSortField] = useState<SortField>("xtreinoKills");
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>("totalKills");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   // Filtros de mês e dia do xtreino
@@ -89,84 +44,52 @@ export default function Jogadores() {
   const { data: teamsList } = trpc.teams.list.useQuery();
   const { data: allPlayerStats, isLoading: statsLoading } = trpc.xtreinos.listPlayerStats.useQuery();
   const { data: playerDetail } = trpc.players.getById.useQuery(
-    { id: selectedPlayer! },
-    { enabled: !!selectedPlayer }
+    { id: selectedPlayer ? parseInt(selectedPlayer) : 0 },
+    { enabled: !!selectedPlayer && !isNaN(parseInt(selectedPlayer)) }
   );
 
-  // ===== FILTROS DE MÊS E DIA =====
-  // Extrair meses disponíveis dos xtreinoPlayerStats
-  const availableMonths = useMemo(() => {
-    if (!allPlayerStats) return [];
-    const months = new Set<string>();
-    allPlayerStats.forEach((stat: XtreinoPlayerStat) => {
-      if (stat.date) months.add(stat.date.substring(0, 7));
-    });
-    return Array.from(months).sort().reverse();
-  }, [allPlayerStats]);
+  // Hook de cálculos
+  const {
+    playerAccumulated,
+    playerXtreinoStats,
+    availableMonths,
+    availableDates,
+    periodSummary,
+  } = useXtreinoCalculations({
+    playerStats: allPlayerStats ?? [],
+    selectedMonth,
+    selectedDate,
+  });
 
-  // Extrair datas disponíveis do mês selecionado
-  const availableDates = useMemo(() => {
-    if (!allPlayerStats || !selectedMonth) return [];
-    const dates = new Set<string>();
-    allPlayerStats.forEach((stat: XtreinoPlayerStat) => {
-      if (stat.date && stat.date.startsWith(selectedMonth)) dates.add(stat.date);
-    });
-    return Array.from(dates).sort();
-  }, [allPlayerStats, selectedMonth]);
-
-  // Filtrar stats por mês e dia (AGORA POR playerName, não playerId)
-  const filteredStats = useMemo(() => {
-    if (!allPlayerStats) return [];
-    return allPlayerStats.filter((stat: XtreinoPlayerStat) => {
-      if (selectedMonth && !stat.date?.startsWith(selectedMonth)) return false;
-      if (selectedDate && stat.date !== selectedDate) return false;
-      return true;
-    });
-  }, [allPlayerStats, selectedMonth, selectedDate]);
-
-  // Calcular kills e participações por jogador (match por NOME)
-  const playerStatsMap = useMemo(() => {
-    const map = new Map<string, { kills: number; participations: number }>();
-
-    filteredStats.forEach((stat: XtreinoPlayerStat) => {
-      const name = stat.playerName.trim().toLowerCase();
-      const existing = map.get(name);
-      if (existing) {
-        existing.kills += stat.totalKills || 0;
-        existing.participations += 1;
-      } else {
-        map.set(name, { kills: stat.totalKills || 0, participations: 1 });
-      }
-    });
-
-    return map;
-  }, [filteredStats]);
-
-  // Enriquecer jogadores com stats filtradas
-  const enrichedPlayers: PlayerWithStats[] = useMemo(() => {
+  // Merge com dados do DB (times, etc)
+  const enrichedPlayers = useMemo(() => {
     if (!playersList) return [];
 
-    return playersList.map((p: PlayerFromDB) => {
+    return playersList.map((p) => {
       const nameKey = p.nickname.trim().toLowerCase();
-      const stats = playerStatsMap.get(nameKey);
-
-      // Se tem filtro ativo, usa os stats filtrados; senão usa os do DB
-      const xtreinoKills = stats?.kills ?? p.xtreinoKills ?? 0;
-      const xtreinoParticipations = stats?.participations ?? p.xtreinoParticipations ?? 0;
-      const avgKills = xtreinoParticipations > 0
-        ? Math.round(xtreinoKills / xtreinoParticipations)
-        : 0;
+      const stats = playerAccumulated.find(
+        (s) => s.playerName.trim().toLowerCase() === nameKey
+      );
 
       return {
-        ...p,
-        xtreinoKills,
-        xtreinoParticipations,
-        avgKills,
+        id: p.id,
+        nickname: p.nickname,
+        teamId: p.teamId,
+        teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
+        // Stats do período filtrado (ou do DB se não tem filtro)
+        totalKills: stats?.totalKills ?? p.xtreinoKills ?? 0,
+        q1Kills: stats?.totalQ1Kills ?? 0,
+        q2Kills: stats?.totalQ2Kills ?? 0,
+        q3Kills: stats?.totalQ3Kills ?? 0,
+        participations: stats?.participations ?? p.xtreinoParticipations ?? 0,
+        avgKills: stats?.avgKills ?? 0,
+        killPoints: calcKillPoints(stats?.totalKills ?? p.xtreinoKills ?? 0),
+        xtreinoDates: stats?.xtreinoDates ?? [],
       };
     });
-  }, [playersList, playerStatsMap]);
+  }, [playersList, playerAccumulated, teamsList]);
 
-  // Ordenar jogadores
+  // Ordenar
   const sortedPlayers = useMemo(() => {
     return [...enrichedPlayers].sort((a, b) => {
       const aVal = a[sortField] ?? 0;
@@ -175,21 +98,16 @@ export default function Jogadores() {
     });
   }, [enrichedPlayers, sortField, sortDir]);
 
-  // Stats do período filtrado
-  const periodStats = useMemo(() => {
-    if (!filteredStats.length) return null;
-    const totalKills = filteredStats.reduce((sum, s) => sum + (s.totalKills || 0), 0);
-    const uniquePlayers = new Set(filteredStats.map((s) => s.playerName)).size;
-    const uniqueDates = new Set(filteredStats.map((s) => s.date)).size;
-    return { totalKills, uniquePlayers, uniqueDates };
-  }, [filteredStats]);
+  // Stats do jogador selecionado (do hook)
+  const selectedPlayerStats = useMemo(() => {
+    if (!selectedPlayer) return null;
+    const nameKey = selectedPlayer.toLowerCase();
+    return playerXtreinoStats.filter(
+      (s) => s.playerName.toLowerCase() === nameKey
+    );
+  }, [selectedPlayer, playerXtreinoStats]);
 
   // ===== HELPERS =====
-  const getTeamName = (teamId: number | null) => {
-    if (!teamId) return "Sem equipe";
-    return teamsList?.find((t) => t.id === teamId)?.name ?? "Sem equipe";
-  };
-
   const getRankIcon = (index: number) => {
     if (index === 0) return <Trophy className="w-5 h-5 text-green-400" />;
     if (index === 1) return <Medal className="w-5 h-5 text-green-300" />;
@@ -225,14 +143,8 @@ export default function Jogadores() {
     </button>
   );
 
-  const kd = (kills: number, deaths: number) => {
-    if (deaths === 0) return kills > 0 ? kills.toString() : "0";
-    return (kills / deaths).toFixed(2);
-  };
-
   const isLoading = playersLoading || statsLoading;
 
-  // ===== RENDER =====
   return (
     <MainLayout>
       <div className="min-h-screen bg-[#0a0a0f]">
@@ -261,7 +173,6 @@ export default function Jogadores() {
               </div>
 
               <div className="flex flex-wrap gap-3 flex-1">
-                {/* Busca */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" />
                   <input
@@ -273,15 +184,11 @@ export default function Jogadores() {
                   />
                 </div>
 
-                {/* Filtro de Mês */}
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#5a5a6e]" />
                   <select
                     value={selectedMonth}
-                    onChange={(e) => {
-                      setSelectedMonth(e.target.value);
-                      setSelectedDate("");
-                    }}
+                    onChange={(e) => { setSelectedMonth(e.target.value); setSelectedDate(""); }}
                     className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50 min-w-[140px]"
                   >
                     <option value="">Todos os meses</option>
@@ -293,7 +200,6 @@ export default function Jogadores() {
                   </select>
                 </div>
 
-                {/* Filtro de Dia */}
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#5a5a6e]" />
                   <select
@@ -312,14 +218,9 @@ export default function Jogadores() {
                 </div>
               </div>
 
-              {/* Limpar filtros */}
               {(selectedMonth || selectedDate || search) && (
                 <button
-                  onClick={() => {
-                    setSelectedMonth("");
-                    setSelectedDate("");
-                    setSearch("");
-                  }}
+                  onClick={() => { setSelectedMonth(""); setSelectedDate(""); setSearch(""); }}
                   className="text-xs text-green-400 hover:text-green-300 transition-colors"
                 >
                   Limpar filtros
@@ -328,29 +229,38 @@ export default function Jogadores() {
             </div>
           </div>
 
-          {/* ===== CARDS DE RESUMO DO PERÍODO ===== */}
-          {periodStats && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {/* ===== CARDS DE RESUMO ===== */}
+          {periodSummary && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Swords className="w-4 h-4 text-green-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Kills</span>
                 </div>
-                <p className="text-2xl font-bold text-green-400">{periodStats.totalKills}</p>
+                <p className="text-2xl font-bold text-green-400">{periodSummary.totalKills}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-4 h-4 text-green-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Jogadores</span>
                 </div>
-                <p className="text-2xl font-bold text-[#f0f0f5]">{periodStats.uniquePlayers}</p>
+                <p className="text-2xl font-bold text-[#f0f0f5]">{periodSummary.uniquePlayers}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="w-4 h-4 text-green-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">XTreinos</span>
                 </div>
-                <p className="text-2xl font-bold text-[#f0f0f5]">{periodStats.uniqueDates}</p>
+                <p className="text-2xl font-bold text-[#f0f0f5]">{periodSummary.uniqueDates}</p>
+              </div>
+              <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Award className="w-4 h-4 text-green-400" />
+                  <span className="text-xs text-[#5a5a6e] uppercase">Pts Kills</span>
+                </div>
+                <p className="text-2xl font-bold text-green-400">
+                  {calcKillPoints(periodSummary.totalKills)}
+                </p>
               </div>
             </div>
           )}
@@ -366,7 +276,6 @@ export default function Jogadores() {
           {/* ===== DETALHE DO JOGADOR ===== */}
           {selectedPlayer && playerDetail && (
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              {/* Header do modal */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <button
@@ -380,7 +289,9 @@ export default function Jogadores() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-[#f0f0f5]">{playerDetail.nickname}</h2>
-                    <p className="text-sm text-[#8a8a9e]">{getTeamName(playerDetail.teamId)}</p>
+                    <p className="text-sm text-[#8a8a9e]">
+                      {teamsList?.find((t) => t.id === playerDetail.teamId)?.name ?? "Sem equipe"}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -391,7 +302,6 @@ export default function Jogadores() {
                 </button>
               </div>
 
-              {/* Stats cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-[#1a1a24] rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -399,7 +309,9 @@ export default function Jogadores() {
                     <span className="text-xs text-[#5a5a6e]">K/D</span>
                   </div>
                   <p className="text-xl font-bold text-[#f0f0f5]">
-                    {kd(playerDetail.kills, playerDetail.deaths)}
+                    {playerDetail.deaths > 0 
+                      ? (playerDetail.kills / playerDetail.deaths).toFixed(2) 
+                      : playerDetail.kills}
                   </p>
                 </div>
                 <div className="bg-[#1a1a24] rounded-lg p-4">
@@ -429,12 +341,17 @@ export default function Jogadores() {
                 </div>
               </div>
 
-              {/* Histórico de XTreinos */}
-              {playerDetail.xtreinoStats && playerDetail.xtreinoStats.length > 0 && (
+              {/* Histórico de XTreinos do período filtrado */}
+              {selectedPlayerStats && selectedPlayerStats.length > 0 && (
                 <div>
                   <h4 className="text-sm font-bold text-[#f0f0f5] mb-3 flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-green-400" />
                     Histórico de XTreinos
+                    {selectedMonth && (
+                      <span className="text-xs font-normal text-[#5a5a6e]">
+                        — {selectedMonth.split("-")[1]}/{selectedMonth.split("-")[0]}
+                      </span>
+                    )}
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -446,19 +363,19 @@ export default function Jogadores() {
                           <th className="px-4 py-2 text-center text-xs font-medium text-[#5a5a6e]">Q2</th>
                           <th className="px-4 py-2 text-center text-xs font-medium text-[#5a5a6e]">Q3</th>
                           <th className="px-4 py-2 text-center text-xs font-medium text-[#5a5a6e]">Total</th>
+                          <th className="px-4 py-2 text-center text-xs font-medium text-[#5a5a6e]">Pts</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#2a2a3a]">
-                        {playerDetail.xtreinoStats.map((stat: any) => (
-                          <tr key={stat.id} className="hover:bg-[#1a1a24]">
+                        {selectedPlayerStats.map((stat) => (
+                          <tr key={`${stat.date}-${stat.xtreinoId}`} className="hover:bg-[#1a1a24]">
                             <td className="px-4 py-2 text-sm text-[#f0f0f5]">{stat.date}</td>
                             <td className="px-4 py-2 text-sm text-[#8a8a9e]">{stat.teamName}</td>
                             <td className="px-4 py-2 text-sm text-center text-[#8a8a9e]">{stat.q1Kills}</td>
                             <td className="px-4 py-2 text-sm text-center text-[#8a8a9e]">{stat.q2Kills}</td>
                             <td className="px-4 py-2 text-sm text-center text-[#8a8a9e]">{stat.q3Kills}</td>
-                            <td className="px-4 py-2 text-sm text-center text-green-400 font-bold">
-                              {stat.totalKills}
-                            </td>
+                            <td className="px-4 py-2 text-sm text-center text-green-400 font-bold">{stat.totalKills}</td>
+                            <td className="px-4 py-2 text-sm text-center text-green-400">{stat.killPoints}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -475,7 +392,7 @@ export default function Jogadores() {
               {sortedPlayers.slice(0, 3).map((p, i) => (
                 <div
                   key={p.id}
-                  onClick={() => setSelectedPlayer(p.id)}
+                  onClick={() => setSelectedPlayer(p.nickname)}
                   className={`rounded-xl border border-[#2a2a3a] p-6 cursor-pointer transition-all hover:-translate-y-1 ${
                     i === 0
                       ? "bg-gradient-to-b from-green-500/10 to-[#12121a] border-green-400/30"
@@ -507,7 +424,7 @@ export default function Jogadores() {
                     />
                   </div>
                   <h3 className="text-lg font-bold text-[#f0f0f5] mb-1">{p.nickname}</h3>
-                  <p className="text-sm text-[#8a8a9e] mb-3">{getTeamName(p.teamId)}</p>
+                  <p className="text-sm text-[#8a8a9e] mb-3">{p.teamName}</p>
                   <div className="flex items-center gap-4">
                     <div>
                       <p className="text-xs text-[#5a5a6e]">Kills XT</p>
@@ -520,12 +437,12 @@ export default function Jogadores() {
                             : "text-green-500"
                         }`}
                       >
-                        {p.xtreinoKills}
+                        {p.totalKills}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-[#5a5a6e]">Partic.</p>
-                      <p className="text-lg font-bold text-[#f0f0f5]">{p.xtreinoParticipations}</p>
+                      <p className="text-lg font-bold text-[#f0f0f5]">{p.participations}</p>
                     </div>
                     <div>
                       <p className="text-xs text-[#5a5a6e]">Média</p>
@@ -570,10 +487,19 @@ export default function Jogadores() {
                         Equipe
                       </th>
                       <th className="px-6 py-3 text-center">
-                        <SortHeader field="xtreinoKills" label="Kills XT" />
+                        <SortHeader field="totalKills" label="Kills XT" />
                       </th>
                       <th className="px-6 py-3 text-center">
-                        <SortHeader field="xtreinoParticipations" label="XTreinos" />
+                        <SortHeader field="q1Kills" label="Q1" />
+                      </th>
+                      <th className="px-6 py-3 text-center">
+                        <SortHeader field="q2Kills" label="Q2" />
+                      </th>
+                      <th className="px-6 py-3 text-center">
+                        <SortHeader field="q3Kills" label="Q3" />
+                      </th>
+                      <th className="px-6 py-3 text-center">
+                        <SortHeader field="participations" label="XTreinos" />
                       </th>
                       <th className="px-6 py-3 text-center">
                         <SortHeader field="avgKills" label="Média" />
@@ -585,7 +511,7 @@ export default function Jogadores() {
                       <tr
                         key={p.id}
                         className={`${getRankStyle(i)} cursor-pointer transition-colors`}
-                        onClick={() => setSelectedPlayer(p.id)}
+                        onClick={() => setSelectedPlayer(p.nickname)}
                       >
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-2">{getRankIcon(i)}</div>
@@ -598,14 +524,15 @@ export default function Jogadores() {
                             <span className="text-sm font-bold text-[#f0f0f5]">{p.nickname}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-3 text-sm text-[#8a8a9e]">
-                          {getTeamName(p.teamId)}
-                        </td>
+                        <td className="px-6 py-3 text-sm text-[#8a8a9e]">{p.teamName}</td>
                         <td className="px-6 py-3 text-sm text-center font-bold text-green-400">
-                          {p.xtreinoKills}
+                          {p.totalKills}
                         </td>
+                        <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q1Kills}</td>
+                        <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q2Kills}</td>
+                        <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q3Kills}</td>
                         <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">
-                          {p.xtreinoParticipations}
+                          {p.participations}
                         </td>
                         <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">
                           {p.avgKills}
