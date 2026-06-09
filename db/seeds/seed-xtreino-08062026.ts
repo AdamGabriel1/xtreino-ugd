@@ -67,7 +67,7 @@ export function seedXtreino08062026() {
     { date, xtreinoId, teamName: "UGD LIGHT", playerName: "Psycho", q1Kills: 5, q2Kills: 1, q3Kills: 0, totalKills: 6 },
     { date, xtreinoId, teamName: "UGD LIGHT", playerName: "Chino", q1Kills: 5, q2Kills: 3, q3Kills: 5, totalKills: 13 },
     { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Ohara", q1Kills: 2, q2Kills: 0, q3Kills: 0, totalKills: 2 },
-    { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Rafa", q1Kills: 4, q2Kills: 11, q3Kills: 10, totalKills: 25 },
+    { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Rafa", q1Kills: 4, q2Kills: 0, q3Kills: 0, totalKills: 4 },
     { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Xoxoto", q1Kills: 3, q2Kills: 9, q3Kills: 4, totalKills: 16 },
     { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Buzeira", q1Kills: 1, q2Kills: 1, q3Kills: 2, totalKills: 4 },
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "VN", q1Kills: 9, q2Kills: 6, q3Kills: 11, totalKills: 26 },
