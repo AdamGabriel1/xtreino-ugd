@@ -16,6 +16,7 @@ import {
   seedLogos,
   seedXtreinoHistorico,
   seedXtreinoSchedule,
+  seedXtreino08062026,
 } from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
@@ -87,6 +88,8 @@ if (env.isProduction) {
 
     // Seed das logos das equipes (só se ainda não tiver)
     runSeedIfNeeded("logos", seedLogos);
+
+    runSeedIfNeeded("xtreino_08062026", seedXtreino08062026);
 
     // Futuros seeds:
     // runSeedIfNeeded("scrim_historico", seedScrimHistorico);
