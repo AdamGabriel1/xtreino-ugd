@@ -18,7 +18,17 @@
     "paths": {
       "@/*": ["./src/*"],
       "@contracts/*": ["./contracts/*"],
-      "@db/*": ["./db/*"]
+      "@db/*": ["./db/*"],
+      "@api/*": ["./api/*"],
+      "@srclib/*": ["./src/lib/*"],
+      "@components/*": ["./src/components/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@tabs/*": ["./src/tabs/*"],
+      "@types/*": ["./src/types/*"],
+      "@apilib/*": ["./api/lib/*"],
+      "@queries/*": ["./api/queries/*"],
+      "@routers/*": ["./api/routers/*"],
+      "@hooks/*": ["./src/hooks/*"]
     }
   },
   "include": ["api", "contracts", "db"]
