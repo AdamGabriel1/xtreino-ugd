@@ -1,10 +1,6 @@
-// ============================================================
-// TAB: Agenda
-// ============================================================
-
 import { Plus, CalendarDays } from "lucide-react";
-import type { ScheduleItem, ScheduleFormData, ScheduleStatus } from "../types";
-import { ScheduleForm } from "../components/ScheduleForm";
+import type { ScheduleItem, ScheduleFormData, ScheduleStatus } from "../pages/admin/types";
+import { ScheduleForm } from "../pages/admin/components/ScheduleForm";
 
 interface ScheduleTabProps {
   scheduleList: ScheduleItem[] | undefined;
@@ -17,6 +13,7 @@ interface ScheduleTabProps {
   onSubmit: (e: React.FormEvent) => void;
   onGenerateMonth: () => void;
   onFormChange: (form: ScheduleFormData) => void;
+  isAdmin?: boolean;
 }
 
 const statusConfig: Record<ScheduleStatus, { bg: string; text: string; label: string }> = {
@@ -36,29 +33,34 @@ export function ScheduleTab({
   onSubmit,
   onGenerateMonth,
   onFormChange,
+  isAdmin = false,
 }: ScheduleTabProps) {
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         <div className="flex gap-2">
-          <button
-            onClick={onShowForm}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
-          >
-            <Plus className="w-4 h-4" /> Add Agendamento
-          </button>
-          <button
-            onClick={onGenerateMonth}
-            disabled={isGenerating}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm font-medium hover:bg-[#22222e] transition-all disabled:opacity-50"
-          >
-            <CalendarDays className="w-4 h-4" />
-            {isGenerating ? "Gerando..." : "Gerar Mes"}
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={onShowForm}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+              >
+                <Plus className="w-4 h-4" /> Add Agendamento
+              </button>
+              <button
+                onClick={onGenerateMonth}
+                disabled={isGenerating}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm font-medium hover:bg-[#22222e] transition-all disabled:opacity-50"
+              >
+                <CalendarDays className="w-4 h-4" />
+                {isGenerating ? "Gerando..." : "Gerar Mes"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {showForm && (
+      {isAdmin && showForm && (
         <ScheduleForm
           form={form}
           isPending={isPending}

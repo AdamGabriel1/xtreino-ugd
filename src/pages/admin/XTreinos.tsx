@@ -16,11 +16,11 @@ import type {
 } from "./types.js";
 
 // Tabs
-import { XTreinosList } from "./tabs/XTreinosList";
-import { ResultsTab } from "./tabs/ResultsTab";
-import { PlayersTab } from "./tabs/PlayersTab";
-import { ScheduleTab } from "./tabs/ScheduleTab";
-import { InscricoesTab } from "./tabs/InscricoesTab";
+import { XTreinosList } from "../../tabs/XTreinosList.js";
+import { ResultsTab } from "../../tabs/ResultsTab.js";
+import { PlayersTab } from "../../tabs/PlayersTab.js";
+import { ScheduleTab } from "../../tabs/ScheduleTab.js";
+import { InscricoesTab } from "../../tabs/InscricoesTab.js";
 
 export default function AdminXTreinos() {
   const {
@@ -393,6 +393,7 @@ export default function AdminXTreinos() {
             onSubmit={handleSubmitXt}
             onDelete={handleDeleteXt}
             onFormChange={setXtForm}
+            isAdmin={true}
           />
         )}
 
@@ -414,6 +415,7 @@ export default function AdminXTreinos() {
             onCloseForm={() => setShowResultForm(false)}
             onSubmit={handleSubmitResult}
             onFormChange={setResultForm}
+            isAdmin={true}
           />
         )}
 
@@ -435,6 +437,7 @@ export default function AdminXTreinos() {
             onCloseForm={() => setShowPlayerForm(false)}
             onSubmit={handleSubmitPlayer}
             onFormChange={setPlayerForm}
+            isAdmin={true}
           />
         )}
 
@@ -454,6 +457,7 @@ export default function AdminXTreinos() {
             onSubmit={handleSubmitSchedule}
             onGenerateMonth={handleGenerateMonth}
             onFormChange={setScheduleForm}
+            isAdmin={true}
           />
         )}
 
@@ -479,7 +483,6 @@ export default function AdminXTreinos() {
             onToggleFixed={({ teamName }) => {
               toggleFixedTeam.mutate({ teamName });
             }}
-            // ← NOVO: passa a mutation de criar xtreino
             onCreateEvent={({ date, maxTeams, status }) => {
               create.mutate({
                 name: `Xtreino ${date}`,
@@ -494,6 +497,7 @@ export default function AdminXTreinos() {
             isPending={
               registerTeam.isPending || unregisterTeam.isPending || toggleFixedTeam.isPending
             }
+            isAdmin={true}
           />
         )}
       </div>

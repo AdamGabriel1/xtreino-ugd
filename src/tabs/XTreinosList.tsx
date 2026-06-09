@@ -1,10 +1,6 @@
-// ============================================================
-// TAB: Lista de XTreinos
-// ============================================================
-
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import type { XTreino, XTreinoFormData, XTreinoStatus } from "../types";
-import { XTreinoForm } from "../components/XTreinoForm";
+import type { XTreino, XTreinoFormData, XTreinoStatus } from "../pages/admin/types";
+import { XTreinoForm } from "../pages/admin/components/XTreinoForm";
 
 interface XTreinosListProps {
   xtreinosList: XTreino[] | undefined;
@@ -18,6 +14,7 @@ interface XTreinosListProps {
   onSubmit: (e: React.FormEvent) => void;
   onDelete: (id: number) => void;
   onFormChange: (form: XTreinoFormData) => void;
+  isAdmin?: boolean;
 }
 
 const statusColors: Record<XTreinoStatus, string> = {
@@ -38,19 +35,22 @@ export function XTreinosList({
   onSubmit,
   onDelete,
   onFormChange,
+  isAdmin = false,
 }: XTreinosListProps) {
   return (
     <>
-      <div className="flex justify-between items-center">
-        <button
-          onClick={onShowForm}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
-        >
-          <Plus className="w-4 h-4" /> Novo XTreino
-        </button>
-      </div>
+      {isAdmin && (
+        <div className="flex justify-between items-center">
+          <button
+            onClick={onShowForm}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+          >
+            <Plus className="w-4 h-4" /> Novo XTreino
+          </button>
+        </div>
+      )}
 
-      {showForm && (
+      {isAdmin && showForm && (
         <XTreinoForm
           form={form}
           editing={editing}
@@ -71,7 +71,9 @@ export function XTreinosList({
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Horarios</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Modo</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Acoes</th>
+                {isAdmin && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Acoes</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a3a]">
@@ -88,22 +90,24 @@ export function XTreinosList({
                       {x.status}
                     </span>
                   </td>
-                  <td className="px-6 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => onEdit(x)}
-                        className="p-1.5 rounded hover:bg-blue-500/10 text-blue-400"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => { if (confirm("Remover?")) onDelete(x.id); }}
-                        className="p-1.5 rounded hover:bg-red-500/10 text-red-400"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td className="px-6 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onEdit(x)}
+                          className="p-1.5 rounded hover:bg-blue-500/10 text-blue-400"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => { if (confirm("Remover?")) onDelete(x.id); }}
+                          className="p-1.5 rounded hover:bg-red-500/10 text-red-400"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

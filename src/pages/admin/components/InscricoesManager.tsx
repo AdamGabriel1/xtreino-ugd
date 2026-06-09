@@ -143,7 +143,7 @@ export function InscricoesManager({
         </div>
       </div>
 
-      {/* Adicionar Time */}
+      {/* Adicionar Time - disponível para todos quando xtreino está aberto */}
       {isXtreinoAberto && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
           <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
@@ -321,8 +321,8 @@ export function InscricoesManager({
         </div>
       </div>
 
-      {/* Lista de Pendentes */}
-      {pendingTeams.length > 0 && (
+      {/* Lista de Pendentes - visível para admin */}
+      {isAdmin && pendingTeams.length > 0 && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
           <div className="px-6 py-4 border-b border-[#2a2a3a]">
             <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
@@ -341,14 +341,12 @@ export function InscricoesManager({
                   <span className="text-sm text-[#8a8a9e]">{team.teamName}</span>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {isAdmin && (
-                    <button
-                      onClick={() => handleRemove(team.teamName)}
-                      className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleRemove(team.teamName)}
+                    className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -356,8 +354,8 @@ export function InscricoesManager({
         </div>
       )}
 
-      {/* Lista de Cancelados */}
-      {cancelledTeams.length > 0 && (
+      {/* Lista de Cancelados - visível para admin */}
+      {isAdmin && cancelledTeams.length > 0 && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden opacity-60">
           <div className="px-6 py-4 border-b border-[#2a2a3a]">
             <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
@@ -381,7 +379,7 @@ export function InscricoesManager({
         </div>
       )}
 
-      {/* Gerenciar Times Fixos Globais */}
+      {/* Times Fixos - visível para todos */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
         <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-yellow-400" />
