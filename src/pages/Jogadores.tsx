@@ -22,7 +22,7 @@ import MainLayout from "@/layout/MainLayout";
 import {
   useXtreinoCalculations,
   calcKillPoints,
-} from "../hooks/useXtreinoCalculations.ts";
+} from "@/hooks/useXtreinoCalculations.ts";
 
 type SortField = "totalKills" | "participations" | "avgKills" | "q1Kills" | "q2Kills" | "q3Kills";
 type SortDir = "asc" | "desc";
