@@ -633,8 +633,8 @@ export default function XTreinos() {
             settings={settings}
             selectedXt={selectedXtForInscricoes}
             onSelectXt={setSelectedXtForInscricoes}
-            onRegister={({ xtreinoId, teamName, players, isReserve }) => {
-              registerTeam.mutate({ xtreinoId, teamName, players, isReserve });
+            onRegister={({ xtreinoId, teamName, isReserve }) => {
+              registerTeam.mutate({ xtreinoId, teamName, isReserve });
             }}
             onUnregister={({ xtreinoId, teamName }) => {
               unregisterTeam.mutate({ xtreinoId, teamName });
