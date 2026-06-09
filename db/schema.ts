@@ -33,7 +33,7 @@ export const settings = sqliteTable("settings", {
   whatsappTemplate: text("whatsapp_template"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-  fixedTeamsList: text("fixed_teams_list"),  // <-- ADICIONAR ISSO
+  fixedTeamsList: text("fixed_teams_list"),
 });
 
 export const teams = sqliteTable("teams", {
@@ -107,15 +107,16 @@ export const matches = sqliteTable("matches", {
 });
 
 // ============================================================
-// XTREINOS - Treinos da Underground (Seg-Sex, 21h BRT)
+// XTREINOS - Sistema Unificado
 // ============================================================
+
 export const xtreinos = sqliteTable("xtreinos", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   date: text("date").notNull(),
   timeMx: text("time_mx"),
   timeBr: text("time_br").notNull().default("21:00"),
-  modality: text("modality").notNull(),
+  modality: text("modality").notNull().default("squad"),
   maxTeams: integer("max_teams").notNull().default(20),
   rules: text("rules"),
   discordLink: text("discord_link"),
@@ -127,19 +128,32 @@ export const xtreinos = sqliteTable("xtreinos", {
 
 export const xtreinoTeams = sqliteTable("xtreino_teams", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id", { mode: "number" }),
-  teamId: integer("team_id", { mode: "number" }).notNull(),
+  xtreinoId: integer("xtreino_id", { mode: "number" }).notNull(),
+  teamId: integer("team_id", { mode: "number" }),
+  teamName: text("team_name").notNull(),
   isReserve: integer("is_reserve", { mode: "boolean" }).notNull().default(false),
   slotNumber: integer("slot_number", { mode: "number" }),
+  isFixed: integer("is_fixed", { mode: "boolean" }).notNull().default(false),
+  status: text("status").notNull().default("confirmed"),
+  registeredAt: text("registered_at"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
-// ============================================================
-// RESULTADOS DO XTREINO (Colocações por time/quadrimestre)
-// ============================================================
+export const xtreinoPlayers = sqliteTable("xtreino_players", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  xtreinoTeamId: integer("xtreino_team_id", { mode: "number" }).notNull(),
+  playerName: text("player_name").notNull(),
+  teamName: text("team_name").notNull(),
+  q1Kills: integer("q1_kills").notNull().default(0),
+  q2Kills: integer("q2_kills").notNull().default(0),
+  q3Kills: integer("q3_kills").notNull().default(0),
+  totalKills: integer("total_kills").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 export const xtreinoResults = sqliteTable("xtreino_results", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id", { mode: "number" }),
+  xtreinoId: integer("xtreino_id", { mode: "number" }).notNull(),
   date: text("date").notNull(),
   teamName: text("team_name").notNull(),
   q1Pos: integer("q1_pos"),
@@ -149,12 +163,9 @@ export const xtreinoResults = sqliteTable("xtreino_results", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
-// ============================================================
-// ESTATÍSTICAS DOS JOGADORES NO XTREINO
-// ============================================================
 export const xtreinoPlayerStats = sqliteTable("xtreino_player_stats", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id", { mode: "number" }),
+  xtreinoId: integer("xtreino_id", { mode: "number" }).notNull(),
   date: text("date").notNull(),
   teamName: text("team_name").notNull(),
   playerName: text("player_name").notNull(),
@@ -166,7 +177,7 @@ export const xtreinoPlayerStats = sqliteTable("xtreino_player_stats", {
 });
 
 // ============================================================
-// AGENDAMENTO DE XTREINOS (Recorrente Seg-Sex, 21h BRT)
+// AGENDAMENTO DE XTREINOS
 // ============================================================
 export const xtreinoSchedule = sqliteTable("xtreino_schedule", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -179,7 +190,7 @@ export const xtreinoSchedule = sqliteTable("xtreino_schedule", {
 });
 
 // ============================================================
-// SCRIMS - Dados separados (ainda sem dados)
+// SCRIMS
 // ============================================================
 export const scrims = sqliteTable("scrims", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -265,7 +276,7 @@ export const registrations = sqliteTable("registrations", {
 });
 
 // ============================================================
-// RANKINGS - Separados por tipo (xtreino, campeonato, scrim)
+// RANKINGS
 // ============================================================
 export const rankings = sqliteTable("rankings", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -280,45 +291,4 @@ export const rankings = sqliteTable("rankings", {
   kdRatio: real("kd_ratio"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-});
-
-// --- 🆕 NOVO: Tabela de inscrições de times ---
-export const teamRegistrations = sqliteTable("team_registrations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id", { mode: "number" }),
-  teamName: text("team_name").notNull(),
-  isFixed: integer("is_fixed", { mode: "boolean" }).default(false),
-  position: integer("position").default(0),
-  status: text("status").default("confirmed"), // "confirmed" | "reserve" | "cancelled"
-  registeredAt: text("registered_at"),
-});
-
-export const xtreinoEventos = sqliteTable("xtreino_eventos", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  date: text("date").notNull(),
-  status: text("status", {
-    enum: ["aberto", "fechado", "em_andamento", "finalizado"],
-  }).notNull().default("aberto"),
-  maxTeams: integer("max_teams").notNull().default(12),
-  createdAt: text("created_at"),
-  updatedAt: text("updated_at"),
-});
-
-export const xtreinoInscricoes = sqliteTable("xtreino_inscricoes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  xtreinoId: integer("xtreino_id").notNull(),
-  teamName: text("team_name").notNull(),
-  status: text("status", { enum: ["confirmada", "reserva", "pendente", "cancelada"] })
-    .notNull()
-    .default("confirmada"),
-  registeredAt: text("registered_at"),
-  registeredBy: text("registered_by"),
-  position: integer("position").notNull().default(0),  // ← ADICIONE ESTA LINHA
-});
-
-// A tabela de jogadores já deve existir:
-export const xtreinoInscricoesJogadores = sqliteTable("xtreino_inscricoes_jogadores", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  inscricaoId: integer("inscricao_id").notNull(),
-  playerName: text("player_name").notNull(),
 });

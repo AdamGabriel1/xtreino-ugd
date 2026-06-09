@@ -101,15 +101,14 @@ export default function Jogadores() {
   const playerKillsMap = useMemo(() => {
     const map = new Map<number, { kills: number; participations: number }>();
     filteredStats.forEach((stat) => {
-      // Procurar o jogador pelo nome nas stats
-      // Nota: isso depende de como seus dados estão estruturados
-      // Ajuste conforme necessário
-      const existing = map.get(stat.playerId ?? 0);
+      const playerId = stat.id;
+      if (!playerId) return;
+      const existing = map.get(playerId);
       if (existing) {
         existing.kills += stat.totalKills || 0;
         existing.participations += 1;
       } else {
-        map.set(stat.playerId ?? 0, { kills: stat.totalKills || 0, participations: 1 });
+        map.set(playerId, { kills: stat.totalKills || 0, participations: 1 });
       }
     });
     return map;

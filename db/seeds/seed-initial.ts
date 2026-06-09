@@ -4,10 +4,6 @@ import { eq } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
 import { WHATSAPP_TEMPLATE } from "./whatsapp-template.js";
 
-// ============================================================
-// HELPERS IDEMPOTENTES
-// ============================================================
-
 function upsertAdmin(db: ReturnType<typeof getDb>, data: typeof admins.$inferInsert) {
   const existing = db.select().from(admins).where(eq(admins.username, data.username)).get();
   if (!existing) {
@@ -53,12 +49,6 @@ function upsertPlayer(db: ReturnType<typeof getDb>, data: typeof players.$inferI
   return false;
 }
 
-// ============================================================
-// CONFIGURAÇÃO DE TIMES FIXOS (editável pelo painel admin)
-// ============================================================
-
-// Lista padrão de times fixos da Underground
-// Para alterar: edite no painel admin ou modifique esta lista
 export const DEFAULT_FIXED_TEAMS = [
   "UGD Threat",
   "UGD Royal",
@@ -66,15 +56,10 @@ export const DEFAULT_FIXED_TEAMS = [
   "UGD OLYMPIQUE",
 ];
 
-// ============================================================
-// SEED INICIAL (idempotente)
-// ============================================================
-
 export function seed() {
   const db = getDb();
   console.log("[SEED] Starting initial seed...");
 
-  // --- Admin ---
   const adminCreated = upsertAdmin(db, {
     username: "admin",
     passwordHash: hashSync("admin123", 10),
@@ -82,7 +67,6 @@ export function seed() {
   });
   console.log(`[SEED] Admin ${adminCreated ? "created" : "already exists"} (admin/admin123)`);
 
-  // --- Settings ---
   const settingsCreated = upsertSettings(db, {
     orgName: "𝙐𝙉𝘿𝙀𝙍𝙂𝙍𝙊𝙐𝙉𝘿",
     discordLink: "https://discord.gg/QpvaHxzPW",
@@ -92,28 +76,39 @@ export function seed() {
     defaultTimesBr: "9:00",
     primaryColor: "#006400",
     whatsappTemplate: WHATSAPP_TEMPLATE,
+    fixedTeamsList: JSON.stringify(DEFAULT_FIXED_TEAMS),
   });
   console.log(`[SEED] Settings ${settingsCreated ? "created" : "already exists"}`);
 
-  // --- Teams ---
   const teamsData = [
     { name: "UGD Threat", tag: "UGD" },
     { name: "UGD Royal", tag: "UGD" },
     { name: "UGD Light", tag: "UGD" },
+    { name: "UGD LEGENDS", tag: "UGD" },
+    { name: "UGD OLYMPIQUE", tag: "UGD" },
     { name: "RED", tag: "RED" },
     { name: "RED Magic BR", tag: "RED" },
+    { name: "REÐ Outlaws", tag: "RED" },
     { name: "CMF", tag: "CMF" },
+    { name: "CMF ATLANTIC", tag: "CMF" },
+    { name: "CMF ASSALT", tag: "CMF" },
     { name: "KOV", tag: "KOV" },
     { name: "LMF", tag: "LMF" },
     { name: "INF", tag: "INF" },
     { name: "Eternity", tag: "ETE" },
     { name: "FURY", tag: "FURY" },
+    { name: "FURY ELITE", tag: "FURY" },
+    { name: "FURY ROYAL", tag: "FURY" },
     { name: "Λつつ", tag: "Λつつ" },
     { name: "ODS", tag: "ODS" },
     { name: "Misturado", tag: "MIX" },
     { name: "Time I", tag: "TI" },
     { name: "Time E", tag: "TE" },
     { name: "Dev", tag: "DEV" },
+    { name: "EmE", tag: "EME" },
+    { name: "♱VØID×STRIKE♱", tag: "VOID" },
+    { name: "7KW_LHETAL", tag: "7KW" },
+    { name: "K4F", tag: "K4F" },
   ];
 
   let teamsCount = 0;
@@ -122,40 +117,12 @@ export function seed() {
   }
   console.log(`[SEED] ${teamsCount} teams created`);
 
-  // --- XTreinos Historicos da Underground ---
   const xtreinosData = [
-    {
-      name: "XTreino Underground - 30/04",
-      date: "2026-04-30",
-      timeBr: "21:00",
-      modality: "squad",
-      maxTeams: 20,
-      status: "finalizado",
-    },
-    {
-      name: "XTreino Underground - 07/05",
-      date: "2026-05-07",
-      timeBr: "21:00",
-      modality: "squad",
-      maxTeams: 20,
-      status: "finalizado",
-    },
-    {
-      name: "XTreino Underground - 19/05",
-      date: "2026-05-19",
-      timeBr: "21:00",
-      modality: "squad",
-      maxTeams: 20,
-      status: "finalizado",
-    },
-    {
-      name: "XTreino Underground - 21/05",
-      date: "2026-05-21",
-      timeBr: "21:00",
-      modality: "squad",
-      maxTeams: 20,
-      status: "finalizado",
-    },
+    { name: "XTreino Underground - 30/04", date: "2026-04-30", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
+    { name: "XTreino Underground - 07/05", date: "2026-05-07", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
+    { name: "XTreino Underground - 19/05", date: "2026-05-19", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
+    { name: "XTreino Underground - 21/05", date: "2026-05-21", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
+    { name: "XTreino Underground - 08/06", date: "2026-06-08", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
   ];
 
   let xtreinosCount = 0;
@@ -164,18 +131,22 @@ export function seed() {
   }
   console.log(`[SEED] ${xtreinosCount} xtreinos created`);
 
-  // --- Players ---
   const allTeams = db.select().from(teams).all();
   const teamIdMap = new Map(allTeams.map(t => [t.name, t.id]));
 
   const playersData = [
-    // CMF
     { nickname: "CMF Leo", teamName: "CMF" },
     { nickname: "CMF Lyx7", teamName: "CMF" },
     { nickname: "CMF MOIZO", teamName: "CMF" },
     { nickname: "CMF Stygian", teamName: "CMF" },
     { nickname: "CMF Syx", teamName: "CMF" },
-    // Eternity
+    { nickname: "CMF Léo", teamName: "CMF ATLANTIC" },
+    { nickname: "CMF Kira", teamName: "CMF ATLANTIC" },
+    { nickname: "CMF Moizo", teamName: "CMF ATLANTIC" },
+    { nickname: "CMF Dnvy", teamName: "CMF ASSALT" },
+    { nickname: "CMF Lynx7", teamName: "CMF ASSALT" },
+    { nickname: "CMF Max", teamName: "CMF ASSALT" },
+    { nickname: "CMF Thxxxz", teamName: "CMF ASSALT" },
     { nickname: "Black 永", teamName: "Eternity" },
     { nickname: "Damøn.TTK", teamName: "Eternity" },
     { nickname: "DamønTTK 永", teamName: "Eternity" },
@@ -186,28 +157,32 @@ export function seed() {
     { nickname: "Nofear", teamName: "Eternity" },
     { nickname: "RED REZE", teamName: "Eternity" },
     { nickname: "Shxrk", teamName: "Eternity" },
-    // FURY
     { nickname: "Creedz FURY", teamName: "FURY" },
     { nickname: "Diana FURY", teamName: "FURY" },
     { nickname: "VN' FURY", teamName: "FURY" },
     { nickname: "perfection z", teamName: "FURY" },
-    // INF
-    { nickname: "INF BARONI", teamName: "INF" },
-    { nickname: "INF GOAT", teamName: "INF" },
+    { nickname: "DIANA", teamName: "FURY ELITE" },
+    { nickname: "RAUAN", teamName: "FURY ELITE" },
+    { nickname: "SUN", teamName: "FURY ELITE" },
+    { nickname: "DEX", teamName: "FURY ELITE" },
+    { nickname: "VN", teamName: "FURY ROYAL" },
+    { nickname: "NG", teamName: "FURY ROYAL" },
+    { nickname: "EGOIST", teamName: "FURY ROYAL" },
+    { nickname: "MARTNA", teamName: "FURY ROYAL" },
     { nickname: "INF Noxz7", teamName: "INF" },
+    { nickname: "INF GOAT", teamName: "INF" },
+    { nickname: "INF BARONI", teamName: "INF" },
     { nickname: "INF RINNEGA", teamName: "INF" },
     { nickname: "「INF」BLAZE", teamName: "INF" },
     { nickname: "「INF」GOAT", teamName: "INF" },
     { nickname: "「INF」Noxz7'", teamName: "INF" },
     { nickname: "「INF」RINNEGA", teamName: "INF" },
-    // KOV
     { nickname: "AET Jentexz", teamName: "KOV" },
     { nickname: "KOV ADAN", teamName: "KOV" },
     { nickname: "KOV ALONE", teamName: "KOV" },
     { nickname: "KOV FushyX", teamName: "KOV" },
     { nickname: "TTKKAIKE", teamName: "KOV" },
     { nickname: "YoSurper", teamName: "KOV" },
-    // LMF
     { nickname: "LMF CALOP12", teamName: "LMF" },
     { nickname: "LMF LACERDA", teamName: "LMF" },
     { nickname: "LMF XIT", teamName: "LMF" },
@@ -217,16 +192,13 @@ export function seed() {
     { nickname: "LMF_RICHIMO", teamName: "LMF" },
     { nickname: "LMF_XIT", teamName: "LMF" },
     { nickname: "LMF_mtfacil", teamName: "LMF" },
-    // Misturado
     { nickname: "INF BADBOY", teamName: "Misturado" },
     { nickname: "INF RONY", teamName: "Misturado" },
     { nickname: "REVERSE_", teamName: "Misturado" },
     { nickname: "TOP FreeKill", teamName: "Misturado" },
-    // ODS
     { nickname: "Az Aamon", teamName: "ODS" },
     { nickname: "[ODS] vantex", teamName: "ODS" },
     { nickname: "[ODS].STROG", teamName: "ODS" },
-    // RED
     { nickname: "CF ALMEIDA", teamName: "RED" },
     { nickname: "LMF Boss", teamName: "RED" },
     { nickname: "RED APENAS", teamName: "RED" },
@@ -240,36 +212,46 @@ export function seed() {
     { nickname: "REÐ Sunraku", teamName: "RED" },
     { nickname: "REÐ Zadock", teamName: "RED" },
     { nickname: "REÐ snow777", teamName: "RED" },
-    // RED Magic BR
+    { nickname: "REÐ MoraesBC", teamName: "REÐ Outlaws" },
+    { nickname: "REÐ Felpz", teamName: "REÐ Outlaws" },
+    { nickname: "REÐ Skibidi", teamName: "REÐ Outlaws" },
+    { nickname: "REÐ Apenas", teamName: "REÐ Outlaws" },
     { nickname: "LXELTINHO", teamName: "RED Magic BR" },
     { nickname: "MOL ADRIAN", teamName: "RED Magic BR" },
     { nickname: "RED KENNZY", teamName: "RED Magic BR" },
     { nickname: "RED LANGO", teamName: "RED Magic BR" },
-    // Time E
     { nickname: "ONE-Javi", teamName: "Time E" },
     { nickname: "PAIN SWAN", teamName: "Time E" },
     { nickname: "Poindexter", teamName: "Time E" },
     { nickname: "morqesb", teamName: "Time E" },
-    // Time I
     { nickname: "ASTRO", teamName: "Time I" },
     { nickname: "AimColor", teamName: "Time I" },
     { nickname: "GzmAkaza", teamName: "Time I" },
     { nickname: "Jtpe", teamName: "Time I" },
     { nickname: "hcky", teamName: "Time I" },
     { nickname: "iDiaasz", teamName: "Time I" },
-    // UGD Light
     { nickname: "DEATH", teamName: "UGD Light" },
     { nickname: "I miss her", teamName: "UGD Light" },
     { nickname: "UGD Kyz", teamName: "UGD Light" },
     { nickname: "UGD Psycho", teamName: "UGD Light" },
-    // UGD Royal
+    { nickname: "Kyz", teamName: "UGD LIGHT" },
+    { nickname: "Zann", teamName: "UGD LIGHT" },
+    { nickname: "Psycho", teamName: "UGD LIGHT" },
+    { nickname: "Chino", teamName: "UGD LIGHT" },
     { nickname: "Dexz", teamName: "UGD Royal" },
     { nickname: "MayaZ", teamName: "UGD Royal" },
     { nickname: "OFFz", teamName: "UGD Royal" },
     { nickname: "UGD Weenot", teamName: "UGD Royal" },
     { nickname: "UGD Z", teamName: "UGD Royal" },
     { nickname: "WenoTz", teamName: "UGD Royal" },
-    // UGD Threat
+    { nickname: "Ohara", teamName: "UGD LEGENDS" },
+    { nickname: "Rafa", teamName: "UGD LEGENDS" },
+    { nickname: "Xoxoto", teamName: "UGD LEGENDS" },
+    { nickname: "Buzeira", teamName: "UGD LEGENDS" },
+    { nickname: "Weenot", teamName: "UGD OLYMPIQUE" },
+    { nickname: "Duardin", teamName: "UGD OLYMPIQUE" },
+    { nickname: "Striker", teamName: "UGD OLYMPIQUE" },
+    { nickname: "Lorex", teamName: "UGD OLYMPIQUE" },
     { nickname: "Rivers AR", teamName: "UGD Threat" },
     { nickname: "UGD ARISE", teamName: "UGD Threat" },
     { nickname: "UGD Ares", teamName: "UGD Threat" },
@@ -277,7 +259,10 @@ export function seed() {
     { nickname: "UGD Neo", teamName: "UGD Threat" },
     { nickname: "UGD Treon", teamName: "UGD Threat" },
     { nickname: "UGD cool7", teamName: "UGD Threat" },
-    // Λつつ
+    { nickname: "Cool", teamName: "UGD Threat" },
+    { nickname: "Treon", teamName: "UGD Threat" },
+    { nickname: "Kaze", teamName: "UGD Threat" },
+    { nickname: "Arise", teamName: "UGD Threat" },
     { nickname: "Striker71", teamName: "Λつつ" },
     { nickname: "Striker81", teamName: "Λつつ" },
     { nickname: "ØNE ???", teamName: "Λつつ" },
@@ -286,7 +271,6 @@ export function seed() {
     { nickname: "Λつつ Unknown", teamName: "Λつつ" },
     { nickname: "Λつつ_$CAVEIRA", teamName: "Λつつ" },
     { nickname: "『PsS-KINN-ボ", teamName: "Λつつ" },
-    // Dev
     { nickname: "DevNexT★", teamName: "Dev" },
     { nickname: "DevBatata", teamName: "Dev" },
     { nickname: "DevPisca", teamName: "Dev" },
@@ -294,6 +278,22 @@ export function seed() {
     { nickname: "Dev_Guizin", teamName: "Dev" },
     { nickname: "Dev_LTz", teamName: "Dev" },
     { nickname: "Dev Ana", teamName: "Dev" },
+    { nickname: "Yeezy", teamName: "EmE" },
+    { nickname: "geldeysito", teamName: "EmE" },
+    { nickname: "EME々Akaza", teamName: "EmE" },
+    { nickname: "EME々Lulu", teamName: "EmE" },
+    { nickname: "♱Vøid♱.D_R", teamName: "♱VØID×STRIKE♱" },
+    { nickname: "♱Vøid♱+gute", teamName: "♱VØID×STRIKE♱" },
+    { nickname: "♱Vøid♱.nino", teamName: "♱VØID×STRIKE♱" },
+    { nickname: "™VØID°⁷⁷⁷", teamName: "♱VØID×STRIKE♱" },
+    { nickname: "(NTC)patrikm", teamName: "7KW_LHETAL" },
+    { nickname: "_061_kakashi", teamName: "7KW_LHETAL" },
+    { nickname: "RL.MATADOR☠️", teamName: "7KW_LHETAL" },
+    { nickname: "Fefe_🎭🇧🇷", teamName: "7KW_LHETAL" },
+    { nickname: "k4F urso", teamName: "K4F" },
+    { nickname: "K4F nine", teamName: "K4F" },
+    { nickname: "K4F gui", teamName: "K4F" },
+    { nickname: "Alek", teamName: "K4F" },
   ];
 
   let playersCount = 0;
@@ -310,7 +310,6 @@ export function seed() {
   }
   console.log(`[SEED] ${playersCount} players created`);
 
-  // --- Seed run tracking ---
   const seedName = "initial-v1";
   const existingSeed = db.select().from(seedRuns).where(eq(seedRuns.seedName, seedName)).get();
   if (!existingSeed) {

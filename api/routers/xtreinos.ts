@@ -10,8 +10,9 @@ import {
   teams,
   settings,
 } from "../../db/schema.js";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, isNull } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
+import { calcularPontosXtreino } from "../lib/pontuacao.js";
 
 export const xtreinosRouter = createRouter({
   // ============================================================
@@ -58,27 +59,31 @@ export const xtreinosRouter = createRouter({
         .where(eq(xtreinoTeams.xtreinoId, input.id))
         .all();
 
-      const teamIds = xTeams.map(t => t.teamId);
-      const teamData = teamIds.map((tid) => {
-        return db.select().from(teams).where(eq(teams.id, tid)).get();
-      }).filter(Boolean);
+      // Buscar dados dos times (teamId pode ser null)
+      const teamIds = xTeams
+        .map(t => t.teamId)
+        .filter((tid): tid is number => tid != null);
 
-      const teamMap = new Map(teamData.filter(Boolean).map(t => [t!.id, t!]));
+      const teamData = teamIds.length > 0
+        ? db.select().from(teams).where(sql`${teams.id} IN (${sql.join(teamIds, sql`, `)})`).all()
+        : [];
+
+      const teamMap = new Map(teamData.map(t => [t.id, t]));
 
       const mainTeams = xTeams
         .filter(t => !t.isReserve)
         .map(t => ({
           ...t,
-          teamName: teamMap.get(t.teamId)?.name ?? "Desconhecido",
-          teamTag: teamMap.get(t.teamId)?.tag ?? "",
+          teamName: teamMap.get(t.teamId ?? -1)?.name ?? t.teamName ?? "Desconhecido",
+          teamTag: teamMap.get(t.teamId ?? -1)?.tag ?? "",
         }));
 
       const reserveTeams = xTeams
         .filter(t => t.isReserve)
         .map(t => ({
           ...t,
-          teamName: teamMap.get(t.teamId)?.name ?? "Desconhecido",
-          teamTag: teamMap.get(t.teamId)?.tag ?? "",
+          teamName: teamMap.get(t.teamId ?? -1)?.name ?? t.teamName ?? "Desconhecido",
+          teamTag: teamMap.get(t.teamId ?? -1)?.tag ?? "",
         }));
 
       // Resultados do xtreino
@@ -205,6 +210,15 @@ export const xtreinosRouter = createRouter({
 
       const db = getDb();
 
+      // Buscar nome do time
+      const team = db
+        .select()
+        .from(teams)
+        .where(eq(teams.id, input.teamId))
+        .get();
+
+      if (!team) throw new Error("Time não encontrado");
+
       // Verificar se time já está inscrito
       const existing = db
         .select()
@@ -237,6 +251,7 @@ export const xtreinosRouter = createRouter({
       db.insert(xtreinoTeams).values({
         xtreinoId: input.xtreinoId,
         teamId: input.teamId,
+        teamName: team.name,
         isReserve,
         slotNumber,
       }).run();
@@ -325,11 +340,17 @@ export const xtreinosRouter = createRouter({
 
       const { xtreinoId, ...data } = input;
       const db = getDb();
+
+      // Calcula totalPoints automaticamente se não fornecido
+      const totalPoints =
+        input.totalPoints ?? calcularPontosXtreino(input.q1Pos, input.q2Pos, input.q3Pos);
+
       db.insert(xtreinoResults).values({
         xtreinoId,
         ...data,
+        totalPoints,
       }).run();
-      return { success: true };
+      return { success: true, totalPoints };
     }),
 
   // ============================================================
@@ -354,11 +375,19 @@ export const xtreinosRouter = createRouter({
 
       const { xtreinoId, ...data } = input;
       const db = getDb();
+
+      // Calcula totalKills automaticamente se não fornecido ou for 0
+      const totalKills =
+        input.totalKills > 0
+          ? input.totalKills
+          : input.q1Kills + input.q2Kills + input.q3Kills;
+
       db.insert(xtreinoPlayerStats).values({
         xtreinoId,
         ...data,
+        totalKills,
       }).run();
-      return { success: true };
+      return { success: true, totalKills };
     }),
 
   // ============================================================

@@ -2,48 +2,43 @@ import { getDb } from "../../api/queries/connection.js";
 import { teams } from "../schema.js";
 import { eq } from "drizzle-orm";
 
-// ============================================================
-// CONFIGURAÇÃO: Extensão padrão das logos
-// ============================================================
-const LOGO_EXT = ".jpg"; // Mude para ".png", ".webp", etc. se necessário
+const LOGO_EXT = ".jpg";
 
-/**
- * Mapeamento manual: nome da equipe → nome do arquivo (sem extensão)
- * 
- * A extensão é adicionada automaticamente via LOGO_EXT.
- * Adicione ou remova entradas conforme necessário.
- */
 const LOGO_MAP: Record<string, string> = {
   "UGD Threat":   "ugd-threat",
   "UGD Royal":    "ugd-royal",
   "UGD Light":    "ugd-light",
+  "UGD LEGENDS":  "ugd-legends",
+  "UGD OLYMPIQUE": "ugd-olympique",
   "RED":          "red",
   "RED Magic BR": "red-magic-br",
+  "REÐ Outlaws":  "red-outlaws",
   "CMF":          "cmf",
+  "CMF ATLANTIC": "cmf-atlantic",
+  "CMF ASSALT":   "cmf-assalt",
   "KOV":          "kov",
   "LMF":          "lmf",
   "INF":          "inf",
   "Eternity":     "eternity",
   "FURY":         "fury",
+  "FURY ELITE":   "fury-elite",
+  "FURY ROYAL":   "fury-royal",
   "Λつつ":         "lambda",
   "ODS":          "ods",
   "Misturado":    "misturado",
   "Time I":       "time-i",
   "Time E":       "time-e",
   "Dev":          "dev",
+  "EmE":          "eme",
+  "♱VØID×STRIKE♱": "void-strike",
+  "7KW_LHETAL":   "7kw-lhetal",
+  "K4F":          "k4f",
 };
 
-/**
- * Monta o caminho completo da logo.
- */
 function buildLogoPath(filename: string): string {
   return `/logos/${filename}${LOGO_EXT}`;
 }
 
-/**
- * Popula o campo logo das equipes baseado no mapeamento manual.
- * Idempotente: só atualiza se a logo ainda estiver vazia.
- */
 export function seedLogos(force = false) {
   const db = getDb();
   console.log(`[SEED-LOGOS] Starting logo population (ext: ${LOGO_EXT})...`);
@@ -64,7 +59,6 @@ export function seedLogos(force = false) {
 
     const logoPath = buildLogoPath(filename);
 
-    // Só atualiza se não tiver logo ou se force=true
     if (!team.logo || force) {
       db.update(teams)
         .set({ logo: logoPath })
@@ -83,10 +77,6 @@ export function seedLogos(force = false) {
   return { updated, skipped, notFound };
 }
 
-/**
- * Versão automática: escaneia /public/logos/ e faz match pelo nome do arquivo.
- * Suporta múltiplas extensões: .jpg, .jpeg, .png, .webp, .gif
- */
 export function seedLogosAuto(publicDir = "public") {
   const { readdirSync, existsSync } = require("fs");
   const path = require("path");
@@ -99,7 +89,6 @@ export function seedLogosAuto(publicDir = "public") {
     return { updated: 0, skipped: 0, notFound: 0, error: "Directory not found" };
   }
 
-  // Aceita .jpg, .jpeg, .png, .webp, .gif
   const files = readdirSync(logosDir).filter((f: string) =>
     /\.(jpg|jpeg|png|webp|gif)$/i.test(f)
   );
@@ -110,12 +99,10 @@ export function seedLogosAuto(publicDir = "public") {
   let notFound = 0;
 
   for (const team of allTeams) {
-    // Normaliza nome da equipe para matching
     const normalizedName = team.name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
 
-    // Tenta encontrar arquivo que contenha o nome normalizado
     const match = files.find((f: string) => {
       const normalizedFile = f
         .toLowerCase()

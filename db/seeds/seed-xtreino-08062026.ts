@@ -4,12 +4,11 @@ import {
   xtreinoResults,
   xtreinoPlayerStats,
 } from "../schema.js";
+import { calcularPontosXtreino } from "../../api/lib/pontuacao.js";
 
 /**
  * Seed de dados do XTREINO da Underground
  * Data: 08/06/2026 (xtreinoId: 5)
- *
- * Xtreinos acontecem: Segunda a Sexta, 21h (BRT)
  */
 
 export function seedXtreino08062026() {
@@ -19,9 +18,6 @@ export function seedXtreino08062026() {
   const xtreinoId = 5;
   const date = "2026-06-08";
 
-  // ============================================================
-  // RESULTADOS POR EQUIPE (Colocações do Xtreino)
-  // ============================================================
   const xtreinoColocacoesData = [
     { date, xtreinoId, teamName: "CMF ATLANTIC", q1Pos: 1, q2Pos: 2, q3Pos: 1 },
     { date, xtreinoId, teamName: "EmE", q1Pos: 2, q2Pos: 4, q3Pos: 3 },
@@ -52,15 +48,13 @@ export function seedXtreino08062026() {
       .get();
 
     if (!existing) {
-      db.insert(xtreinoResults).values(data).run();
+      const totalPoints = calcularPontosXtreino(data.q1Pos, data.q2Pos, data.q3Pos);
+      db.insert(xtreinoResults).values({ ...data, totalPoints }).run();
       colocacoesCount++;
     }
   }
   console.log(`[SEED XTREINO-08062026] ${colocacoesCount} colocações inseridas`);
 
-  // ============================================================
-  // ESTATÍSTICAS DOS JOGADORES (Xtreino Underground - 08/06/2026)
-  // ============================================================
   const xtreinoJogadoresData = [
     { date, xtreinoId, teamName: "UGD OLYMPIQUE", playerName: "Weenot", q1Kills: 4, q2Kills: 4, q3Kills: 0, totalKills: 8 },
     { date, xtreinoId, teamName: "UGD OLYMPIQUE", playerName: "Duardin", q1Kills: 1, q2Kills: 0, q3Kills: 2, totalKills: 3 },
@@ -135,6 +129,5 @@ export function seedXtreino08062026() {
     }
   }
   console.log(`[SEED XTREINO-08062026] ${jogadoresCount} estatísticas de jogadores inseridas`);
-
   console.log("[SEED XTREINO-08062026] Done!");
 }

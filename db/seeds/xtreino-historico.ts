@@ -5,6 +5,7 @@ import {
   xtreinoPlayerStats,
   rankings,
 } from "../schema.js";
+import { calcularPontosXtreino } from "../../api/lib/pontuacao.js";
 
 /**
  * Seed de dados históricos do XTREINO da Underground
@@ -310,9 +311,7 @@ export function recalculateRankings() {
   >();
 
   for (const r of xtResults) {
-    const pts =
-      (r.totalPoints ?? 0) +
-      ((4 - (r.q1Pos ?? 99)) * 10 + (4 - (r.q2Pos ?? 99)) * 10 + (4 - (r.q3Pos ?? 99)) * 10);
+    const pts = r.totalPoints ?? calcularPontosXtreino(r.q1Pos, r.q2Pos, r.q3Pos);
     const existing = xtTeamMap.get(r.teamName) ?? {
       points: 0,
       kills: 0,
