@@ -28,6 +28,7 @@ export default defineConfig({
       "@apilib": path.resolve(__dirname, "./api/lib"),
       "@queries": path.resolve(__dirname, "./api/queries"),
       "@routers": path.resolve(__dirname, "./api/routers"),
+      "@hooks": path.resolve(__dirname, "./src/hooks"),
     },
   },
   envDir: path.resolve(__dirname),
