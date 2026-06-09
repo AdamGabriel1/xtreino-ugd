@@ -15,7 +15,6 @@ import {
   seedMinimal,
   seedLogos,
   seedXtreinoHistorico,
-  seedXtreinoSchedule,
   seedXtreino08062026,
 } from "../db/seed.js";
 
@@ -82,9 +81,6 @@ if (env.isProduction) {
 
     // Seed dos dados históricos do xtreino (antigos dados da Red Devils)
     runSeedIfNeeded("xtreino_historico", seedXtreinoHistorico);
-
-    // Seed do agendamento de xtreinos (seg-sex, 21h BRT)
-    runSeedIfNeeded("xtreino_schedule", seedXtreinoSchedule);
 
     // Seed das logos das equipes (só se ainda não tiver)
     runSeedIfNeeded("logos", seedLogos);
