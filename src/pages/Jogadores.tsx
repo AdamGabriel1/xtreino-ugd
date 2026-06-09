@@ -22,7 +22,7 @@ import MainLayout from "@/layout/MainLayout";
 import {
   useXtreinoCalculations,
   calcKillPoints,
-} from "@/hooks/useXtreinoCalculations.ts";
+} from "../hooks/useXtreinoCalculations";
 
 type SortField = "totalKills" | "participations" | "avgKills" | "q1Kills" | "q2Kills" | "q3Kills";
 type SortDir = "asc" | "desc";
@@ -42,13 +42,14 @@ export default function Jogadores() {
     search ? { search } : undefined
   );
   const { data: teamsList } = trpc.teams.list.useQuery();
+  const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats, isLoading: statsLoading } = trpc.xtreinos.listPlayerStats.useQuery();
   const { data: playerDetail } = trpc.players.getById.useQuery(
     { id: selectedPlayer ? parseInt(selectedPlayer) : 0 },
     { enabled: !!selectedPlayer && !isNaN(parseInt(selectedPlayer)) }
   );
 
-  // Hook de cálculos
+  // Hook de cálculos — AGORA COM 'results' PARA availableMonths/availableDates FUNCIONAREM
   const {
     playerAccumulated,
     playerXtreinoStats,
@@ -56,6 +57,7 @@ export default function Jogadores() {
     availableDates,
     periodSummary,
   } = useXtreinoCalculations({
+    results: allResults ?? [],
     playerStats: allPlayerStats ?? [],
     selectedMonth,
     selectedDate,
