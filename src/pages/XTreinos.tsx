@@ -55,7 +55,7 @@ interface TeamStats {
 
 export default function XTreinos() {
   // ===== ABA PRINCIPAL (Classificação) =====
-  const [selectedMonth, setSelectedMonth] = useState<string>("2026-05");
+  const [selectedMonth, setSelectedMonth] = useState<string>("2026-06");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<"total" | "kills" | "pos">("total");
 
