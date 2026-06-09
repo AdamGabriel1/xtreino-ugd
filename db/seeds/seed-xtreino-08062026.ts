@@ -57,9 +57,11 @@ export function seedXtreino08062026() {
 
   const xtreinoJogadoresData = [
     { date, xtreinoId, teamName: "UGD OLYMPIQUE", playerName: "Weenot", q1Kills: 4, q2Kills: 4, q3Kills: 0, totalKills: 8 },
+    { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Santz", q1Kills: 0, q2Kills: 11, q3Kills: 10, totalKills: 21 },
     { date, xtreinoId, teamName: "UGD OLYMPIQUE", playerName: "Duardin", q1Kills: 1, q2Kills: 0, q3Kills: 2, totalKills: 3 },
     { date, xtreinoId, teamName: "UGD OLYMPIQUE", playerName: "Striker", q1Kills: 3, q2Kills: 0, q3Kills: 0, totalKills: 3 },
     { date, xtreinoId, teamName: "UGD OLYMPIQUE", playerName: "Lorex", q1Kills: 4, q2Kills: 1, q3Kills: 1, totalKills: 6 },
+    { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "hell", q1Kills: 0, q2Kills: 3, q3Kills: 6, totalKills: 9},
     { date, xtreinoId, teamName: "UGD LIGHT", playerName: "Kyz", q1Kills: 5, q2Kills: 1, q3Kills: 2, totalKills: 8 },
     { date, xtreinoId, teamName: "UGD LIGHT", playerName: "Zann", q1Kills: 6, q2Kills: 1, q3Kills: 3, totalKills: 10 },
     { date, xtreinoId, teamName: "UGD LIGHT", playerName: "Psycho", q1Kills: 5, q2Kills: 1, q3Kills: 0, totalKills: 6 },
@@ -69,13 +71,13 @@ export function seedXtreino08062026() {
     { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Xoxoto", q1Kills: 3, q2Kills: 9, q3Kills: 4, totalKills: 16 },
     { date, xtreinoId, teamName: "UGD LEGENDS", playerName: "Buzeira", q1Kills: 1, q2Kills: 1, q3Kills: 2, totalKills: 4 },
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "VN", q1Kills: 9, q2Kills: 6, q3Kills: 11, totalKills: 26 },
-    { date, xtreinoId, teamName: "FURY ROYAL", playerName: "NG", q1Kills: 4, q2Kills: 4, q3Kills: 4, totalKills: 12 },
+    { date, xtreinoId, teamName: "FURY ROYAL", playerName: "NOKI", q1Kills: 4, q2Kills: 4, q3Kills: 4, totalKills: 12 },
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "EGOIST", q1Kills: 4, q2Kills: 6, q3Kills: 6, totalKills: 16 },
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "MARTNA", q1Kills: 9, q2Kills: 5, q3Kills: 2, totalKills: 16 },
     { date, xtreinoId, teamName: "FURY ELITE", playerName: "DIANA", q1Kills: 2, q2Kills: 1, q3Kills: 3, totalKills: 6 },
-    { date, xtreinoId, teamName: "FURY ELITE", playerName: "RAUAN", q1Kills: 2, q2Kills: 3, q3Kills: 2, totalKills: 7 },
-    { date, xtreinoId, teamName: "FURY ELITE", playerName: "SUN", q1Kills: 4, q2Kills: 7, q3Kills: 4, totalKills: 15 },
-    { date, xtreinoId, teamName: "FURY ELITE", playerName: "DEX", q1Kills: 5, q2Kills: 4, q3Kills: 3, totalKills: 12 },
+    { date, xtreinoId, teamName: "FURY ELITE", playerName: "hluydex", q1Kills: 2, q2Kills: 3, q3Kills: 2, totalKills: 7 },
+    { date, xtreinoId, teamName: "FURY ELITE", playerName: "TRY", q1Kills: 4, q2Kills: 7, q3Kills: 4, totalKills: 15 },
+    { date, xtreinoId, teamName: "FURY ELITE", playerName: "DEXZ", q1Kills: 5, q2Kills: 4, q3Kills: 3, totalKills: 12 },
     { date, xtreinoId, teamName: "CMF ATLANTIC", playerName: "CMF Léo", q1Kills: 18, q2Kills: 19, q3Kills: 17, totalKills: 54 },
     { date, xtreinoId, teamName: "CMF ATLANTIC", playerName: "CMF Syx", q1Kills: 10, q2Kills: 12, q3Kills: 23, totalKills: 45 },
     { date, xtreinoId, teamName: "CMF ATLANTIC", playerName: "CMF Kira", q1Kills: 8, q2Kills: 6, q3Kills: 11, totalKills: 25 },
@@ -107,7 +109,7 @@ export function seedXtreino08062026() {
     { date, xtreinoId, teamName: "UGD Threat", playerName: "Cool", q1Kills: 4, q2Kills: 6, q3Kills: 6, totalKills: 16 },
     { date, xtreinoId, teamName: "UGD Threat", playerName: "Treon", q1Kills: 6, q2Kills: 4, q3Kills: 8, totalKills: 18 },
     { date, xtreinoId, teamName: "UGD Threat", playerName: "Kaze", q1Kills: 1, q2Kills: 1, q3Kills: 4, totalKills: 6 },
-    { date, xtreinoId, teamName: "UGD Threat", playerName: "Arise", q1Kills: 2, q2Kills: 1, q3Kills: 1, totalKills: 4 },
+    { date, xtreinoId, teamName: "UGD Threat", playerName: "LMF_BOSS", q1Kills: 2, q2Kills: 1, q3Kills: 1, totalKills: 4 },
   ];
 
   let jogadoresCount = 0;
