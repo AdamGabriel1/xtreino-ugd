@@ -58,7 +58,7 @@ export function seedXtreino09062026() {
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "VN", q1Kills: 3, q2Kills: 11, q3Kills: 8, totalKills: 22 },
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "EGOIST", q1Kills: 4, q2Kills: 20, q3Kills: 4, totalKills: 28 },
     { date, xtreinoId, teamName: "FURY ROYAL", playerName: "MARTNA", q1Kills: 6, q2Kills: 10, q3Kills: 12, totalKills: 28 },
-    { date, xtreinoId, teamName: "FURY ROYAL", playerName: "OFF", q1Kills: 3, q2Kills: 10, q3Kills: 7, totalKills: 20 },
+    { date, xtreinoId, teamName: "FURY ROYAL", playerName: "FURY OFF", q1Kills: 3, q2Kills: 10, q3Kills: 7, totalKills: 20 },
     { date, xtreinoId, teamName: "EmE", playerName: "Yeezy", q1Kills: 6, q2Kills: 4, q3Kills: 0, totalKills: 10 },
     { date, xtreinoId, teamName: "EmE", playerName: "EME々Akaza", q1Kills: 6, q2Kills: 0, q3Kills: 0, totalKills: 6 },
     { date, xtreinoId, teamName: "EmE", playerName: "MK4", q1Kills: 6, q2Kills: 8, q3Kills: 0, totalKills: 14 },
