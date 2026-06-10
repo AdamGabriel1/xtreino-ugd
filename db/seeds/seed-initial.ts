@@ -253,6 +253,7 @@ export function seed() {
     { nickname: "Duardin", teamName: "UGD OLYMPIQUE" },
     { nickname: "Striker", teamName: "UGD OLYMPIQUE" },
     { nickname: "Lorex", teamName: "UGD OLYMPIQUE" },
+    { nickname: "CANTS", teamName: "UGD OLYMPIQUE" },
     { nickname: "Rivers AR", teamName: "UGD Threat" },
     { nickname: "UGD ARISE", teamName: "UGD Threat" },
     { nickname: "UGD Ares", teamName: "UGD Threat" },
