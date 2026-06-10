@@ -345,7 +345,7 @@ export default function SalinhaPerlotti() {
             className="block relative w-full max-w-[1080px] mx-auto aspect-[1080/721] rounded-xl overflow-hidden border border-[#2a2a3a] hover:border-[#fe2c55]/30 transition-colors group"
           >
             <img
-              src="/images/post-perlotti-salinhas.jpg"
+              src="/banner-perlotti.jpg"
               alt="Post oficial do Perlotti sobre as salinhas"
               className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
             />
