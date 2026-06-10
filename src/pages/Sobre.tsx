@@ -156,7 +156,7 @@ export default function Sobre() {
     {
       name: "Neto Aguiar",
       role: "Administrador & Designer",
-      description: "Administrador da UGD e da K4F. Responsável pela identidade visual, arte, banners e thumbnails da organização.",
+      description: "Administrador da K4F. Responsável pela identidade visual, arte, banners e thumbnails da organização.",
       icon: Palette,
       color: "bg-gradient-to-br from-purple-500 to-purple-700",
       clan: "K4F",
