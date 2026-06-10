@@ -1,7 +1,7 @@
 import { createRouter, publicQuery } from "./middleware.js";
 import { authRouter } from "./routers/auth.js";
 import { settingsRouter } from "./routers/settings.js";
-import { teamsRouter } from "./routers/teams.js";
+import { clansRouter, teamsRouter } from "./routers/clans.js";
 import { playersRouter } from "./routers/players.js";
 import { championshipsRouter } from "./routers/championships.js";
 import { xtreinosRouter } from "./routers/xtreinos.js";
@@ -13,6 +13,7 @@ export const appRouter = createRouter({
   ping: publicQuery.query(() => ({ ok: true, ts: Date.now() })),
   auth: authRouter,
   settings: settingsRouter,
+  clans: clansRouter,
   teams: teamsRouter,
   players: playersRouter,
   championships: championshipsRouter,

@@ -5,7 +5,7 @@ import Campeonatos from "./pages/Campeonatos";
 import XTreinos from "./pages/XTreinos";
 import Scrims from "./pages/Scrims";
 import Rankings from "./pages/Rankings";
-import Equipes from "./pages/Equipes";
+import Equipes from "./pages/Clans";
 import Jogadores from "./pages/Jogadores";
 import Inscricoes from "./pages/Inscricoes";
 import AdminLogin from "./pages/admin/Login";

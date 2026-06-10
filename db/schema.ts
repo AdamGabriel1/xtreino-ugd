@@ -36,24 +36,54 @@ export const settings = sqliteTable("settings", {
   fixedTeamsList: text("fixed_teams_list"),
 });
 
-export const teams = sqliteTable("teams", {
+// ============================================================
+// CLANS - Organizações pai
+// ============================================================
+export const clans = sqliteTable("clans", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   tag: text("tag").notNull(),
+  description: text("description"),
   logo: text("logo"),
-  captainName: text("captain_name"),
-  captainDiscord: text("captain_discord"),
-  whatsapp: text("whatsapp"),
+  banner: text("banner"),
+  discord: text("discord"),
+  color: text("color").default("#ff3b3b"),
+  foundedAt: text("founded_at"),
+  status: text("status").notNull().default("active"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// TEAMS - Lines/equipes de um clã
+// ============================================================
+export const teams = sqliteTable("teams", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  clanId: integer("clan_id", { mode: "number" }).references(() => clans.id),
+  name: text("name").notNull(),
+  tag: text("tag").notNull(),
+  logo: text("logo"),
+  description: text("description"),
+  captainId: integer("captain_id", { mode: "number" }),
+  captainName: text("captain_name"),
+  captainDiscord: text("captain_discord"),
+  whatsapp: text("whatsapp"),
+  status: text("status").notNull().default("active"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================
+// PLAYERS - Jogadores com role
+// ============================================================
 export const players = sqliteTable("players", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   nickname: text("nickname").notNull(),
   uid: text("uid"),
   discord: text("discord"),
   teamId: integer("team_id", { mode: "number" }),
+  role: text("role").notNull().default("official"),
+  joinDate: text("join_date"),
   kills: integer("kills").notNull().default(0),
   deaths: integer("deaths").notNull().default(0),
   wins: integer("wins").notNull().default(0),
@@ -62,6 +92,9 @@ export const players = sqliteTable("players", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// CHAMPIONSHIPS
+// ============================================================
 export const championships = sqliteTable("championships", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
@@ -109,7 +142,6 @@ export const matches = sqliteTable("matches", {
 // ============================================================
 // XTREINOS - Sistema Unificado
 // ============================================================
-
 export const xtreinos = sqliteTable("xtreinos", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
