@@ -329,25 +329,15 @@ export default function SalinhaPerlotti() {
             <h2 className="text-xl font-bold text-[#f0f0f5]">Post Oficial</h2>
           </div>
           
-          {/* Placeholder para o post do TikTok/Instagram */}
-          <div className="bg-[#0a0a0f] rounded-xl border border-[#2a2a3a] p-8 md:p-12 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-[#fe2c55]/10 flex items-center justify-center mb-4">
-              <Flame className="w-8 h-8 text-[#fe2c55]" />
+            {/* Embed do post do TikTok */}
+            <div className="rounded-xl overflow-hidden border border-[#2a2a3a]">
+                <iframe
+                    src="https://www.tiktok.com/embed/v2/7649581004541152520"
+                    style={{ width: "100%", height: "740px", border: "none", display: "block" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    scrolling="no"
+                />
             </div>
-            <h3 className="text-lg font-bold text-[#f0f0f5] mb-2">Post do Perlotti</h3>
-            <p className="text-[#8a8a9e] text-sm max-w-md mb-4">
-              Cole aqui o embed do post do TikTok ou Instagram do @perlottihd sobre as salinhas.
-              Você pode usar o componente de embed do TikTok ou uma imagem do post.
-            </p>
-            <a
-              href="https://www.tiktok.com/@perlottihd"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[#fe2c55] text-sm font-medium hover:underline"
-            >
-              Ver perfil no TikTok <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
         </div>
       </section>
 
