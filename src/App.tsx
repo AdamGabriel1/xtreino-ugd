@@ -5,12 +5,14 @@ import Campeonatos from "./pages/Campeonatos";
 import XTreinos from "./pages/XTreinos";
 import Scrims from "./pages/Scrims";
 import Rankings from "./pages/Rankings";
-import Equipes from "./pages/Clans";
+import Clans from "./pages/Clans";
 import Jogadores from "./pages/Jogadores";
 import Inscricoes from "./pages/Inscricoes";
+import Salinhas from "./pages/Salinhas";
+import Sobre from "./pages/Sobre";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
-import AdminEquipes from "./pages/admin/Equipes";
+import AdminClans from "./pages/admin/Clans";
 import AdminJogadores from "./pages/admin/Jogadores";
 import AdminCampeonatos from "./pages/admin/Campeonatos";
 import AdminXTreinos from "./pages/admin/XTreinos";
@@ -38,14 +40,16 @@ export default function App() {
         <Route path="/xtreinos" element={<XTreinos />} />
         <Route path="/scrims" element={<Scrims />} />
         <Route path="/rankings" element={<Rankings />} />
-        <Route path="/equipes" element={<Equipes />} />
+        <Route path="/clans" element={<Clans />} />
         <Route path="/jogadores" element={<Jogadores />} />
         <Route path="/inscricoes" element={<Inscricoes />} />
+        <Route path="/salinhas" element={<Salinhas />} />
+        <Route path="/sobre" element={<Sobre />} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/equipes" element={<AdminEquipes />} />
+        <Route path="/admin/clans" element={<AdminClans />} />
         <Route path="/admin/jogadores" element={<AdminJogadores />} />
         <Route path="/admin/campeonatos" element={<AdminCampeonatos />} />
         <Route path="/admin/xtreinos" element={<AdminXTreinos />} />

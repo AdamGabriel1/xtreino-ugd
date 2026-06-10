@@ -6,13 +6,14 @@ import {
   Swords,
   Users,
   UserCircle,
-  TrendingUp,
+  BarChart3,
+  Shield,
   Menu,
   X,
   ChevronDown,
-  Shield,
   Gamepad2,
   Crown,
+  LogIn,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
@@ -22,16 +23,10 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-interface NavDropdown {
+interface NavGroup {
   label: string;
   icon: React.ElementType;
   items: NavItem[];
-}
-
-type NavItemType = NavItem | NavDropdown;
-
-function isDropdown(item: NavItemType): item is NavDropdown {
-  return "items" in item;
 }
 
 export default function Navbar() {
@@ -57,37 +52,91 @@ export default function Navbar() {
     setOpenDropdown(null);
   }, [location.pathname]);
 
-  const navItems: NavItemType[] = [
+  const isActive = (path: string) => location.pathname === path;
+
+  const mainLinks: NavItem[] = [
     { label: "Home", to: "/", icon: Home },
-    { label: "Rankings", to: "/rankings", icon: TrendingUp },
-    {
-      label: "Eventos",
-      icon: Trophy,
-      items: [
-        { label: "Campeonatos", to: "/campeonatos", icon: Trophy },
-        { label: "XTreinos", to: "/xtreinos", icon: Dumbbell },
-        { label: "Scrims", to: "/scrims", icon: Swords },
-        { label: "Salinhas Premiadas", to: "/salinhas", icon: Gamepad2 },
-      ],
-    },
-    {
-      label: "Comunidade",
-      icon: Users,
-      items: [
-        { label: "Clans", to: "/clans", icon: Crown },
-        { label: "Jogadores", to: "/jogadores", icon: UserCircle },
-      ],
-    },
+    { label: "Rankings", to: "/rankings", icon: BarChart3 },
     { label: "Sobre", to: "/sobre", icon: Shield },
   ];
 
-  const isActive = (to: string) => {
-    if (to === "/") return location.pathname === "/";
-    return location.pathname.startsWith(to);
+  const eventosGroup: NavGroup = {
+    label: "Eventos",
+    icon: Trophy,
+    items: [
+      { label: "Campeonatos", to: "/campeonatos", icon: Trophy },
+      { label: "XTreinos", to: "/xtreinos", icon: Dumbbell },
+      { label: "Scrims", to: "/scrims", icon: Swords },
+      { label: "Salinhas Premiadas", to: "/salinhas", icon: Gamepad2 },
+    ],
   };
 
-  const isDropdownActive = (items: NavItem[]) => {
-    return items.some((item) => isActive(item.to));
+  const comunidadeGroup: NavGroup = {
+    label: "Comunidade",
+    icon: Users,
+    items: [
+      { label: "Clans", to: "/clans", icon: Crown },
+      { label: "Jogadores", to: "/jogadores", icon: UserCircle },
+    ],
+  };
+
+  const toggleDropdown = (key: string) => {
+    setOpenDropdown((prev) => (prev === key ? null : key));
+  };
+
+  const DropdownMenu = ({ group }: { group: NavGroup }) => {
+    const isOpen = openDropdown === group.label;
+    const hasActiveChild = group.items.some((item) => isActive(item.to));
+    const GroupIcon = group.icon;
+
+    return (
+      <div className="relative" ref={isOpen ? dropdownRef : undefined}>
+        <button
+          onClick={() => toggleDropdown(group.label)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            hasActiveChild
+              ? "text-emerald-400 bg-emerald-500/10"
+              : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
+          }`}
+        >
+          <GroupIcon className="w-4 h-4" />
+          <span className="hidden lg:inline">{group.label}</span>
+          <ChevronDown
+            className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {/* Desktop Dropdown */}
+        <div
+          className={`absolute top-full left-0 mt-2 w-56 bg-[#12121a] border border-[#2a2a3a] rounded-xl shadow-2xl shadow-black/50 overflow-hidden transition-all duration-200 z-50 ${
+            isOpen
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 -translate-y-2 pointer-events-none"
+          }`}
+        >
+          <div className="p-1.5">
+            {group.items.map((item) => {
+              const ItemIcon = item.icon;
+              const active = isActive(item.to);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
+                    active
+                      ? "bg-emerald-500/10 text-emerald-400 font-semibold"
+                      : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
+                  }`}
+                >
+                  <ItemIcon className={`w-4 h-4 ${active ? "text-emerald-400" : "text-[#5a5a6e]"}`} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -96,164 +145,162 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <span className="text-[#f0f0f5] font-bold text-lg tracking-tight hidden sm:block">
+            <span className="text-[#f0f0f5] font-bold text-lg tracking-tight hidden sm:inline">
               Underground
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1" ref={dropdownRef}>
-            {navItems.map((item) => {
-              if (isDropdown(item)) {
-                const active = isDropdownActive(item.items);
-                return (
-                  <div key={item.label} className="relative">
-                    <button
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === item.label ? null : item.label)
-                      }
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        active || openDropdown === item.label
-                          ? "text-emerald-400 bg-emerald-500/10"
-                          : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
-                      }`}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      {item.label}
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          openDropdown === item.label ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {openDropdown === item.label && (
-                      <div className="absolute top-full left-0 mt-2 w-56 bg-[#12121a] rounded-xl border border-[#2a2a3a] shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="p-1.5">
-                          {item.items.map((sub) => (
-                            <Link
-                              key={sub.to}
-                              to={sub.to}
-                              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
-                                isActive(sub.to)
-                                  ? "text-emerald-400 bg-emerald-500/10 font-medium"
-                                  : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
-                              }`}
-                            >
-                              <sub.icon className="w-4 h-4 shrink-0" />
-                              {sub.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
+          <div className="hidden md:flex items-center gap-1">
+            {mainLinks.map((link) => {
+              const LinkIcon = link.icon;
+              const active = isActive(link.to);
               return (
                 <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive(item.to)
+                  key={link.to}
+                  to={link.to}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    active
                       ? "text-emerald-400 bg-emerald-500/10"
                       : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
+                  <LinkIcon className="w-4 h-4" />
+                  <span className="hidden lg:inline">{link.label}</span>
                 </Link>
               );
             })}
+
+            <div className="w-px h-6 bg-[#2a2a3a] mx-1" />
+
+            <DropdownMenu group={eventosGroup} />
+            <DropdownMenu group={comunidadeGroup} />
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden w-10 h-10 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] flex items-center justify-center text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          {/* Right Side - Admin + Mobile Toggle */}
+          <div className="flex items-center gap-2">
+            {/* Admin Link - Desktop */}
+            <Link
+              to="/admin"
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#8a8a9e] hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 border border-transparent hover:border-emerald-500/20"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden lg:inline">Painel</span>
+            </Link>
+
+            {/* Mobile Toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden w-10 h-10 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] flex items-center justify-center text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      {mobileOpen && (
-        <div className="lg:hidden border-t border-[#2a2a3a] bg-[#0a0a0f]/95 backdrop-blur-xl">
-          <div className="max-w-[1400px] mx-auto px-4 py-4 space-y-1">
-            {navItems.map((item) => {
-              if (isDropdown(item)) {
-                const active = isDropdownActive(item.items);
-                const isOpen = openDropdown === item.label;
+      {/* Mobile Menu */}
+      <div
+        className={`md:hidden border-t border-[#2a2a3a] bg-[#0a0a0f]/95 backdrop-blur-xl transition-all duration-300 overflow-hidden ${
+          mobileOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="px-4 py-4 space-y-1">
+          {/* Main Links */}
+          {mainLinks.map((link) => {
+            const LinkIcon = link.icon;
+            const active = isActive(link.to);
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  active
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
+                }`}
+              >
+                <LinkIcon className="w-5 h-5" />
+                {link.label}
+              </Link>
+            );
+          })}
+
+          <div className="my-2 border-t border-[#2a2a3a]" />
+
+          {/* Eventos Group */}
+          <div className="px-4 py-2">
+            <p className="text-[#5a5a6e] text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-2">
+              <Trophy className="w-3.5 h-3.5" />
+              Eventos
+            </p>
+            <div className="space-y-1 pl-2">
+              {eventosGroup.items.map((item) => {
+                const ItemIcon = item.icon;
+                const active = isActive(item.to);
                 return (
-                  <div key={item.label}>
-                    <button
-                      onClick={() =>
-                        setOpenDropdown(isOpen ? null : item.label)
-                      }
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        active || isOpen
-                          ? "text-emerald-400 bg-emerald-500/10"
-                          : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon className="w-5 h-5" />
-                        {item.label}
-                      </div>
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Mobile Submenu */}
-                    {isOpen && (
-                      <div className="mt-1 ml-4 pl-4 border-l-2 border-[#2a2a3a] space-y-1">
-                        {item.items.map((sub) => (
-                          <Link
-                            key={sub.to}
-                            to={sub.to}
-                            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-150 ${
-                              isActive(sub.to)
-                                ? "text-emerald-400 bg-emerald-500/10 font-medium"
-                                : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
-                            }`}
-                          >
-                            <sub.icon className="w-4 h-4 shrink-0" />
-                            {sub.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                      active
+                        ? "text-emerald-400 bg-emerald-500/5 font-semibold"
+                        : "text-[#8a8a9e] hover:text-[#f0f0f5]"
+                    }`}
+                  >
+                    <ItemIcon className="w-4 h-4" />
+                    {item.label}
+                  </Link>
                 );
-              }
-
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive(item.to)
-                      ? "text-emerald-400 bg-emerald-500/10"
-                      : "text-[#8a8a9e] hover:text-[#f0f0f5] hover:bg-[#1a1a24]"
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </Link>
-              );
-            })}
+              })}
+            </div>
           </div>
+
+          <div className="my-2 border-t border-[#2a2a3a]" />
+
+          {/* Comunidade Group */}
+          <div className="px-4 py-2">
+            <p className="text-[#5a5a6e] text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-2">
+              <Users className="w-3.5 h-3.5" />
+              Comunidade
+            </p>
+            <div className="space-y-1 pl-2">
+              {comunidadeGroup.items.map((item) => {
+                const ItemIcon = item.icon;
+                const active = isActive(item.to);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                      active
+                        ? "text-emerald-400 bg-emerald-500/5 font-semibold"
+                        : "text-[#8a8a9e] hover:text-[#f0f0f5]"
+                    }`}
+                  >
+                    <ItemIcon className="w-4 h-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="my-2 border-t border-[#2a2a3a]" />
+
+          {/* Admin - Mobile */}
+          <Link
+            to="/admin"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#8a8a9e] hover:text-emerald-400 hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20"
+          >
+            <LogIn className="w-5 h-5" />
+            Painel Administrativo
+          </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 }
