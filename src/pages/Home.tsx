@@ -34,12 +34,62 @@ import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
 type RankCategory = "xtreino" | "campeonato" | "scrim";
 
-// ==================== NOVOS COMPONENTES DE UI ====================
+// ==================== TIPOS INFERIDOS DO BACKEND ====================
 
-// Tipo para o ícone do Lucide
+// Tipos inferidos das queries do tRPC (evita conflito com tipos do backend)
+type XtreinoItem = {
+  id: number;
+  name: string;
+  date: string | null;
+  timeMx: string | null;
+  timeBr: string | null;
+  modality: string | null;
+  maxTeams: number | null;
+  rules: string | null;
+  discordLink: string | null;
+  whatsappLink: string | null;
+  status: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ChampionshipItem = {
+  id: number;
+  name: string;
+  modality: string;
+  format: string;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  rules: string | null;
+  prizePool: string | null;
+  maxTeams: number;
+  registeredTeams: number;
+  bracketData: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ScrimItem = {
+  id: number;
+  name: string;
+  team1Id: number | null;
+  team2Id: number | null;
+  team1Name: string | null;
+  team2Name: string | null;
+  team1Tag: string | null;
+  team2Tag: string | null;
+  date: string | null;
+  time: string | null;
+  modality: string | null;
+  status: string | null;
+  result: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 type LucideIcon = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
 
-// Tipo para config de status
 interface StatusConfig {
   bg: string;
   text: string;
@@ -48,11 +98,12 @@ interface StatusConfig {
   icon: LucideIcon;
 }
 
-// Badge de status
-const StatusBadge = ({ status, type }: { status: string; type: "champ" | "xtreino" }) => {
+// ==================== COMPONENTES DE UI ====================
+
+const StatusBadge = ({ status, type }: { status: string; type: "champ" | "xtreino" | "scrim" }) => {
   const champConfigs: Record<string, StatusConfig> = {
     ativo: { bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", label: "Ativo", icon: Radio },
-    inscricoes: { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", label: "Inscrições Abertas", icon: AlertCircle },
+    inscricoes: { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", label: "Inscrições", icon: AlertCircle },
     encerrado: { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30", label: "Encerrado", icon: Clock },
   };
 
@@ -62,9 +113,20 @@ const StatusBadge = ({ status, type }: { status: string; type: "champ" | "xtrein
     fechado: { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30", label: "Fechado", icon: Clock },
   };
 
-  const config = type === "champ" 
-    ? (champConfigs[status] || champConfigs.ativo)
-    : (xtreinoConfigs[status] || xtreinoConfigs.aberto);
+  const scrimConfigs: Record<string, StatusConfig> = {
+    agendado: { bg: "bg-blue-500/15", text: "text-blue-400", border: "border-blue-500/30", label: "Agendado", icon: Calendar },
+    em_andamento: { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", label: "Em Andamento", icon: Timer },
+    finalizado: { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30", label: "Finalizado", icon: Clock },
+  };
+
+  let config: StatusConfig;
+  if (type === "champ") {
+    config = champConfigs[status] || champConfigs.ativo;
+  } else if (type === "xtreino") {
+    config = xtreinoConfigs[status] || xtreinoConfigs.aberto;
+  } else {
+    config = scrimConfigs[status] || scrimConfigs.agendado;
+  }
 
   const Icon = config.icon;
 
@@ -76,7 +138,6 @@ const StatusBadge = ({ status, type }: { status: string; type: "champ" | "xtrein
   );
 };
 
-// Card de estatística com trend
 const StatCard = ({ label, value, icon: Icon, trend }: { label: string; value: number; icon: LucideIcon; trend?: number }) => (
   <div className="bg-[#12121a] rounded-xl p-5 border border-[#2a2a3a] hover:border-emerald-500/30 transition-all duration-300 group hover:-translate-y-0.5">
     <div className="flex items-center justify-between mb-3">
@@ -95,7 +156,6 @@ const StatCard = ({ label, value, icon: Icon, trend }: { label: string; value: n
   </div>
 );
 
-// Card de jogador em destaque
 const FeaturedPlayerCard = ({ player, rank }: { player: { name?: string; entityName?: string; points: number; kills?: number; wins?: number }; rank: number }) => {
   const rankColors = ["text-yellow-400", "text-gray-300", "text-amber-600"];
   const rankIcons = [Crown, Medal, Star];
@@ -129,83 +189,13 @@ const FeaturedPlayerCard = ({ player, rank }: { player: { name?: string; entityN
   );
 };
 
-// Seção de próximos eventos
-const UpcomingEvents = ({ events }: { events: Array<{ id: number; name: string; date: string; type: string; modality?: string }> }) => {
-  if (!events || events.length === 0) return null;
-
-  return (
-    <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
-      <div className="px-6 py-4 border-b border-[#2a2a3a]">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-emerald-400" />
-          <h3 className="font-bold text-[#f0f0f5]">Próximos Eventos</h3>
-        </div>
-      </div>
-      <div className="divide-y divide-[#2a2a3a]">
-        {events.map((event) => (
-          <div key={event.id} className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-              {event.type === "championship" ? <Trophy className="w-5 h-5 text-emerald-400" /> : <Dumbbell className="w-5 h-5 text-emerald-400" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[#f0f0f5] text-sm font-medium truncate">{event.name}</p>
-              <p className="text-[#5a5a6e] text-xs">{event.modality?.toUpperCase()}</p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-emerald-400 text-xs font-semibold">{event.date}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Seção de atividade recente
-const RecentActivity = ({ activities }: { activities: Array<{ id: number; text: string; time: string; type: string }> }) => {
-  if (!activities || activities.length === 0) return null;
-
-  const typeIcons: Record<string, LucideIcon> = {
-    match: Swords,
-    result: Trophy,
-    registration: Users,
-    ranking: TrendingUp,
-  };
-
-  return (
-    <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
-      <div className="px-6 py-4 border-b border-[#2a2a3a]">
-        <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-emerald-400" />
-          <h3 className="font-bold text-[#f0f0f5]">Atividade Recente</h3>
-        </div>
-      </div>
-      <div className="divide-y divide-[#2a2a3a]">
-        {activities.map((activity) => {
-          const Icon = typeIcons[activity.type] || Activity;
-          return (
-            <div key={activity.id} className="flex items-start gap-3 px-6 py-3 hover:bg-[#1a1a24] transition-colors">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Icon className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[#f0f0f5] text-sm">{activity.text}</p>
-                <p className="text-[#5a5a6e] text-xs mt-0.5">{activity.time}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 // ==================== PÁGINA PRINCIPAL ====================
 
 export default function Home() {
   const [teamRankType, setTeamRankType] = useState<RankCategory>("xtreino");
   const [playerRankType, setPlayerRankType] = useState<RankCategory>("xtreino");
 
+  // Queries existentes
   const { data: championships } = trpc.championships.list.useQuery({
     status: "ativo",
   });
@@ -216,7 +206,12 @@ export default function Home() {
   const { data: playersList } = trpc.players.list.useQuery();
   const { data: settings } = trpc.settings.get.useQuery();
 
-  // Busca todos os rankings
+  // NOVO: Busca TODOS os dados para estatísticas e eventos
+  const { data: allXtreinos } = trpc.xtreinos.list.useQuery({});
+  const { data: allChampionships } = trpc.championships.list.useQuery({});
+  const { data: allScrims } = trpc.scrims.list.useQuery();
+
+  // Rankings
   const {
     data: allTeamRankings,
     isLoading: isLoadingTeamRankings,
@@ -243,25 +238,96 @@ export default function Home() {
     },
   });
 
-  // Dados mockados para demonstração (remover quando backend estiver pronto)
-  const upcomingEvents = [
-    { id: 1, name: "XTreino Semanal #7", date: "2026-06-12", type: "xtreino", modality: "squad" },
-    { id: 2, name: "Campeonato de Verão", date: "2026-06-15", type: "championship", modality: "duo" },
-    { id: 3, name: "Scrim Tático #3", date: "2026-06-18", type: "xtreino", modality: "squad" },
-  ];
+  // ============ ESTATÍSTICAS DETALHADAS ============
 
+  // Contagem de XTreinos por status
+  const xtreinoStats = {
+    total: allXtreinos?.length ?? 0,
+    abertos: allXtreinos?.filter((x) => x.status === "aberto" || !x.status).length ?? 0,
+    emAndamento: allXtreinos?.filter((x) => x.status === "em_andamento").length ?? 0,
+    fechados: allXtreinos?.filter((x) => x.status === "fechado").length ?? 0,
+  };
+
+  // Contagem de Campeonatos por status
+  const championshipStats = {
+    total: allChampionships?.length ?? 0,
+    ativos: allChampionships?.filter((c) => c.status === "ativo" || !c.status).length ?? 0,
+    inscricoes: allChampionships?.filter((c) => c.status === "inscricoes").length ?? 0,
+    encerrados: allChampionships?.filter((c) => c.status === "encerrado").length ?? 0,
+  };
+
+  // Contagem de Scrims
+  const scrimStats = {
+    total: allScrims?.length ?? 0,
+    agendados: allScrims?.filter((s) => s.status === "agendado" || !s.status).length ?? 0,
+    emAndamento: allScrims?.filter((s) => s.status === "em_andamento").length ?? 0,
+    finalizados: allScrims?.filter((s) => s.status === "finalizado").length ?? 0,
+  };
+
+  // Próximos eventos = xtreinos + campeonatos + scrims ordenados por data
+  const upcomingEvents = [
+    ...(allXtreinos?.map((x) => ({
+      id: x.id,
+      name: x.name,
+      date: x.date || "Data não definida",
+      type: "xtreino" as const,
+      modality: x.modality,
+      status: x.status || "aberto",
+    })) || []),
+    ...(allChampionships?.map((c) => ({
+      id: c.id + 10000,
+      name: c.name,
+      date: c.startDate || "Data não definida",
+      type: "championship" as const,
+      modality: c.modality,
+      status: c.status || "ativo",
+    })) || []),
+    ...(allScrims?.map((s) => ({
+      id: s.id + 20000,
+      name: s.name,
+      date: s.date || "Data não definida",
+      type: "scrim" as const,
+      modality: s.modality,
+      status: s.status || "agendado",
+    })) || []),
+  ]
+    .filter((e) => e.status !== "encerrado" && e.status !== "fechado" && e.status !== "finalizado")
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 5);
+
+  // Atividade recente baseada em dados reais
   const recentActivities = [
-    { id: 1, text: "Equipe Alpha venceu o XTreino #6", time: "2h atrás", type: "result" },
-    { id: 2, text: "Novo jogador registrado: ProPlayer99", time: "5h atrás", type: "registration" },
-    { id: 3, text: "Resultado do Scrim #2 confirmado", time: "8h atrás", type: "match" },
-    { id: 4, text: "Rankings recalculados automaticamente", time: "12h atrás", type: "ranking" },
-  ];
+    ...(allXtreinos?.slice(-3).map((x) => ({
+      id: x.id,
+      text: `XTreino "${x.name}" ${x.status === "aberto" ? "aberto para inscrições" : x.status === "em_andamento" ? "em andamento" : "finalizado"}`,
+      time: x.date || "Recente",
+      type: x.status === "fechado" ? "result" : "match",
+    })) || []),
+    ...(allChampionships?.slice(-2).map((c) => ({
+      id: c.id + 20000,
+      text: `Campeonato "${c.name}" ${c.status === "ativo" ? "iniciado" : c.status === "inscricoes" ? "recebendo inscrições" : "encerrado"}`,
+      time: c.startDate || "Recente",
+      type: c.status === "encerrado" ? "result" : "registration",
+    })) || []),
+  ].slice(0, 5);
+
+  // ============ STATS CARDS ============
 
   const stats = [
     { label: "Equipes", value: teamsList?.length ?? 0, icon: Users, trend: 12 },
     { label: "Jogadores", value: playersList?.length ?? 0, icon: UserCircle, trend: 8 },
-    { label: "Campeonatos Ativos", value: championships?.length ?? 0, icon: Trophy, trend: -5 },
-    { label: "XTreinos", value: xtreinosList?.length ?? 0, icon: Dumbbell, trend: 25 },
+    {
+      label: "XTreinos",
+      value: xtreinoStats.total,
+      icon: Dumbbell,
+      trend: xtreinoStats.abertos > 0 ? 25 : 0,
+    },
+    {
+      label: "Campeonatos",
+      value: championshipStats.total,
+      icon: Trophy,
+      trend: championshipStats.ativos > 0 ? 15 : 0,
+    },
   ];
 
   const rankTabs: { key: RankCategory; label: string; icon: LucideIcon }[] = [
@@ -387,7 +453,7 @@ export default function Home() {
         <div className="w-full max-w-[1920px] mx-auto">
           <img
             src="/banner.jpg"
-            alt="UNDERGROUND BANNER"
+            alt="Devils Mobile League Banner"
             className="w-full h-auto object-cover"
             style={{ aspectRatio: "2 / 1" }}
             loading="eager"
@@ -415,7 +481,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-white via-emerald-100 to-emerald-400 bg-clip-text text-transparent">
-            {settings?.orgName ?? "UNDERGROUND XTREINOS"}
+            {settings?.orgName ?? "Devils Mobile League"}
           </h1>
           <p className="text-lg sm:text-xl text-[#8a8a9e] mb-8 max-w-2xl mx-auto">
             Sistema completo de XTreinos, Scrims e Campeonatos Mobile. 
@@ -464,8 +530,99 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Active Events - COM BADGES MELHORADOS */}
+      {/* ============ ESTATÍSTICAS DETALHADAS ============ */}
       <section className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-1 h-8 bg-emerald-500 rounded-full" />
+          <h2 className="text-2xl font-bold text-[#f0f0f5]">Estatísticas Detalhadas</h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* XTreinos Stats */}
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Dumbbell className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#f0f0f5]">XTreinos</h3>
+                <p className="text-[#5a5a6e] text-xs">{xtreinoStats.total} total</p>
+              </div>
+            </div>
+            <div className="p-6 grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-emerald-400">{xtreinoStats.abertos}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Abertos</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-400">{xtreinoStats.emAndamento}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Em Andamento</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-400">{xtreinoStats.fechados}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Fechados</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Campeonatos Stats */}
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#f0f0f5]">Campeonatos</h3>
+                <p className="text-[#5a5a6e] text-xs">{championshipStats.total} total</p>
+              </div>
+            </div>
+            <div className="p-6 grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-emerald-400">{championshipStats.ativos}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Ativos</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-400">{championshipStats.inscricoes}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Inscrições</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-400">{championshipStats.encerrados}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Encerrados</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scrims Stats */}
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Swords className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#f0f0f5]">Scrims</h3>
+                <p className="text-[#5a5a6e] text-xs">{scrimStats.total} total</p>
+              </div>
+            </div>
+            <div className="p-6 grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-emerald-400">{scrimStats.agendados}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Agendados</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-400">{scrimStats.emAndamento}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Em Andamento</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-400">{scrimStats.finalizados}</p>
+                <p className="text-[#5a5a6e] text-xs mt-1">Finalizados</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Active Events */}
+      <section className="max-w-[1400px] mx-auto px-4 lg:px-8 pb-12">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-1 h-8 bg-emerald-500 rounded-full" />
           <h2 className="text-2xl font-bold text-[#f0f0f5]">Eventos Ativos</h2>
@@ -553,7 +710,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NOVA SEÇÃO: Grid de Destaques (Jogadores + Próximos Eventos + Atividade) */}
+      {/* ============ DESTAQUES: PRÓXIMOS EVENTOS + ATIVIDADE RECENTE + TOP JOGADORES ============ */}
       <section className="max-w-[1400px] mx-auto px-4 lg:px-8 pb-12">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-1 h-8 bg-emerald-500 rounded-full" />
@@ -591,19 +748,94 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Próximos Eventos */}
+          {/* Próximos Eventos - DADOS REAIS */}
           <div className="lg:col-span-1">
-            <UpcomingEvents events={upcomingEvents} />
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden h-full">
+              <div className="px-6 py-4 border-b border-[#2a2a3a]">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-emerald-400" />
+                  <h3 className="font-bold text-[#f0f0f5]">Próximos Eventos</h3>
+                </div>
+              </div>
+              {upcomingEvents.length > 0 ? (
+                <div className="divide-y divide-[#2a2a3a]">
+                  {upcomingEvents.map((event) => (
+                    <div key={event.id} className="flex items-center gap-4 px-6 py-3 hover:bg-[#1a1a24] transition-colors">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                        {event.type === "championship" ? <Trophy className="w-5 h-5 text-emerald-400" /> : event.type === "scrim" ? <Swords className="w-5 h-5 text-emerald-400" /> : <Dumbbell className="w-5 h-5 text-emerald-400" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[#f0f0f5] text-sm font-medium truncate">{event.name}</p>
+                        <p className="text-[#5a5a6e] text-xs">{event.modality?.toUpperCase()}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-emerald-400 text-xs font-semibold">{event.date}</p>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded mt-1 inline-block ${
+                          event.type === "championship"
+                            ? "bg-amber-500/10 text-amber-400"
+                            : event.type === "scrim"
+                              ? "bg-blue-500/10 text-blue-400"
+                              : "bg-emerald-500/10 text-emerald-400"
+                        }`}>
+                          {event.type === "championship" ? "Camp." : event.type === "scrim" ? "Scrim" : "XTreino"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-6 py-8 text-center">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 text-[#3a3a4e]" />
+                  <p className="text-[#5a5a6e] text-sm">Nenhum evento próximo</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Atividade Recente */}
+          {/* Atividade Recente - DADOS REAIS */}
           <div className="lg:col-span-1">
-            <RecentActivity activities={recentActivities} />
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden h-full">
+              <div className="px-6 py-4 border-b border-[#2a2a3a]">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-emerald-400" />
+                  <h3 className="font-bold text-[#f0f0f5]">Atividade Recente</h3>
+                </div>
+              </div>
+              {recentActivities.length > 0 ? (
+                <div className="divide-y divide-[#2a2a3a]">
+                  {recentActivities.map((activity) => {
+                    const typeIcons: Record<string, LucideIcon> = {
+                      match: Swords,
+                      result: Trophy,
+                      registration: Users,
+                      ranking: TrendingUp,
+                    };
+                    const Icon = typeIcons[activity.type] || Activity;
+                    return (
+                      <div key={activity.id} className="flex items-start gap-3 px-6 py-3 hover:bg-[#1a1a24] transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Icon className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[#f0f0f5] text-sm">{activity.text}</p>
+                          <p className="text-[#5a5a6e] text-xs mt-0.5">{activity.time}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="px-6 py-8 text-center">
+                  <Activity className="w-8 h-8 mx-auto mb-2 text-[#3a3a4e]" />
+                  <p className="text-[#5a5a6e] text-sm">Nenhuma atividade recente</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Rankings Preview - TEMA VERDE */}
+      {/* Rankings Preview */}
       <section className="max-w-[1400px] mx-auto px-4 lg:px-8 pb-12">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -694,7 +926,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NOVA SEÇÃO: Call to Action */}
+      {/* Call to Action */}
       <section className="max-w-[1400px] mx-auto px-4 lg:px-8 pb-16">
         <div className="bg-gradient-to-r from-emerald-900/20 via-[#12121a] to-emerald-900/20 rounded-2xl border border-emerald-500/20 p-8 md:p-12 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(16,185,129,0.1)_0%,_transparent_70%)]" />
