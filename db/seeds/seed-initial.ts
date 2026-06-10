@@ -93,21 +93,21 @@ export function seed() {
   // CLANS
   // ============================================================
   const clansData = [
-    { name: "Underground", tag: "UGD", description: "Clã brasileiro de Free Fire fundado em 2020. Uma das maiores organizações do cenário underground com múltiplas lines competitivas.", color: "#006400" },
-    { name: "FURY", tag: "FURY", description: "Clã competitivo com foco em torneios e xtreinos. Conhecido pela agressividade e determinação.", color: "#ff4444" },
-    { name: "CMF", tag: "CMF", description: "Clã CMF com múltiplas lines competitivas no cenário brasileiro.", color: "#4444ff" },
-    { name: "RED", tag: "RED", description: "Clã RED com forte presença nos xtreinos e campeonatos.", color: "#ff0000" },
-    { name: "Eternity", tag: "ETE", description: "Clã Eternity, sempre presente nas competições.", color: "#ffd700" },
-    { name: "KOV", tag: "KOV", description: "Clã KOV, time competitivo de Free Fire.", color: "#800080" },
-    { name: "LMF", tag: "LMF", description: "Clã LMF com história no cenário competitivo.", color: "#ff8c00" },
-    { name: "INF", tag: "INF", description: "Clã INF, organização competitiva de Free Fire.", color: "#00ced1" },
-    { name: "Lambda", tag: "Λつつ", description: "Clã Lambda (Λつつ), time japonês-brasileiro de Free Fire.", color: "#ffffff" },
-    { name: "ODS", tag: "ODS", description: "Clã ODS, organização de Free Fire.", color: "#228b22" },
-    { name: "7KW", tag: "7KW", description: "Clã 7KW, time competitivo.", color: "#ffff00" },
-    { name: "K4F", tag: "K4F", description: "Clã K4F, organização de Free Fire.", color: "#ff69b4" },
-    { name: "Dev", tag: "DEV", description: "Line de desenvolvedores e amigos.", color: "#808080" },
-    { name: "EmE", tag: "EME", description: "Clã EmE, time competitivo.", color: "#008080" },
-    { name: "VOID STRIKE", tag: "VOID", description: "Clã VOID STRIKE, organização de Free Fire.", color: "#000000" },
+    { name: "Underground", tag: "UGD", description: "Clã Underground.", color: "#006400" },
+    { name: "FURY", tag: "FURY", description: "Clã FURY Rising", color: "#ff4444" },
+    { name: "CMF", tag: "CMF", description: "Clã Comando Anfibrios.", color: "#4444ff" },
+    { name: "RED", tag: "RED", description: "Clã Red Devils", color: "#ff0000" },
+    { name: "Eternity", tag: "ETE", description: "Clã Eternity.", color: "#ffd700" },
+    { name: "KOV", tag: "KOV", description: "Clã KOV.", color: "#800080" },
+    { name: "LMF", tag: "LMF", description: "Clã Lá Mafia.", color: "#ff8c00" },
+    { name: "INF", tag: "INF", description: "Clã Infinit Esports.", color: "#00ced1" },
+    { name: "Lambda", tag: "Λつつ", description: "Clã (Λつつ).", color: "#ffffff" },
+    { name: "ODS", tag: "ODS", description: "Clã ODS.", color: "#228b22" },
+    { name: "7KW", tag: "7KW", description: "Clã 7KW.", color: "#ffff00" },
+    { name: "K4F", tag: "K4F", description: "Clã Kill 4 Fun.", color: "#ff69b4" },
+    { name: "Dev", tag: "DEV", description: "Clã Dev.", color: "#808080" },
+    { name: "EmE", tag: "EME", description: "Clã EmE.", color: "#008080" },
+    { name: "VOID STRIKE", tag: "VOID", description: "Clã VOID STRIKE.", color: "#000000" },
   ];
 
   let clansCount = 0;
@@ -124,15 +124,15 @@ export function seed() {
 
   const teamsData = [
     // Underground lines (clanId: 1)
-    { name: "UGD Threat", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line principal da Underground. A mais antiga e competitiva." },
-    { name: "UGD Royal", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "disbanded", description: "Line antiga da Underground. Desativada em 2025." },
-    { name: "UGD Light", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line secundária da Underground. Foco em desenvolvimento de novos talentos." },
-    { name: "UGD LEGENDS", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line de lendas da Underground. Jogadores experientes e consagrados." },
-    { name: "UGD OLYMPIQUE", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line olímpica da Underground. Competições de alto nível." },
+    { name: "UGD Threat", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line Threat da Underground." },
+    { name: "UGD Royal", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "disbanded", description: "Line antiga da Underground. Desativada em 2026." },
+    { name: "UGD Light", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line dos Manitos da Underground." },
+    { name: "UGD LEGENDS", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line Legends da Underground." },
+    { name: "UGD OLYMPIQUE", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line Olympique da Underground." },
 
     // FURY lines (clanId: 2)
     { name: "FURY", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line principal da FURY." },
-    { name: "FURY ELITE", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line elite da FURY. Jogadores de destaque." },
+    { name: "FURY ELITE", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line elite da FURY." },
     { name: "FURY ROYAL", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line royal da FURY." },
 
     // CMF lines (clanId: 3)
