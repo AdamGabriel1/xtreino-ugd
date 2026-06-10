@@ -257,13 +257,11 @@ export default function SalinhaPerlotti() {
         {/* Banner 1080x721 */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full max-w-[1080px] aspect-[1080/721] mx-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#fe2c55]/10 via-[#12121a] to-[#25f4ee]/10 rounded-2xl border border-[#2a2a3a] flex flex-col items-center justify-center">
-              <div className="w-20 h-20 rounded-2xl bg-[#fe2c55]/10 border border-[#fe2c55]/20 flex items-center justify-center mb-4">
-                <Flame className="w-10 h-10 text-[#fe2c55]" />
-              </div>
-              <p className="text-[#8a8a9e] text-sm font-medium">Banner 1080x721</p>
-              <p className="text-[#5a5a6e] text-xs mt-1">Substitua pela imagem do evento</p>
-            </div>
+            <img
+              src="/banner-perlotti.jpg"
+              alt="Banner do evento"
+              className="rounded-2xl border border-[#2a2a3a] object-cover w-full h-full"
+            />
           </div>
         </div>
 
