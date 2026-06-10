@@ -169,6 +169,7 @@ export function seed() {
     { nickname: "NG", teamName: "FURY ROYAL" },
     { nickname: "EGOIST", teamName: "FURY ROYAL" },
     { nickname: "MARTNA", teamName: "FURY ROYAL" },
+    { nickname: "OFF", teamName: "FURY ROYAL"},
     { nickname: "INF Noxz7", teamName: "INF" },
     { nickname: "INF GOAT", teamName: "INF" },
     { nickname: "INF BARONI", teamName: "INF" },
