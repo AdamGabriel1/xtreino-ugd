@@ -1,5 +1,17 @@
-import { useState } from "react";
-import { Users, MessageCircle, ChevronDown, ChevronUp, CalendarPlus, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import {
+  Users,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  CalendarPlus,
+  CheckCircle2,
+  Filter,
+  Trophy,
+  Target,
+  Medal,
+  TrendingUp,
+} from "lucide-react";
 import { toast } from "sonner";
 import { InscricoesManager } from "../pages/admin/components/InscricoesManager";
 import { WhatsAppGenerator } from "../pages/admin/components/WhatsAppGenerator";
@@ -58,6 +70,24 @@ export function InscricoesTab({
   const selectedXtData = xtreinosList?.find((x) => x.id === selectedXt);
   const xtInscricoes = registrations?.filter((r) => r.xtreinoId === selectedXt) || [];
 
+  // ===== RESUMO DO XTREINO SELECIONADO =====
+  const summary = useMemo(() => {
+    if (!selectedXtData || !xtInscricoes.length) return null;
+
+    const mainTeams = xtInscricoes.filter((i) => fixedTeams.includes(i.teamName));
+    const reserveTeams = xtInscricoes.filter((i) => !fixedTeams.includes(i.teamName));
+    const totalPlayers = xtInscricoes.reduce((acc, i) => acc + (i.players?.length || 0), 0);
+
+    return {
+      totalInscricoes: xtInscricoes.length,
+      mainTeams: mainTeams.length,
+      reserveTeams: reserveTeams.length,
+      totalPlayers,
+      vagasDisponiveis: selectedXtData.maxTeams - xtInscricoes.length,
+      vagasPercent: Math.round((xtInscricoes.length / selectedXtData.maxTeams) * 100),
+    };
+  }, [selectedXtData, xtInscricoes, fixedTeams]);
+
   const handleCreateEvent = () => {
     if (!newDate) {
       toast.error("Data é obrigatória");
@@ -83,18 +113,38 @@ export function InscricoesTab({
     toast.success(`Status alterado para ${status}`);
   };
 
+  // ===== STYLES =====
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "aberto": return "text-green-400 bg-green-500/10 border-green-500/20";
+      case "fechado": return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+      case "em_andamento": return "text-blue-400 bg-blue-500/10 border-blue-500/20";
+      case "finalizado": return "text-gray-400 bg-gray-500/10 border-gray-500/20";
+      default: return "text-[#5a5a6e] bg-[#1a1a24] border-[#2a2a3a]";
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header com ações */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h2 className="text-xl font-bold text-[#f0f0f5]">Gerenciar Inscrições</h2>
-          <p className="text-sm text-[#8a8a9e]">
-            Selecione um xtreino para gerenciar as inscrições
+      {/* Header */}
+      <div className="bg-[#12121a] border-b border-[#2a2a3a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-8 mb-6">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <Users className="w-8 h-8 text-red-400" />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
+              Gerenciar Inscrições
+            </h1>
+          </div>
+          <p className="text-[#8a8a9e]">
+            Selecione um xtreino para gerenciar as inscrições de equipes
           </p>
         </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+        {/* Ações Admin */}
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 mb-6">
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm"
@@ -111,190 +161,255 @@ export function InscricoesTab({
             </button>
           </div>
         )}
-      </div>
 
-      {/* Form de criar xtreino - APENAS ADMIN */}
-      {isAdmin && showCreateForm && (
-        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-          <h3 className="font-bold text-[#f0f0f5] mb-4">Criar Novo Xtreino</h3>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-[#8a8a9e] mb-1">Data</label>
-              <input
-                type="date"
-                value={newDate}
-                onChange={(e) => setNewDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-              />
+        {/* Form de criar xtreino - APENAS ADMIN */}
+        {isAdmin && showCreateForm && (
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6 mb-6">
+            <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+              <CalendarPlus className="w-4 h-4 text-red-400" />
+              Criar Novo Xtreino
+            </h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm text-[#8a8a9e] mb-1">Data</label>
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-[#8a8a9e] mb-1">
+                  Máximo de Equipes
+                </label>
+                <input
+                  type="number"
+                  value={newMaxTeams}
+                  onChange={(e) => setNewMaxTeams(parseInt(e.target.value) || 12)}
+                  min={1}
+                  max={32}
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-[#8a8a9e] mb-1">Status</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                >
+                  <option value="aberto">Aberto</option>
+                  <option value="fechado">Fechado</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm text-[#8a8a9e] mb-1">
-                Máximo de Equipes
-              </label>
-              <input
-                type="number"
-                value={newMaxTeams}
-                onChange={(e) => setNewMaxTeams(parseInt(e.target.value) || 12)}
-                min={1}
-                max={32}
-                className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-[#8a8a9e] mb-1">Status</label>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handleCreateEvent}
+                disabled={isCreatingEvent}
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
               >
-                <option value="aberto">Aberto</option>
-                <option value="fechado">Fechado</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={handleCreateEvent}
-              disabled={isCreatingEvent}
-              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
-            >
-              {isCreatingEvent ? "Criando..." : "Criar"}
-            </button>
-            <button
-              onClick={() => setShowCreateForm(false)}
-              className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm hover:text-[#f0f0f5] transition-all"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Selecionar Xtreino */}
-      <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-        <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-          <Users className="w-4 h-4 text-red-400" />
-          Selecionar Xtreino
-        </h3>
-        <select
-          value={selectedXt ?? ""}
-          onChange={(e) => {
-            const id = e.target.value ? parseInt(e.target.value) : null;
-            onSelectXt(id);
-            setShowWhatsApp(false);
-          }}
-          className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-        >
-          <option value="">Selecione um xtreino...</option>
-          {xtreinosList?.map((x) => (
-            <option key={x.id} value={x.id}>
-              #{x.id} — {x.date} ({x.status}) — {x.maxTeams} vagas
-            </option>
-          ))}
-        </select>
-
-        {/* Status do xtreino selecionado - APENAS ADMIN */}
-        {isAdmin && selectedXtData && (
-          <div className="mt-4 flex items-center gap-2">
-            <span className="text-sm text-[#8a8a9e]">Status:</span>
-            <div className="flex gap-1">
-              {(["aberto", "fechado", "em_andamento", "finalizado"] as const).map(
-                (status) => (
-                  <button
-                    key={status}
-                    onClick={() => handleStatusChange(selectedXtData.id, status)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                      selectedXtData.status === status
-                        ? status === "aberto"
-                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                          : status === "fechado"
-                          ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                          : status === "em_andamento"
-                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                          : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
-                        : "bg-[#1a1a24] border border-[#2a2a3a] text-[#5a5a6e] hover:text-[#8a8a9e]"
-                    }`}
-                  >
-                    {status === "em_andamento" ? "EM ANDAMENTO" : status.toUpperCase()}
-                  </button>
-                )
-              )}
+                {isCreatingEvent ? "Criando..." : "Criar"}
+              </button>
+              <button
+                onClick={() => setShowCreateForm(false)}
+                className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm hover:text-[#f0f0f5] transition-all"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}
-      </div>
 
-      {selectedXtData && (
-        <>
-          {/* Toggle WhatsApp */}
-          {isAdmin && (
-            <button
-              onClick={() => setShowWhatsApp(!showWhatsApp)}
-              className="w-full flex items-center justify-between px-6 py-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-medium">
-                  {showWhatsApp
-                    ? "Ocultar Gerador WhatsApp"
-                    : "Gerar Mensagem WhatsApp"}
+        {/* Selecionar Xtreino */}
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6 mb-6">
+          <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+            <Filter className="w-4 h-4 text-red-400" />
+            Selecionar Xtreino
+          </h3>
+          <select
+            value={selectedXt ?? ""}
+            onChange={(e) => {
+              const id = e.target.value ? parseInt(e.target.value) : null;
+              onSelectXt(id);
+              setShowWhatsApp(false);
+            }}
+            className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+          >
+            <option value="">Selecione um xtreino...</option>
+            {xtreinosList?.map((x) => (
+              <option key={x.id} value={x.id}>
+                #{x.id} — {x.date} ({x.status}) — {x.maxTeams} vagas
+              </option>
+            ))}
+          </select>
+
+          {/* Status do xtreino selecionado - APENAS ADMIN */}
+          {isAdmin && selectedXtData && (
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-sm text-[#8a8a9e]">Status:</span>
+              <div className="flex gap-1">
+                {(["aberto", "fechado", "em_andamento", "finalizado"] as const).map(
+                  (status) => (
+                    <button
+                      key={status}
+                      onClick={() => handleStatusChange(selectedXtData.id, status)}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                        selectedXtData.status === status
+                          ? status === "aberto"
+                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                            : status === "fechado"
+                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            : status === "em_andamento"
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                          : "bg-[#1a1a24] border border-[#2a2a3a] text-[#5a5a6e] hover:text-[#8a8a9e]"
+                      }`}
+                    >
+                      {status === "em_andamento" ? "EM ANDAMENTO" : status.toUpperCase()}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {selectedXtData && (
+          <>
+            {/* Cards de Resumo - Estilo XTreinos.tsx */}
+            {summary && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs text-[#5a5a6e] uppercase">Inscrições</span>
+                  </div>
+                  <p className="text-2xl font-bold text-[#f0f0f5]">{summary.totalInscricoes}</p>
+                  <p className="text-xs text-[#5a5a6e] mt-1">
+                    {summary.mainTeams} fixas · {summary.reserveTeams} reservas
+                  </p>
+                </div>
+                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-red-400" />
+                    <span className="text-xs text-[#5a5a6e] uppercase">Jogadores</span>
+                  </div>
+                  <p className="text-2xl font-bold text-red-400">{summary.totalPlayers}</p>
+                  <p className="text-xs text-[#5a5a6e] mt-1">Total inscritos</p>
+                </div>
+                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trophy className="w-4 h-4 text-yellow-400" />
+                    <span className="text-xs text-[#5a5a6e] uppercase">Vagas</span>
+                  </div>
+                  <p className="text-2xl font-bold text-yellow-400">{summary.vagasDisponiveis}</p>
+                  <p className="text-xs text-[#5a5a6e] mt-1">de {selectedXtData.maxTeams} disponíveis</p>
+                </div>
+                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-green-400" />
+                    <span className="text-xs text-[#5a5a6e] uppercase">Ocupação</span>
+                  </div>
+                  <p className="text-2xl font-bold text-green-400">{summary.vagasPercent}%</p>
+                  <div className="w-full bg-[#1a1a24] rounded-full h-1.5 mt-2">
+                    <div
+                      className="bg-green-500 rounded-full h-1.5 transition-all"
+                      style={{ width: `${summary.vagasPercent}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Toggle WhatsApp */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowWhatsApp(!showWhatsApp)}
+                className="w-full flex items-center justify-between px-6 py-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all mb-6"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="font-medium">
+                    {showWhatsApp
+                      ? "Ocultar Gerador WhatsApp"
+                      : "Gerar Mensagem WhatsApp"}
+                  </span>
+                </div>
+                {showWhatsApp ? (
+                  <ChevronUp className="w-5 h-5" />
+                ) : (
+                  <ChevronDown className="w-5 h-5" />
+                )}
+              </button>
+            )}
+
+            {showWhatsApp && isAdmin && (
+              <div className="mb-6">
+                <WhatsAppGenerator
+                  xtreino={selectedXtData}
+                  inscricoes={xtInscricoes}
+                  fixedTeams={fixedTeams}
+                  settings={settings}
+                />
+              </div>
+            )}
+
+            {/* Gerenciador de Inscrições */}
+            <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
+                <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+                  <Medal className="w-5 h-5 text-yellow-400" />
+                  Inscrições — {selectedXtData.date}
+                </h3>
+                <span className={`text-xs px-2 py-1 rounded-lg border ${getStatusColor(selectedXtData.status)}`}>
+                  {selectedXtData.status === "em_andamento" ? "EM ANDAMENTO" : selectedXtData.status.toUpperCase()}
                 </span>
               </div>
-              {showWhatsApp ? (
-                <ChevronUp className="w-5 h-5" />
-              ) : (
-                <ChevronDown className="w-5 h-5" />
-              )}
-            </button>
-          )}
 
-          {showWhatsApp && isAdmin && (
-            <WhatsAppGenerator
-              xtreino={selectedXtData}
-              inscricoes={xtInscricoes}
-              fixedTeams={fixedTeams}
-              settings={settings}
-            />
-          )}
+              <InscricoesManager
+                xtreino={selectedXtData}
+                inscricoes={xtInscricoes}
+                fixedTeams={fixedTeams}
+                allTeams={allTeams}
+                onRegister={(data) => {
+                  onRegister({
+                    xtreinoId: selectedXtData.id,
+                    teamName: data.teamName,
+                    players: data.players,
+                    isReserve: !fixedTeams.includes(data.teamName),
+                  });
+                }}
+                onCancel={(data) => {
+                  onCancel({
+                    xtreinoId: selectedXtData.id,
+                    teamName: data.teamName,
+                  });
+                }}
+                onRemove={(data) => {
+                  onUnregister({
+                    xtreinoId: selectedXtData.id,
+                    teamName: data.teamName,
+                  });
+                }}
+                isPending={isPending}
+                isAdmin={isAdmin}
+              />
+            </div>
+          </>
+        )}
 
-          {/* Gerenciador de Inscrições */}
-          <InscricoesManager
-            xtreino={selectedXtData}
-            inscricoes={xtInscricoes}
-            fixedTeams={fixedTeams}
-            allTeams={allTeams}
-            onRegister={(data) => {
-              onRegister({
-                xtreinoId: selectedXtData.id,
-                teamName: data.teamName,
-                players: data.players,
-                isReserve: !fixedTeams.includes(data.teamName),
-              });
-            }}
-            onCancel={(data) => {
-              onCancel({
-                xtreinoId: selectedXtData.id,
-                teamName: data.teamName,
-              });
-            }}
-            onRemove={(data) => {
-              onUnregister({
-                xtreinoId: selectedXtData.id,
-                teamName: data.teamName,
-              });
-            }}
-            isPending={isPending}
-            isAdmin={isAdmin}
-          />
-        </>
-      )}
-
-      {!selectedXtData && (
-        <div className="text-center py-12 text-[#5a5a6e]">
-          <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p>Selecione um xtreino para gerenciar inscrições</p>
-        </div>
-      )}
+        {!selectedXtData && (
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] px-6 py-16 text-center">
+            <Users className="w-12 h-12 mx-auto mb-4 text-[#2a2a3a]" />
+            <p className="text-[#5a5a6e] text-lg font-medium">Nenhum xtreino selecionado</p>
+            <p className="text-[#3a3a4e] text-sm mt-1">
+              Selecione um xtreino no filtro acima para gerenciar as inscrições
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
