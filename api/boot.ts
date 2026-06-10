@@ -28,6 +28,9 @@ const app = new Hono();
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.get("/health", (c) => c.json({ status: "ok", time: Date.now() }));
 
+// ============================================================
+// API ROUTES (sempre antes do catch-all)
+// ============================================================
 app.all("/api/trpc/*", async (c) => {
   return fetchRequestHandler({
     endpoint: "/api/trpc",
@@ -100,29 +103,31 @@ if (env.isProduction) {
     }
   }
 
+  // ============================================================
+  // SERVIR ARQUIVOS ESTÁTICOS + SPA FALLBACK
+  // ============================================================
   const { serve } = await import("@hono/node-server");
   const { serveStatic } = await import("@hono/node-server/serve-static");
 
-  // Servir arquivos estáticos do build do Vite
+  // Servir arquivos estáticos (CSS, JS, imagens, etc.)
   app.use("/*", serveStatic({ root: "./dist/public" }));
 
-  // ============================================================
-  // SPA FALLBACK - serve index.html para rotas não-API não encontradas
-  // ============================================================
-  // Isso deve vir DEPOIS do serveStatic e DEPOIS de todas as rotas da API
+  // SPA FALLBACK: serve index.html para rotas do React Router
+  // Isso deve ser a ÚLTIMA rota, depois de API e static
   app.notFound((c) => {
     // Não faz fallback para rotas da API
     if (c.req.path.startsWith("/api/")) {
       return c.json({ error: "Not Found" }, 404);
     }
-    
+
     try {
       const indexPath = join(process.cwd(), "dist/public/index.html");
+      console.log(`[BOOT] SPA fallback for: ${c.req.path} → serving ${indexPath}`);
       const html = readFileSync(indexPath, "utf-8");
       return c.html(html);
     } catch (err) {
       console.error("[BOOT] Failed to serve index.html:", err);
-      return c.json({ error: "Internal Server Error" }, 500);
+      return c.json({ error: "index.html not found. Did you run 'npm run build'?" }, 500);
     }
   });
 

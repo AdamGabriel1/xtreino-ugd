@@ -11,8 +11,6 @@ import {
   Target,
   Zap,
   Gamepad2,
-  ArrowRight,
-  ChevronRight,
   User,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
