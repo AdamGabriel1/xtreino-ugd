@@ -15,7 +15,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
-import MainLayout from "@/layout/MainLayout";
+import AdminLayout from "@/layout/AdminLayout";
 import {
   useXtreinoCalculations,
   POSITION_POINTS,
@@ -89,7 +89,7 @@ export default function XTreinos() {
   };
 
   return (
-    <MainLayout>
+    <AdminLayout>
       {/* Header */}
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
@@ -430,6 +430,6 @@ export default function XTreinos() {
           </div>
         )}
       </div>
-    </MainLayout>
+    </AdminLayout>
   );
 }

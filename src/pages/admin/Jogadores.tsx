@@ -18,7 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
-import MainLayout from "@/layout/MainLayout";
+import AdminLayout from "@/layout/AdminLayout";
 import {
   useXtreinoCalculations,
   calcKillPoints,
@@ -146,7 +146,7 @@ export default function Jogadores() {
   const isLoading = playersLoading || statsLoading;
 
   return (
-    <MainLayout>
+    <AdminLayout>
       <div className="min-h-screen bg-[#0a0a0f]">
         {/* Header */}
         <div className="bg-[#12121a] border-b border-[#2a2a3a]">
@@ -558,6 +558,6 @@ export default function Jogadores() {
           )}
         </div>
       </div>
-    </MainLayout>
+    </AdminLayout>
   );
 }
