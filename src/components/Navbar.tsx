@@ -144,11 +144,15 @@ export default function Navbar() {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-[#f0f0f5] font-bold text-lg tracking-tight hidden sm:inline">
+          <Link to="/" className="flex items-center gap-3 shrink-0">
+            <img
+              src="/logo-xtreino.jpg"
+              alt="XTreinos Logo"
+              className="w-9 h-9 rounded-lg object-cover shadow-lg shadow-emerald-500/20"
+              draggable={false}
+              loading="eager"
+            />
+            <span className="font-bold text-lg text-[#f0f0f5] hidden sm:block tracking-tight">
               Underground
             </span>
           </Link>
