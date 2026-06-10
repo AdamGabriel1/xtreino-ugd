@@ -453,7 +453,7 @@ export default function Home() {
         <div className="w-full max-w-[1920px] mx-auto">
           <img
             src="/banner.jpg"
-            alt="Devils Mobile League Banner"
+            alt="Underground Banner"
             className="w-full h-auto object-cover"
             style={{ aspectRatio: "2 / 1" }}
             loading="eager"
@@ -481,7 +481,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-white via-emerald-100 to-emerald-400 bg-clip-text text-transparent">
-            {settings?.orgName ?? "Devils Mobile League"}
+            {settings?.orgName ?? "Underground"}
           </h1>
           <p className="text-lg sm:text-xl text-[#8a8a9e] mb-8 max-w-2xl mx-auto">
             Sistema completo de XTreinos, Scrims e Campeonatos Mobile. 
