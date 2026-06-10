@@ -14,6 +14,7 @@ import {
   Globe,
   Award,
   Handshake,
+  Code2,
   type LucideProps,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
@@ -27,6 +28,10 @@ interface TeamMember {
   description: string;
   icon: LucideIcon;
   color: string;
+  tiktok?: string;
+  youtube?: string;
+  clan?: string;
+  nick?: string;
 }
 
 interface Partner {
@@ -51,6 +56,40 @@ const RoleCard = ({ member }: { member: TeamMember }) => {
         </div>
       </div>
       <p className="text-[#8a8a9e] text-sm leading-relaxed">{member.description}</p>
+      
+      {/* Social Links */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {member.nick && (
+          <span className="text-xs px-2 py-1 rounded-md bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e]">
+            Nick: {member.nick}
+          </span>
+        )}
+        {member.clan && (
+          <span className="text-xs px-2 py-1 rounded-md bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e]">
+            Clã: {member.clan}
+          </span>
+        )}
+        {member.tiktok && (
+          <a 
+            href={`https://tiktok.com/${member.tiktok}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-xs px-2 py-1 rounded-md bg-[#1a1a24] border border-[#2a2a3a] text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-colors"
+          >
+            TT: {member.tiktok}
+          </a>
+        )}
+        {member.youtube && (
+          <a 
+            href={`https://youtube.com/${member.youtube}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-xs px-2 py-1 rounded-md bg-[#1a1a24] border border-[#2a2a3a] text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-colors"
+          >
+            YT: {member.youtube}
+          </a>
+        )}
+      </div>
     </div>
   );
 };
@@ -89,25 +128,48 @@ const PartnerCard = ({ partner }: { partner: Partner }) => (
 export default function Sobre() {
   const teamMembers: TeamMember[] = [
     {
-      name: "Administradores",
-      role: "Gestão Geral",
-      description: "Responsáveis pela direção estratégica do clã, tomada de decisões importantes e manutenção da visão e valores da UGD. Garantem que tudo funcione perfeitamente.",
+      name: "Edgar Lira (Ed)",
+      role: "Fundador & Dono da Underground",
+      description: "Responsável pela direção estratégica e visão geral da UGD. Gerencia as inscrições das equipes nos xtreinos e garante que tudo funcione perfeitamente.",
       icon: Crown,
       color: "bg-gradient-to-br from-amber-500 to-amber-700",
+      nick: "A-Train da UGD",
+      tiktok: "@edgarlira9",
     },
     {
-      name: "Organizadores",
-      role: "Produção de Eventos",
-      description: "Planejam e executam todos os xtreinos, campeonatos e scrims. Desde a criação das salas até a gestão de resultados e premiações.",
-      icon: Target,
+      name: "Sant",
+      role: "CEO da Underground",
+      description: "CEO da UGD, responsável pela organização das equipes nos xtreinos e pela gestão estratégica das operações do clã.",
+      icon: Shield,
       color: "bg-gradient-to-br from-emerald-500 to-emerald-700",
+      tiktok: "@playersnt",
     },
     {
-      name: "Designers",
-      role: "Identidade Visual",
-      description: "Cuidam da arte, banners, thumbnails e toda identidade visual da UGD. Dão vida ao nosso projeto com criatividade e profissionalismo.",
+      name: "Kaze",
+      role: "Administrador & Tabelas",
+      description: "Um dos administradores da UGD. Especialista na criação e manutenção das tabelas dos xtreinos, garantindo organização nos resultados.",
+      icon: Target,
+      color: "bg-gradient-to-br from-blue-500 to-blue-700",
+      tiktok: "@ugdkaze",
+      youtube: "@KazeFpsBloodStrike",
+    },
+    {
+      name: "Neto Aguiar",
+      role: "Administrador & Designer",
+      description: "Administrador da UGD e da K4F. Responsável pela identidade visual, arte, banners e thumbnails da organização.",
       icon: Palette,
       color: "bg-gradient-to-br from-purple-500 to-purple-700",
+      clan: "K4F",
+      tiktok: "@netinhoaguiar0",
+    },
+    {
+      name: "Adam (Ares/Cool)",
+      role: "Líder UGD Threat & Desenvolvedor",
+      description: "Líder da line UGD Threat, administrador da Underground, organizador de xtreinos, desenvolvedor e mantenedor do site, designer web e patrocinador da organização.",
+      icon: Code2,
+      color: "bg-gradient-to-br from-rose-500 to-rose-700",
+      nick: "Ares/Cool",
+      tiktok: "@aresz.bs0",
     },
   ];
 
@@ -130,8 +192,8 @@ export default function Sobre() {
 
   const partners: Partner[] = [
     { name: "UGD Esports", type: "Clã Principal", status: "ativo" },
+    { name: "K4F", type: "Clã Parceiro", status: "ativo" },
     { name: "Em Breve", type: "Patrocinador", status: "em_breve" },
-    { name: "Em Breve", type: "Clã Parceiro", status: "em_breve" },
   ];
 
   return (
@@ -248,7 +310,7 @@ export default function Sobre() {
           <h2 className="text-2xl font-bold text-[#f0f0f5]">Nossa Equipe</h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {teamMembers.map((member) => (
             <RoleCard key={member.name} member={member} />
           ))}
@@ -292,7 +354,7 @@ export default function Sobre() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/equipes"
+                to="/clans"
                 className="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all duration-150 hover:scale-[1.02] shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
               >
                 <Users className="w-4 h-4" />
