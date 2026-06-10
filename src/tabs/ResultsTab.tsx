@@ -54,31 +54,28 @@ export function ResultsTab({
     ? (xtDetail?.results ?? allResults?.filter((r) => r.xtreinoId === selectedXt) ?? [])
     : (allResults ?? []);
 
-  // Filtrar por busca
   const filteredResults = useMemo(() => {
     if (!search.trim()) return results;
     const q = search.toLowerCase();
     return results.filter((r) => r.teamName.toLowerCase().includes(q));
   }, [results, search]);
 
-  // Ordenar
   const sortedResults = useMemo(() => {
-    const getSortValue = (item: XTreinoResult) => {
+    return [...filteredResults].sort((a, b) => {
       if (sortField === "date") {
-        return new Date(item.date ?? "").getTime() || 0;
+        const aVal = a.date ?? "";
+        const bVal = b.date ?? "";
+        return sortDir === "desc"
+          ? bVal.localeCompare(aVal)
+          : aVal.localeCompare(bVal);
       }
 
-      return (item[sortField] as number) ?? 0;
-    };
-
-    return [...filteredResults].sort((a, b) => {
-      const aVal = getSortValue(a);
-      const bVal = getSortValue(b);
+      const aVal = a[sortField] ?? 0;
+      const bVal = b[sortField] ?? 0;
       return sortDir === "desc" ? bVal - aVal : aVal - bVal;
     });
   }, [filteredResults, sortField, sortDir]);
 
-  // Resumo
   const summary = useMemo(() => {
     if (!results.length) return null;
     return {
@@ -133,7 +130,7 @@ export function ResultsTab({
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <Trophy className="w-8 h-8 text-yellow-400" />
+            <Trophy className="w-8 h-8 text-green-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
               Resultados dos XTreinos
             </h1>
@@ -163,7 +160,7 @@ export function ResultsTab({
                   placeholder="Buscar time..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-yellow-500/50 min-w-[220px]"
+                  className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-green-500/50 min-w-[220px]"
                 />
               </div>
 
@@ -172,7 +169,7 @@ export function ResultsTab({
                 <select
                   value={selectedXt ?? ""}
                   onChange={(e) => onSelectXt(e.target.value ? parseInt(e.target.value) : null)}
-                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-yellow-500/50 min-w-[180px]"
+                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50 min-w-[180px]"
                 >
                   <option value="">Todos os xtreinos</option>
                   {xtreinosList?.map((x) => (
@@ -186,7 +183,7 @@ export function ResultsTab({
               {isAdmin && (
                 <button
                   onClick={onShowForm}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all"
                 >
                   <Plus className="w-4 h-4" /> Add Resultado
                 </button>
@@ -199,7 +196,7 @@ export function ResultsTab({
                   setSearch("");
                   onSelectXt(null);
                 }}
-                className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
+                className="text-xs text-green-400 hover:text-green-300 transition-colors"
               >
                 Limpar filtros
               </button>
@@ -211,7 +208,7 @@ export function ResultsTab({
         {isAdmin && showForm && (
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
             <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-red-400" />
+              <Plus className="w-4 h-4 text-green-400" />
               Adicionar Resultado
             </h3>
             <ResultForm
@@ -228,7 +225,7 @@ export function ResultsTab({
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-[#5a5a6e]">Carregando resultados...</p>
           </div>
         )}
@@ -238,31 +235,31 @@ export function ResultsTab({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-yellow-400" />
+                <Users className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Equipes</span>
               </div>
               <p className="text-2xl font-bold text-[#f0f0f5]">{summary.totalTeams}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Swords className="w-4 h-4 text-yellow-400" />
+                <Swords className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Registros</span>
               </div>
-              <p className="text-2xl font-bold text-yellow-400">{summary.totalResults}</p>
+              <p className="text-2xl font-bold text-green-400">{summary.totalResults}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-yellow-400" />
+                <BarChart3 className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Média Pts</span>
               </div>
               <p className="text-2xl font-bold text-[#f0f0f5]">{summary.avgPoints}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Trophy className="w-4 h-4 text-yellow-400" />
+                <Trophy className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Top 1</span>
               </div>
-              <p className="text-2xl font-bold text-yellow-400">{summary.top1Count}</p>
+              <p className="text-2xl font-bold text-green-400">{summary.top1Count}</p>
             </div>
           </div>
         )}
@@ -272,7 +269,7 @@ export function ResultsTab({
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
               <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-yellow-400" />
+                <TrendingUp className="w-5 h-5 text-green-400" />
                 {selectedXt
                   ? `Resultados do XTreino`
                   : "Todos os Resultados"}
@@ -306,7 +303,7 @@ export function ResultsTab({
                     <th className="px-6 py-3 text-center">
                       <SortHeader field="q3Pos" label="Q3" />
                     </th>
-                    <th className="px-6 py-3 text-center bg-yellow-500/5">
+                    <th className="px-6 py-3 text-center bg-green-500/5">
                       <SortHeader field="totalPoints" label="Total" />
                     </th>
                   </tr>
@@ -317,19 +314,19 @@ export function ResultsTab({
                       key={r.id}
                       className={`hover:bg-[#1a1a24] transition-colors ${
                         index === 0
-                          ? "bg-gradient-to-r from-yellow-500/5 to-transparent border-l-2 border-yellow-400"
+                          ? "bg-gradient-to-r from-green-500/5 to-transparent border-l-2 border-green-400"
                           : index === 1
-                          ? "bg-gradient-to-r from-gray-400/5 to-transparent border-l-2 border-gray-300"
+                          ? "bg-gradient-to-r from-green-400/5 to-transparent border-l-2 border-green-300"
                           : index === 2
-                          ? "bg-gradient-to-r from-amber-600/5 to-transparent border-l-2 border-amber-500"
+                          ? "bg-gradient-to-r from-green-600/5 to-transparent border-l-2 border-green-500"
                           : ""
                       }`}
                     >
                       <td className="px-6 py-3 text-sm text-[#8a8a9e]">{r.date}</td>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                            <Trophy className="w-4 h-4 text-yellow-400" />
+                          <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                            <Trophy className="w-4 h-4 text-green-400" />
                           </div>
                           <span className="text-sm font-bold text-[#f0f0f5]">
                             {r.teamName}
@@ -345,8 +342,8 @@ export function ResultsTab({
                       <td className="px-6 py-3 text-center">
                         <PosBadge pos={r.q3Pos} />
                       </td>
-                      <td className="px-6 py-3 text-center bg-yellow-500/5">
-                        <span className="text-sm font-bold text-yellow-400">
+                      <td className="px-6 py-3 text-center bg-green-500/5">
+                        <span className="text-sm font-bold text-green-400">
                           {r.totalPoints ?? "-"}
                         </span>
                       </td>
@@ -380,9 +377,9 @@ function PosBadge({ pos }: { pos: number | null }) {
   if (!pos) return <span className="text-[#8a8a9e]">-</span>;
 
   const colors = {
-    1: "bg-yellow-500/20 text-yellow-400",
-    2: "bg-gray-400/20 text-gray-300",
-    3: "bg-amber-600/20 text-amber-500",
+    1: "bg-green-500/20 text-green-400",
+    2: "bg-emerald-500/20 text-emerald-300",
+    3: "bg-lime-500/20 text-lime-400",
   };
 
   return (

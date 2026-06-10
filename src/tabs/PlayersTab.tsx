@@ -54,7 +54,6 @@ export function PlayersTab({
     ? (xtDetail?.playerStats ?? allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
     : (allPlayerStats ?? []);
 
-  // Filtrar por busca
   const filteredStats = useMemo(() => {
     if (!search.trim()) return stats;
     const q = search.toLowerCase();
@@ -65,21 +64,20 @@ export function PlayersTab({
     );
   }, [stats, search]);
 
-  // Ordenar
   const sortedStats = useMemo(() => {
     return [...filteredStats].sort((a, b) => {
-      const getSortValue = (item: PlayerStat) =>
-        sortField === "date"
-          ? new Date(item.date).getTime()
-          : item[sortField] ?? 0;
+      if (sortField === "date") {
+        return sortDir === "desc"
+          ? b.date.localeCompare(a.date)
+          : a.date.localeCompare(b.date);
+      }
 
-      const aVal = getSortValue(a);
-      const bVal = getSortValue(b);
+      const aVal = a[sortField] ?? 0;
+      const bVal = b[sortField] ?? 0;
       return sortDir === "desc" ? bVal - aVal : aVal - bVal;
     });
   }, [filteredStats, sortField, sortDir]);
 
-  // Resumo
   const summary = useMemo(() => {
     if (!stats.length) return null;
     return {
@@ -186,7 +184,7 @@ export function PlayersTab({
               {isAdmin && (
                 <button
                   onClick={onShowForm}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all"
                 >
                   <Plus className="w-4 h-4" /> Add Jogador
                 </button>
@@ -211,7 +209,7 @@ export function PlayersTab({
         {isAdmin && showForm && (
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
             <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-red-400" />
+              <Plus className="w-4 h-4 text-green-400" />
               Adicionar Jogador
             </h3>
             <PlayerForm
@@ -293,7 +291,7 @@ export function PlayersTab({
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#2a2a3a] bg-[#0a0a0f]">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">
+                    <th className="px-6 py-3 text-left">
                       <SortHeader field="date" label="Data" align="left" />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">

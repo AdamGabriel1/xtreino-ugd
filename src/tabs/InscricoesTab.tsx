@@ -117,8 +117,8 @@ export function InscricoesTab({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "aberto": return "text-green-400 bg-green-500/10 border-green-500/20";
-      case "fechado": return "text-amber-400 bg-amber-500/10 border-amber-500/20";
-      case "em_andamento": return "text-blue-400 bg-blue-500/10 border-blue-500/20";
+      case "fechado": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      case "em_andamento": return "text-lime-400 bg-lime-500/10 border-lime-500/20";
       case "finalizado": return "text-gray-400 bg-gray-500/10 border-gray-500/20";
       default: return "text-[#5a5a6e] bg-[#1a1a24] border-[#2a2a3a]";
     }
@@ -127,10 +127,10 @@ export function InscricoesTab({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-[#12121a] border-b border-[#2a2a3a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-8 mb-6">
-        <div className="max-w-[1400px] mx-auto">
+      <div className="bg-[#12121a] border-b border-[#2a2a3a]">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <Users className="w-8 h-8 text-red-400" />
+            <Users className="w-8 h-8 text-green-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
               Gerenciar Inscrições
             </h1>
@@ -141,13 +141,13 @@ export function InscricoesTab({
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6 space-y-6">
         {/* Ações Admin */}
         {isAdmin && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all text-sm"
             >
               <CalendarPlus className="w-4 h-4" />
               Novo Xtreino
@@ -164,9 +164,9 @@ export function InscricoesTab({
 
         {/* Form de criar xtreino - APENAS ADMIN */}
         {isAdmin && showCreateForm && (
-          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6 mb-6">
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
             <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-              <CalendarPlus className="w-4 h-4 text-red-400" />
+              <CalendarPlus className="w-4 h-4 text-green-400" />
               Criar Novo Xtreino
             </h3>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -176,7 +176,7 @@ export function InscricoesTab({
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50"
                 />
               </div>
               <div>
@@ -189,7 +189,7 @@ export function InscricoesTab({
                   onChange={(e) => setNewMaxTeams(parseInt(e.target.value) || 12)}
                   min={1}
                   max={32}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50"
                 />
               </div>
               <div>
@@ -197,7 +197,7 @@ export function InscricoesTab({
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                  className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50"
                 >
                   <option value="aberto">Aberto</option>
                   <option value="fechado">Fechado</option>
@@ -208,7 +208,7 @@ export function InscricoesTab({
               <button
                 onClick={handleCreateEvent}
                 disabled={isCreatingEvent}
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all disabled:opacity-50"
               >
                 {isCreatingEvent ? "Criando..." : "Criar"}
               </button>
@@ -223,9 +223,9 @@ export function InscricoesTab({
         )}
 
         {/* Selecionar Xtreino */}
-        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6 mb-6">
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
           <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-            <Filter className="w-4 h-4 text-red-400" />
+            <Filter className="w-4 h-4 text-green-400" />
             Selecionar Xtreino
           </h3>
           <select
@@ -235,7 +235,7 @@ export function InscricoesTab({
               onSelectXt(id);
               setShowWhatsApp(false);
             }}
-            className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+            className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50"
           >
             <option value="">Selecione um xtreino...</option>
             {xtreinosList?.map((x) => (
@@ -260,9 +260,9 @@ export function InscricoesTab({
                           ? status === "aberto"
                             ? "bg-green-500/20 text-green-400 border border-green-500/30"
                             : status === "fechado"
-                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                             : status === "em_andamento"
-                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            ? "bg-lime-500/20 text-lime-400 border border-lime-500/30"
                             : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
                           : "bg-[#1a1a24] border border-[#2a2a3a] text-[#5a5a6e] hover:text-[#8a8a9e]"
                       }`}
@@ -280,10 +280,10 @@ export function InscricoesTab({
           <>
             {/* Cards de Resumo - Estilo XTreinos.tsx */}
             {summary && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Users className="w-4 h-4 text-blue-400" />
+                    <Users className="w-4 h-4 text-green-400" />
                     <span className="text-xs text-[#5a5a6e] uppercase">Inscrições</span>
                   </div>
                   <p className="text-2xl font-bold text-[#f0f0f5]">{summary.totalInscricoes}</p>
@@ -293,18 +293,18 @@ export function InscricoesTab({
                 </div>
                 <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4 text-red-400" />
+                    <Target className="w-4 h-4 text-green-400" />
                     <span className="text-xs text-[#5a5a6e] uppercase">Jogadores</span>
                   </div>
-                  <p className="text-2xl font-bold text-red-400">{summary.totalPlayers}</p>
+                  <p className="text-2xl font-bold text-green-400">{summary.totalPlayers}</p>
                   <p className="text-xs text-[#5a5a6e] mt-1">Total inscritos</p>
                 </div>
                 <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Trophy className="w-4 h-4 text-yellow-400" />
+                    <Trophy className="w-4 h-4 text-green-400" />
                     <span className="text-xs text-[#5a5a6e] uppercase">Vagas</span>
                   </div>
-                  <p className="text-2xl font-bold text-yellow-400">{summary.vagasDisponiveis}</p>
+                  <p className="text-2xl font-bold text-green-400">{summary.vagasDisponiveis}</p>
                   <p className="text-xs text-[#5a5a6e] mt-1">de {selectedXtData.maxTeams} disponíveis</p>
                 </div>
                 <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
@@ -327,7 +327,7 @@ export function InscricoesTab({
             {isAdmin && (
               <button
                 onClick={() => setShowWhatsApp(!showWhatsApp)}
-                className="w-full flex items-center justify-between px-6 py-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all mb-6"
+                className="w-full flex items-center justify-between px-6 py-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all"
               >
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
@@ -360,7 +360,7 @@ export function InscricoesTab({
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
               <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
                 <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-                  <Medal className="w-5 h-5 text-yellow-400" />
+                  <Medal className="w-5 h-5 text-green-400" />
                   Inscrições — {selectedXtData.date}
                 </h3>
                 <span className={`text-xs px-2 py-1 rounded-lg border ${getStatusColor(selectedXtData.status)}`}>

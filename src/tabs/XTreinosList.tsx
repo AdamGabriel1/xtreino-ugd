@@ -37,20 +37,20 @@ const statusConfig: Record<
   { bg: string; text: string; label: string; icon: typeof CheckCircle2 }
 > = {
   aberto: {
-    bg: "bg-blue-500/10",
-    text: "text-blue-400",
+    bg: "bg-green-500/10",
+    text: "text-green-400",
     label: "Aberto",
     icon: AlertCircle,
   },
   encerrado: {
-    bg: "bg-red-500/10",
-    text: "text-red-400",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-400",
     label: "Encerrado",
-    icon: XCircle,
+    icon: CheckCircle2,
   },
   cancelado: {
-    bg: "bg-gray-500/10",
-    text: "text-gray-400",
+    bg: "bg-red-500/10",
+    text: "text-red-400",
     label: "Cancelado",
     icon: XCircle,
   },
@@ -117,7 +117,7 @@ export function XTreinosList({
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <Dumbbell className="w-8 h-8 text-red-400" />
+            <Dumbbell className="w-8 h-8 text-green-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
               Gerenciar XTreinos
             </h1>
@@ -145,7 +145,7 @@ export function XTreinosList({
                   placeholder="Buscar nome, data ou modalidade..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50 min-w-[260px]"
+                  className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-green-500/50 min-w-[260px]"
                 />
               </div>
 
@@ -154,7 +154,7 @@ export function XTreinosList({
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as XTreinoStatus | "")}
-                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50 min-w-[140px]"
+                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50 min-w-[140px]"
                 >
                   <option value="">Todos os status</option>
                   <option value="aberto">Aberto</option>
@@ -166,7 +166,7 @@ export function XTreinosList({
               {isAdmin && (
                 <button
                   onClick={onShowForm}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all"
                 >
                   <Plus className="w-4 h-4" /> Novo XTreino
                 </button>
@@ -179,7 +179,7 @@ export function XTreinosList({
                   setSearch("");
                   setStatusFilter("");
                 }}
-                className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                className="text-xs text-green-400 hover:text-green-300 transition-colors"
               >
                 Limpar filtros
               </button>
@@ -191,7 +191,7 @@ export function XTreinosList({
         {isAdmin && showForm && (
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
             <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-red-400" />
+              <Plus className="w-4 h-4 text-green-400" />
               {editing ? "Editar XTreino" : "Novo XTreino"}
             </h3>
             <XTreinoForm
@@ -208,7 +208,7 @@ export function XTreinosList({
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-red-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-[#5a5a6e]">Carregando xtreinos...</p>
           </div>
         )}
@@ -218,31 +218,31 @@ export function XTreinosList({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <ListChecks className="w-4 h-4 text-red-400" />
+                <ListChecks className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Total</span>
               </div>
               <p className="text-2xl font-bold text-[#f0f0f5]">{summary.total}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="w-4 h-4 text-blue-400" />
+                <AlertCircle className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Abertos</span>
               </div>
-              <p className="text-2xl font-bold text-blue-400">{summary.abertos}</p>
+              <p className="text-2xl font-bold text-green-400">{summary.abertos}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-4 h-4 text-red-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Encerrados</span>
               </div>
-              <p className="text-2xl font-bold text-red-400">{summary.encerrados}</p>
+              <p className="text-2xl font-bold text-emerald-400">{summary.encerrados}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <XCircle className="w-4 h-4 text-gray-400" />
+                <XCircle className="w-4 h-4 text-red-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Cancelados</span>
               </div>
-              <p className="text-2xl font-bold text-gray-400">{summary.cancelados}</p>
+              <p className="text-2xl font-bold text-red-400">{summary.cancelados}</p>
             </div>
           </div>
         )}
@@ -252,7 +252,7 @@ export function XTreinosList({
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
               <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-red-400" />
+                <TrendingUp className="w-5 h-5 text-green-400" />
                 Lista de XTreinos
                 {statusFilter && (
                   <span className="text-sm font-normal text-[#5a5a6e]">
@@ -302,8 +302,8 @@ export function XTreinosList({
                       >
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                              <Dumbbell className="w-4 h-4 text-red-400" />
+                            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                              <Dumbbell className="w-4 h-4 text-green-400" />
                             </div>
                             <span className="text-sm font-bold text-[#f0f0f5]">
                               {x.name}
@@ -338,7 +338,7 @@ export function XTreinosList({
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => onEdit(x)}
-                                className="p-1.5 rounded-lg hover:bg-blue-500/10 text-blue-400 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-400 transition-colors"
                                 title="Editar"
                               >
                                 <Pencil className="w-4 h-4" />

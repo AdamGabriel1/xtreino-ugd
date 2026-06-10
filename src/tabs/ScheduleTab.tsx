@@ -45,8 +45,8 @@ const statusConfig: Record<
     icon: XCircle,
   },
   scheduled: {
-    bg: "bg-blue-500/10",
-    text: "text-blue-400",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-400",
     label: "Agendado",
     icon: AlertCircle,
   },
@@ -86,7 +86,6 @@ export function ScheduleTab({
     return list;
   }, [scheduleList, search, statusFilter]);
 
-  // Resumo
   const summary = useMemo(() => {
     if (!scheduleList?.length) return null;
     return {
@@ -105,7 +104,7 @@ export function ScheduleTab({
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <Calendar className="w-8 h-8 text-blue-400" />
+            <Calendar className="w-8 h-8 text-green-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
               Agenda de XTreinos
             </h1>
@@ -133,7 +132,7 @@ export function ScheduleTab({
                   placeholder="Buscar data, dia ou observação..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-blue-500/50 min-w-[260px]"
+                  className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-green-500/50 min-w-[260px]"
                 />
               </div>
 
@@ -142,7 +141,7 @@ export function ScheduleTab({
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as ScheduleStatus | "")}
-                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-blue-500/50 min-w-[140px]"
+                  className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50 min-w-[140px]"
                 >
                   <option value="">Todos os status</option>
                   <option value="scheduled">Agendado</option>
@@ -155,7 +154,7 @@ export function ScheduleTab({
                 <>
                   <button
                     onClick={onShowForm}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all"
                   >
                     <Plus className="w-4 h-4" /> Add Agendamento
                   </button>
@@ -177,7 +176,7 @@ export function ScheduleTab({
                   setSearch("");
                   setStatusFilter("");
                 }}
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-xs text-green-400 hover:text-green-300 transition-colors"
               >
                 Limpar filtros
               </button>
@@ -189,7 +188,7 @@ export function ScheduleTab({
         {isAdmin && showForm && (
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
             <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-red-400" />
+              <Plus className="w-4 h-4 text-green-400" />
               Adicionar Agendamento
             </h3>
             <ScheduleForm
@@ -205,7 +204,7 @@ export function ScheduleTab({
         {/* Loading */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-[#5a5a6e]">Carregando agendamentos...</p>
           </div>
         )}
@@ -215,17 +214,17 @@ export function ScheduleTab({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <ListChecks className="w-4 h-4 text-blue-400" />
+                <ListChecks className="w-4 h-4 text-green-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Total</span>
               </div>
               <p className="text-2xl font-bold text-[#f0f0f5]">{summary.total}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="w-4 h-4 text-blue-400" />
+                <AlertCircle className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs text-[#5a5a6e] uppercase">Agendados</span>
               </div>
-              <p className="text-2xl font-bold text-blue-400">{summary.scheduled}</p>
+              <p className="text-2xl font-bold text-emerald-400">{summary.scheduled}</p>
             </div>
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -249,7 +248,7 @@ export function ScheduleTab({
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
               <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-blue-400" />
+                <CalendarDays className="w-5 h-5 text-green-400" />
                 Agendamentos
                 {statusFilter && (
                   <span className="text-sm font-normal text-[#5a5a6e]">
@@ -296,8 +295,8 @@ export function ScheduleTab({
                       >
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                              <Calendar className="w-4 h-4 text-blue-400" />
+                            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                              <Calendar className="w-4 h-4 text-green-400" />
                             </div>
                             <span className="text-sm font-bold text-[#f0f0f5]">
                               {s.date}
