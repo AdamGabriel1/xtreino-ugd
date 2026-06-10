@@ -264,6 +264,7 @@ export function seed() {
     { nickname: "Treon", teamName: "UGD Threat" },
     { nickname: "Kaze", teamName: "UGD Threat" },
     { nickname: "Arise", teamName: "UGD Threat" },
+    { nickname: "Santz", teamName: "UGD Threat" },
     { nickname: "Striker71", teamName: "Λつつ" },
     { nickname: "Striker81", teamName: "Λつつ" },
     { nickname: "ØNE ???", teamName: "Λつつ" },
