@@ -11,16 +11,11 @@ import {
   Target,
   Zap,
   Gamepad2,
-  Ticket,
-  Lock,
-  Eye,
-  Gift,
-  Crown as CrownIcon,
-  User,
   ArrowRight,
+  ChevronRight,
+  User,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
-// Using a standard img tag instead of next/image to avoid missing module/type issues
 import { useState } from "react";
 
 // ==================== DADOS DAS SALINHAS ====================
@@ -35,10 +30,14 @@ interface SalinhaData {
   prize1st: string;
   prize2nd: string;
   prize3rd: string;
+  specialPrize?: string;
   status: "aberta" | "em_andamento" | "encerrada";
   winner1st?: string;
   winner2nd?: string;
   winner3rd?: string;
+  specialWinner?: string;
+  roomId?: string;
+  roomPassword?: string;
 }
 
 const salinhasData: SalinhaData[] = [
@@ -76,6 +75,7 @@ const salinhasData: SalinhaData[] = [
     prize1st: "540 Golds",
     prize2nd: "320 Golds",
     prize3rd: "105 Golds",
+    specialPrize: "1.000 Golds Top Licker da Live",
     status: "aberta",
   },
 ];
@@ -165,10 +165,16 @@ const SalinhaCard = ({ salinha, isActive, onClick }: {
           {salinha.modality.toUpperCase()}
         </span>
         <span className="flex items-center gap-1.5">
-          <Gift className="w-3.5 h-3.5 text-amber-400" />
+          <Trophy className="w-3.5 h-3.5 text-amber-400" />
           {salinha.prize1st}
         </span>
       </div>
+      {salinha.specialPrize && (
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-[#fe2c55]">
+          <Zap className="w-3 h-3" />
+          {salinha.specialPrize}
+        </div>
+      )}
     </button>
   );
 };
@@ -182,9 +188,11 @@ const RoomCredentials = ({ roomId, roomPassword }: {
   if (!roomId || !roomPassword) {
     return (
       <div className="bg-[#12121a] rounded-xl border border-amber-500/20 p-6 text-center">
-        <Lock className="w-8 h-8 text-amber-400 mx-auto mb-3" />
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+          <Flame className="w-6 h-6 text-amber-400" />
+        </div>
         <h4 className="text-lg font-bold text-[#f0f0f5] mb-2">ID e Senha da Sala</h4>
-        <p className="text-[#8a8a9e] text-sm mb-3">
+        <p className="text-[#8a8a9e] text-sm mb-4">
           As credenciais serão divulgadas na live do Perlotti!
         </p>
         <a
@@ -204,14 +212,14 @@ const RoomCredentials = ({ roomId, roomPassword }: {
     <div className="bg-[#12121a] rounded-xl border border-emerald-500/20 p-6">
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-lg font-bold text-[#f0f0f5] flex items-center gap-2">
-          <Ticket className="w-5 h-5 text-emerald-400" />
+          <Trophy className="w-5 h-5 text-emerald-400" />
           Credenciais da Sala
         </h4>
         <button
           onClick={() => setRevealed(!revealed)}
-          className="text-[#8a8a9e] hover:text-emerald-400 transition-colors"
+          className="text-[#8a8a9e] hover:text-emerald-400 transition-colors text-sm flex items-center gap-1"
         >
-          <Eye className="w-5 h-5" />
+          {revealed ? "Ocultar" : "Revelar"}
         </button>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -246,14 +254,16 @@ export default function SalinhaPerlotti() {
         {/* Banner Background - Substitua pela URL do banner 1080x721 */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#0f0f1a] to-[#0a0a0f]" />
         
-        {/* Placeholder para o Banner 1080x721 */}
+        {/* Banner 1080x721 */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full max-w-[1080px] aspect-[1080/721] mx-4">
-            <img
-              src="/banner-perlotti.jpg"
-              alt="Banner do evento"
-              className="rounded-2xl border border-[#2a2a3a] object-cover w-full h-full"
-            />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#fe2c55]/10 via-[#12121a] to-[#25f4ee]/10 rounded-2xl border border-[#2a2a3a] flex flex-col items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-[#fe2c55]/10 border border-[#fe2c55]/20 flex items-center justify-center mb-4">
+                <Flame className="w-10 h-10 text-[#fe2c55]" />
+              </div>
+              <p className="text-[#8a8a9e] text-sm font-medium">Banner 1080x721</p>
+              <p className="text-[#5a5a6e] text-xs mt-1">Substitua pela imagem do evento</p>
+            </div>
           </div>
         </div>
 
@@ -321,7 +331,7 @@ export default function SalinhaPerlotti() {
         </div>
       </section>
 
-      {/* Post do Perlotti - Placeholder */}
+      {/* Post do Perlotti — Foto 1080x721 */}
       <section className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
         <div className="bg-[#12121a] rounded-2xl border border-[#2a2a3a] p-6 md:p-8">
           <div className="flex items-center gap-3 mb-6">
@@ -329,15 +339,37 @@ export default function SalinhaPerlotti() {
             <h2 className="text-xl font-bold text-[#f0f0f5]">Post Oficial</h2>
           </div>
           
-            {/* Embed do post do TikTok */}
-            <div className="rounded-xl overflow-hidden border border-[#2a2a3a]">
-                <iframe
-                    src="https://www.tiktok.com/embed/v2/7649581004541152520"
-                    style={{ width: "100%", height: "740px", border: "none", display: "block" }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    scrolling="no"
-                />
+          {/* Imagem do post — substitua a URL abaixo pela foto 1080x721 */}
+          <a
+            href="https://www.tiktok.com/@perlottihd/photo/7649581004541152520"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block relative w-full max-w-[1080px] mx-auto aspect-[1080/721] rounded-xl overflow-hidden border border-[#2a2a3a] hover:border-[#fe2c55]/30 transition-colors group"
+          >
+            <img
+              src="/images/post-perlotti-salinhas.jpg"
+              alt="Post oficial do Perlotti sobre as salinhas"
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+            />
+            {/* Overlay com ícone do TikTok */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-[#fe2c55] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                <Flame className="w-7 h-7 text-white" />
+              </div>
             </div>
+          </a>
+          
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <a
+              href="https://www.tiktok.com/@perlottihd/photo/7649581004541152520"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#fe2c55]/10 border border-[#fe2c55]/20 text-[#fe2c55] text-sm font-medium hover:bg-[#fe2c55]/20 transition-colors"
+            >
+              <Flame className="w-4 h-4" />
+              Ver no TikTok
+            </a>
+          </div>
         </div>
       </section>
 
@@ -381,7 +413,7 @@ export default function SalinhaPerlotti() {
             {/* Pódio */}
             <div className="bg-[#12121a] rounded-2xl border border-[#2a2a3a] p-6 md:p-8">
               <h3 className="text-xl font-bold text-[#f0f0f5] mb-6 flex items-center gap-2">
-                <CrownIcon className="w-5 h-5 text-amber-400" />
+                <Crown className="w-5 h-5 text-amber-400" />
                 Premiação — {salinha.name}
               </h3>
               <div className="grid grid-cols-3 gap-4">
@@ -404,10 +436,21 @@ export default function SalinhaPerlotti() {
                   color="border-orange-400"
                 />
               </div>
+              {salinha.specialPrize && (
+                <div className="mt-4 bg-gradient-to-r from-[#fe2c55]/10 to-amber-500/10 rounded-xl border border-[#fe2c55]/20 p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#fe2c55]/10 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-[#fe2c55]" />
+                  </div>
+                  <div>
+                    <p className="text-[#8a8a9e] text-xs">Prêmio Extra</p>
+                    <p className="text-[#fe2c55] font-bold">{salinha.specialPrize}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Credenciais */}
-            <RoomCredentials roomId={undefined} roomPassword={undefined} />
+            <RoomCredentials roomId={salinha.roomId} roomPassword={salinha.roomPassword} />
 
             {/* Info da Sala */}
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
