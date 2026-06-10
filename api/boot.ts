@@ -6,6 +6,8 @@ import { createContext } from "./context.js";
 import { env } from "./lib/env.js";
 import { getDb } from "./queries/connection.js";
 import { runSeedIfNeeded } from "../db/seed-runner.js";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 // ============================================================
 // IMPORTS DOS SEEDS (único ponto de entrada)
@@ -80,19 +82,10 @@ if (env.isProduction) {
     // ============================================================
     console.log("[BOOT] Checking specific seeds...");
 
-    // Seed dos dados históricos do xtreino (antigos dados da Red Devils)
     runSeedIfNeeded("xtreino_historico", seedXtreinoHistorico);
-
-    // Seed das logos das equipes (só se ainda não tiver)
     runSeedIfNeeded("logos", seedLogos);
-
     runSeedIfNeeded("xtreino_08062026", seedXtreino08062026);
-    
     runSeedIfNeeded("xtreino_09062026", seedXtreino09062026);
-
-    // Futuros seeds:
-    // runSeedIfNeeded("scrim_historico", seedScrimHistorico);
-    // runSeedIfNeeded("campeonato_historico", seedCampeonatoHistorico);
 
     console.log("[BOOT] All seeds processed");
 
@@ -110,7 +103,28 @@ if (env.isProduction) {
   const { serve } = await import("@hono/node-server");
   const { serveStatic } = await import("@hono/node-server/serve-static");
 
+  // Servir arquivos estáticos do build do Vite
   app.use("/*", serveStatic({ root: "./dist/public" }));
+
+  // ============================================================
+  // SPA FALLBACK - serve index.html para rotas não-API não encontradas
+  // ============================================================
+  // Isso deve vir DEPOIS do serveStatic e DEPOIS de todas as rotas da API
+  app.notFound((c) => {
+    // Não faz fallback para rotas da API
+    if (c.req.path.startsWith("/api/")) {
+      return c.json({ error: "Not Found" }, 404);
+    }
+    
+    try {
+      const indexPath = join(process.cwd(), "dist/public/index.html");
+      const html = readFileSync(indexPath, "utf-8");
+      return c.html(html);
+    } catch (err) {
+      console.error("[BOOT] Failed to serve index.html:", err);
+      return c.json({ error: "Internal Server Error" }, 500);
+    }
+  });
 
   const port = parseInt(process.env.PORT || "3000");
   console.log("[BOOT] Starting server on port:", port);
