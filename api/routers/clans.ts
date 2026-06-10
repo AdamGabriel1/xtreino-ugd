@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery } from "../middleware.js";
+import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
 import { clans, teams, players } from "../../db/schema.js";
 import { eq, like, or, and, sql } from "drizzle-orm";
+import { verifyToken } from "../lib/auth.js";
 
 export const clansRouter = createRouter({
   list: publicQuery
@@ -65,6 +66,65 @@ export const clansRouter = createRouter({
         teams: teamsWithPlayers,
       };
     }),
+
+  create: adminQuery
+    .input(
+      z.object({
+        name: z.string().min(1),
+        tag: z.string().min(1),
+        description: z.string().optional(),
+        logo: z.string().optional(),
+        banner: z.string().optional(),
+        discord: z.string().optional(),
+        color: z.string().optional(),
+        foundedAt: z.string().optional(),
+        status: z.enum(["active", "inactive"]).default("active"),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      const result = db.insert(clans).values(input).run();
+      return { id: Number(result.lastInsertRowid), success: true };
+    }),
+
+  update: adminQuery
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        tag: z.string().optional(),
+        description: z.string().optional(),
+        logo: z.string().optional(),
+        banner: z.string().optional(),
+        discord: z.string().optional(),
+        color: z.string().optional(),
+        foundedAt: z.string().optional(),
+        status: z.enum(["active", "inactive"]).optional(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const { id, ...data } = input;
+      const db = getDb();
+      db.update(clans).set(data).where(eq(clans.id, id)).run();
+      return { success: true };
+    }),
+
+  delete: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      db.delete(clans).where(eq(clans.id, input.id)).run();
+      return { success: true };
+    }),
 });
 
 export const teamsRouter = createRouter({
@@ -109,5 +169,64 @@ export const teamsRouter = createRouter({
         ...team,
         players: teamPlayers,
       };
+    }),
+
+  create: adminQuery
+    .input(
+      z.object({
+        name: z.string().min(1),
+        tag: z.string().min(1),
+        clanId: z.number().optional(),
+        logo: z.string().optional(),
+        description: z.string().optional(),
+        captainName: z.string().optional(),
+        captainDiscord: z.string().optional(),
+        whatsapp: z.string().optional(),
+        status: z.enum(["active", "inactive", "disbanded"]).default("active"),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      const result = db.insert(teams).values(input).run();
+      return { id: Number(result.lastInsertRowid), success: true };
+    }),
+
+  update: adminQuery
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        tag: z.string().optional(),
+        clanId: z.number().optional(),
+        logo: z.string().optional(),
+        description: z.string().optional(),
+        captainName: z.string().optional(),
+        captainDiscord: z.string().optional(),
+        whatsapp: z.string().optional(),
+        status: z.enum(["active", "inactive", "disbanded"]).optional(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const { id, ...data } = input;
+      const db = getDb();
+      db.update(teams).set(data).where(eq(teams.id, id)).run();
+      return { success: true };
+    }),
+
+  delete: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      db.delete(teams).where(eq(teams.id, input.id)).run();
+      return { success: true };
     }),
 });
