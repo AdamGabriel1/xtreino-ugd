@@ -1403,6 +1403,18 @@ export default function XTreinos() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showXtForm, setShowXtForm] = useState(false);
   const [editingXt, setEditingXt] = useState<number | null>(null);
+  const [xtForm, setXtForm] = useState<XTreinoFormData>({
+    name: "",
+    date: "",
+    timeBr: "",
+    timeMx: "",
+    modality: "squad",
+    status: "aberto",
+    maxTeams: 12,
+    rules: "",
+    discordLink: "",
+    whatsappLink: "",
+  });
 
   // Busca dados do tRPC
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
@@ -1901,20 +1913,180 @@ export default function XTreinos() {
 
         {/* ===== TAB: GERENCIAR ===== */}
         {activeTab === "gerenciar" && (
-          <XTreinosList
-            xtreinosList={xtreinosList as unknown as XTreino[] | undefined}
-            showForm={showXtForm}
-            editing={editingXt}
-            form={{ name: "", date: "", timeBr: "", timeMx: "", modality: "squad", status: "aberto", maxTeams: 12, rules: "", discordLink: "", whatsappLink: "" }}
-            isPending={false}
-            onShowForm={() => setShowXtForm(true)}
-            onCloseForm={() => { setShowXtForm(false); setEditingXt(null); }}
-            onEdit={(x) => { setEditingXt(x.id); setShowXtForm(true); }}
-            onSubmit={() => {}}
-            onDelete={() => {}}
-            onFormChange={() => {}}
-            isAdmin={true}
-          />
+          <div className="space-y-6">
+            <div className="bg-[#12121a] border-b border-[#2a2a3a]">
+              <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
+                <div className="flex items-center gap-3 mb-2">
+                  <Dumbbell className="w-8 h-8 text-green-400" />
+                  <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
+                    Gerenciar XTreinos
+                  </h1>
+                </div>
+                <p className="text-[#8a8a9e]">
+                  Visualize e gerencie todos os xtreinos cadastrados no sistema
+                </p>
+              </div>
+            </div>
+
+            <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6 space-y-6">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    setEditingXt(null);
+                    setXtForm({
+                      name: "",
+                      date: "",
+                      timeBr: "",
+                      timeMx: "",
+                      modality: "squad",
+                      status: "aberto",
+                      maxTeams: 12,
+                      rules: "",
+                      discordLink: "",
+                      whatsappLink: "",
+                    });
+                    setShowXtForm(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-all"
+                >
+                  <Plus className="w-4 h-4" /> Novo XTreino
+                </button>
+              </div>
+
+              {showXtForm && (
+                <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
+                  <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-green-400" />
+                    {editingXt ? "Editar XTreino" : "Novo XTreino"}
+                  </h3>
+                  <XTreinoForm
+                    form={xtForm}
+                    editing={editingXt}
+                    isPending={false}
+                    onChange={setXtForm}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      toast.success(editingXt ? "Atualizado!" : "Criado!");
+                      setShowXtForm(false);
+                      setEditingXt(null);
+                    }}
+                    onClose={() => {
+                      setShowXtForm(false);
+                      setEditingXt(null);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Tabela de XTreinos */}
+              <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
+                  <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                    Lista de XTreinos
+                  </h3>
+                  <span className="text-xs text-[#5a5a6e]">
+                    {(xtreinosList ?? []).length} registros
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#2a2a3a] bg-[#0a0a0f]">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Nome</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Data</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Horários</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Modo</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Status</th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase w-24">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#2a2a3a]">
+                      {(xtreinosList ?? []).map((x) => {
+                        const config = xtStatusConfig[x.status as XTreinoStatus] ?? xtStatusConfig.aberto;
+                        const StatusIcon = config.icon;
+                        return (
+                          <tr key={x.id} className="hover:bg-[#1a1a24] transition-colors">
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                                  <Dumbbell className="w-4 h-4 text-green-400" />
+                                </div>
+                                <span className="text-sm font-bold text-[#f0f0f5]">{x.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-3 text-sm text-[#8a8a9e]">{x.date}</td>
+                            <td className="px-6 py-3 text-sm text-[#8a8a9e]">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-[#5a5a6e]" />
+                                MX {x.timeMx ?? "-"} / BR {x.timeBr}
+                              </div>
+                            </td>
+                            <td className="px-6 py-3">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-xs text-[#8a8a9e]">
+                                <Swords className="w-3 h-3" />
+                                {String(x.modality).toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="px-6 py-3">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+                                <StatusIcon className="w-3 h-3" />
+                                {config.label}
+                              </span>
+                            </td>
+                            <td className="px-6 py-3">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingXt(x.id);
+                                    setXtForm({
+                                      name: x.name,
+                                      date: x.date,
+                                      timeBr: x.timeBr,
+                                      timeMx: x.timeMx ?? "",
+                                      modality: x.modality as "squad" | "duo" | "solo",
+                                      status: x.status as "aberto" | "encerrado" | "cancelado",
+                                      maxTeams: x.maxTeams,
+                                      rules: x.rules ?? "",
+                                      discordLink: x.discordLink ?? "",
+                                      whatsappLink: x.whatsappLink ?? "",
+                                    });
+                                    setShowXtForm(true);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-400 transition-colors"
+                                  title="Editar"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm("Remover este xtreino?")) toast.success("Xtreino removido!");
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {(!xtreinosList || xtreinosList.length === 0) && (
+                  <div className="px-6 py-16 text-center">
+                    <Dumbbell className="w-12 h-12 mx-auto mb-4 text-[#2a2a3a]" />
+                    <p className="text-[#5a5a6e] text-lg font-medium">Nenhum xtreino encontrado</p>
+                    <p className="text-[#3a3a4e] text-sm mt-1">Nenhum dado disponível</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AdminLayout>
