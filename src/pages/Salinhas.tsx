@@ -5,14 +5,14 @@ import {
   Star,
   Medal,
   Flame,
-  Swords,
   Users,
   Clock,
   Calendar,
-  TrendingUp,
   Target,
   Zap,
   Gamepad2,
+  ArrowRight,
+  ChevronRight,
   type LucideProps,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
@@ -33,10 +33,160 @@ interface Sala {
   participants: number;
   maxParticipants: number;
   host: string;
+  hostTiktok?: string;
+  hostInstagram?: string;
   status: "aberta" | "encerrada" | "em_andamento";
   winner?: string;
   tags: string[];
+  bannerUrl?: string;
+  detailPath?: string;
 }
+
+// ==================== DADOS DAS SALINHAS ====================
+
+const salas: Sala[] = [
+  // ============================================================
+  // SALINHAS DO PERLOTTI — Evento Especial (14/06/2026)
+  // ============================================================
+  {
+    id: 1,
+    name: "Salinha Perlotti #1",
+    date: "2026-06-14",
+    time: "19:00",
+    modality: "solo",
+    type: "premiada",
+    prize: "540 Golds (1º), 320 Golds (2º), 105 Golds (3º)",
+    participants: 0,
+    maxParticipants: 50,
+    host: "Perlotti",
+    hostTiktok: "@perlottihd",
+    status: "aberta",
+    tags: ["Solo", "Premiado", "Perlotti", "Live"],
+    detailPath: "/salinhas/perlotti",
+  },
+  {
+    id: 2,
+    name: "Salinha Perlotti #2",
+    date: "2026-06-14",
+    time: "19:00",
+    modality: "solo",
+    type: "premiada",
+    prize: "540 Golds (1º), 320 Golds (2º), 105 Golds (3º)",
+    participants: 0,
+    maxParticipants: 50,
+    host: "Perlotti",
+    hostTiktok: "@perlottihd",
+    status: "aberta",
+    tags: ["Solo", "Premiado", "Perlotti", "Live"],
+    detailPath: "/salinhas/perlotti",
+  },
+  {
+    id: 3,
+    name: "Salinha Perlotti #3",
+    date: "2026-06-14",
+    time: "19:00",
+    modality: "solo",
+    type: "premiada",
+    prize: "540 Golds (1º), 320 Golds (2º), 105 Golds (3º) + 1k Golds Top Licker",
+    participants: 0,
+    maxParticipants: 50,
+    host: "Perlotti",
+    hostTiktok: "@perlottihd",
+    status: "aberta",
+    tags: ["Solo", "Premiado", "Perlotti", "Live", "Top Licker"],
+    detailPath: "/salinhas/perlotti",
+  },
+
+  // ============================================================
+  // EXEMPLOS DE OUTRAS SALINHAS (descomente quando quiser usar)
+  // ============================================================
+  /*
+  {
+    id: 4,
+    name: "XTreino #42 - Premiação Especial",
+    date: "2026-06-12",
+    time: "20:00",
+    modality: "squad",
+    type: "premiada",
+    prize: "R$ 100,00 + Skin Exclusiva",
+    participants: 18,
+    maxParticipants: 20,
+    host: "UGD Oficial",
+    status: "aberta",
+    tags: ["Squad", "Premiado"],
+  },
+  {
+    id: 5,
+    name: "Salinha da Comunidade #15",
+    date: "2026-06-11",
+    time: "19:30",
+    modality: "duo",
+    type: "comunitaria",
+    participants: 12,
+    maxParticipants: 16,
+    host: "Comunidade UGD",
+    status: "aberta",
+    tags: ["Duo", "Amistoso"],
+  },
+  {
+    id: 6,
+    name: "Campeonato Interno - Etapa 1",
+    date: "2026-06-10",
+    time: "21:00",
+    modality: "squad",
+    type: "especial",
+    prize: "Troféu + Destaque no Ranking",
+    participants: 20,
+    maxParticipants: 20,
+    host: "UGD Admins",
+    status: "em_andamento",
+    winner: "Em disputa...",
+    tags: ["Squad", "Oficial"],
+  },
+  {
+    id: 7,
+    name: "XTreino #41",
+    date: "2026-06-09",
+    time: "20:00",
+    modality: "squad",
+    type: "comunitaria",
+    participants: 20,
+    maxParticipants: 20,
+    host: "UGD Oficial",
+    status: "encerrada",
+    winner: "Team Alpha",
+    tags: ["Squad", "Concluído"],
+  },
+  {
+    id: 8,
+    name: "Salinha Premiada - Fim de Semana",
+    date: "2026-06-14",
+    time: "15:00",
+    modality: "squad",
+    type: "premiada",
+    prize: "R$ 50,00",
+    participants: 8,
+    maxParticipants: 20,
+    host: "Organizador UGD",
+    status: "aberta",
+    tags: ["Squad", "Weekend"],
+  },
+  {
+    id: 9,
+    name: "Desafio Especial - Modo Rápido",
+    date: "2026-06-13",
+    time: "18:00",
+    modality: "solo",
+    type: "especial",
+    prize: "Destaque no Perfil",
+    participants: 15,
+    maxParticipants: 20,
+    host: "UGD Eventos",
+    status: "aberta",
+    tags: ["Solo", "Rápido"],
+  },
+  */
+];
 
 // ==================== COMPONENTES DE UI ====================
 
@@ -75,8 +225,8 @@ const SalaCard = ({ sala }: { sala: Sala }) => {
   const status = statusConfig[sala.status];
   const TypeIcon = config.icon;
 
-  return (
-    <div className={`bg-[#12121a] rounded-xl border ${config.border} p-6 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-0.5 group`}>
+  const cardContent = (
+    <div className={`bg-[#12121a] rounded-xl border ${config.border} p-6 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className={`w-12 h-12 rounded-xl ${config.bg} flex items-center justify-center`}>
@@ -145,9 +295,14 @@ const SalaCard = ({ sala }: { sala: Sala }) => {
       <div className="flex items-center justify-between pt-3 border-t border-[#2a2a3a]">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <Swords className="w-3 h-3 text-emerald-400" />
+            <Flame className="w-3 h-3 text-emerald-400" />
           </div>
-          <span className="text-[#5a5a6e] text-xs">Organizado por <span className="text-[#8a8a9e]">{sala.host}</span></span>
+          <span className="text-[#5a5a6e] text-xs">
+            Organizado por <span className="text-[#8a8a9e]">{sala.host}</span>
+            {sala.hostTiktok && (
+              <span className="text-[#fe2c55] ml-1">({sala.hostTiktok})</span>
+            )}
+          </span>
         </div>
         <div className="flex gap-1.5">
           {sala.tags.map((tag) => (
@@ -157,8 +312,25 @@ const SalaCard = ({ sala }: { sala: Sala }) => {
           ))}
         </div>
       </div>
+
+      {/* Link indicator */}
+      {sala.detailPath && (
+        <div className="mt-3 pt-3 border-t border-[#2a2a3a]/50 flex items-center justify-center gap-1 text-emerald-400 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          Ver detalhes <ChevronRight className="w-3 h-3" />
+        </div>
+      )}
     </div>
   );
+
+  if (sala.detailPath) {
+    return (
+      <Link to={sala.detailPath} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 };
 
 const FilterTab = ({
@@ -195,94 +367,6 @@ const FilterTab = ({
 export default function Salinhas() {
   const [filter, setFilter] = useState<FilterType>("todas");
 
-  // Dados mockados para exemplo - substituir por query do tRPC quando disponível
-  const salas: Sala[] = [
-    {
-      id: 1,
-      name: "XTreino #42 - Premiação Especial",
-      date: "2026-06-12",
-      time: "20:00",
-      modality: "squad",
-      type: "premiada",
-      prize: "R$ 100,00 + Skin Exclusiva",
-      participants: 18,
-      maxParticipants: 20,
-      host: "UGD Oficial",
-      status: "aberta",
-      tags: ["Squad", "Premiado"],
-    },
-    {
-      id: 2,
-      name: "Salinha da Comunidade #15",
-      date: "2026-06-11",
-      time: "19:30",
-      modality: "duo",
-      type: "comunitaria",
-      participants: 12,
-      maxParticipants: 16,
-      host: "Comunidade UGD",
-      status: "aberta",
-      tags: ["Duo", "Amistoso"],
-    },
-    {
-      id: 3,
-      name: "Campeonato Interno - Etapa 1",
-      date: "2026-06-10",
-      time: "21:00",
-      modality: "squad",
-      type: "especial",
-      prize: "Troféu + Destaque no Ranking",
-      participants: 20,
-      maxParticipants: 20,
-      host: "UGD Admins",
-      status: "em_andamento",
-      winner: "Em disputa...",
-      tags: ["Squad", "Oficial"],
-    },
-    {
-      id: 4,
-      name: "XTreino #41",
-      date: "2026-06-09",
-      time: "20:00",
-      modality: "squad",
-      type: "comunitaria",
-      participants: 20,
-      maxParticipants: 20,
-      host: "UGD Oficial",
-      status: "encerrada",
-      winner: "Team Alpha",
-      tags: ["Squad", "Concluído"],
-    },
-    {
-      id: 5,
-      name: "Salinha Premiada - Fim de Semana",
-      date: "2026-06-14",
-      time: "15:00",
-      modality: "squad",
-      type: "premiada",
-      prize: "R$ 50,00",
-      participants: 8,
-      maxParticipants: 20,
-      host: "Organizador UGD",
-      status: "aberta",
-      tags: ["Squad", "Weekend"],
-    },
-    {
-      id: 6,
-      name: "Desafio Especial - Modo Rápido",
-      date: "2026-06-13",
-      time: "18:00",
-      modality: "solo",
-      type: "especial",
-      prize: "Destaque no Perfil",
-      participants: 15,
-      maxParticipants: 20,
-      host: "UGD Eventos",
-      status: "aberta",
-      tags: ["Solo", "Rápido"],
-    },
-  ];
-
   const typeMap: Record<Exclude<FilterType, "todas">, Sala["type"]> = {
     premiadas: "premiada",
     comunitarias: "comunitaria",
@@ -316,6 +400,9 @@ export default function Salinhas() {
     concluidas: salas.filter((s) => s.status === "encerrada").length,
   };
 
+  // Featured event (Perlotti)
+  const featuredEvent = salas.find((s) => s.host === "Perlotti");
+
   return (
     <MainLayout>
       {/* Hero Section */}
@@ -338,6 +425,44 @@ export default function Salinhas() {
           </p>
         </div>
       </section>
+
+      {/* Featured Event Banner - Perlotti */}
+      {featuredEvent && (
+        <section className="max-w-[1400px] mx-auto px-4 lg:px-8 -mt-4 mb-8">
+          <Link
+            to="/salinhas/perlotti"
+            className="block bg-gradient-to-r from-[#fe2c55]/10 via-[#12121a] to-[#25f4ee]/10 rounded-2xl border border-[#fe2c55]/20 p-6 md:p-8 relative overflow-hidden group hover:border-[#fe2c55]/40 transition-all"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(254,44,85,0.08)_0%,_transparent_70%)]" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-[#fe2c55]/10 border border-[#fe2c55]/20 flex items-center justify-center">
+                  <Flame className="w-7 h-7 text-[#fe2c55]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded-full bg-[#fe2c55]/10 text-[#fe2c55] text-[10px] font-bold uppercase tracking-wider">
+                      Evento em Destaque
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                      14 Jun 2026
+                    </span>
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-bold text-[#f0f0f5] group-hover:text-[#fe2c55] transition-colors">
+                    Salinhas Perlotti — 3 Salas Premiadas
+                  </h2>
+                  <p className="text-[#8a8a9e] text-sm mt-1">
+                    Modo Solo • 19:00 BRT • Premiação total de 1.965 Golds + 1k Top Licker
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[#fe2c55] font-semibold text-sm group-hover:gap-3 transition-all">
+                Ver detalhes <ArrowRight className="w-4 h-4" />
+              </div>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {/* Stats Bar */}
       <section className="border-y border-[#2a2a3a] bg-[#12121a]">
@@ -466,7 +591,7 @@ export default function Salinhas() {
                 to="/rankings"
                 className="px-8 py-3 rounded-xl border border-[#3a3a4e] text-[#f0f0f5] font-semibold hover:border-emerald-500/50 hover:text-emerald-400 transition-all duration-150 flex items-center justify-center gap-2"
               >
-                <TrendingUp className="w-4 h-4" />
+                <Zap className="w-4 h-4" />
                 Ver Rankings
               </Link>
             </div>

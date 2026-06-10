@@ -8,6 +8,7 @@ import { xtreinosRouter } from "./routers/xtreinos.js";
 import { scrimsRouter } from "./routers/scrims.js";
 import { registrationsRouter } from "./routers/registrations.js";
 import { rankingsRouter } from "./routers/rankings.js";
+import { salinhasRouter } from "./routers/salinhas.js";
 
 export const appRouter = createRouter({
   ping: publicQuery.query(() => ({ ok: true, ts: Date.now() })),
@@ -21,6 +22,7 @@ export const appRouter = createRouter({
   scrims: scrimsRouter,
   registrations: registrationsRouter,
   rankings: rankingsRouter,
+  salinhas: salinhasRouter,
 });
 
 export type AppRouter = typeof appRouter;

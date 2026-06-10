@@ -324,3 +324,36 @@ export const rankings = sqliteTable("rankings", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+// ============================================================
+// SALINHAS - Salas personalizadas da comunidade
+// ============================================================
+export const salinhas = sqliteTable("salinhas", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  date: text("date").notNull(),
+  timeBr: text("time_br").notNull().default("19:00"),
+  modality: text("modality").notNull().default("solo"),
+  maxParticipants: integer("max_participants").notNull().default(50),
+  prize1st: text("prize_1st").notNull(),
+  prize2nd: text("prize_2nd").notNull(),
+  prize3rd: text("prize_3rd").notNull(),
+  specialPrize: text("special_prize"), // Ex: "1k gold top licker"
+  hostName: text("host_name").notNull(),
+  hostTiktok: text("host_tiktok"),
+  hostInstagram: text("host_instagram"),
+  hostYoutube: text("host_youtube"),
+  roomId: text("room_id"), // ID da sala (disponibilizado na live)
+  roomPassword: text("room_password"), // Senha da sala (disponibilizado na live)
+  bannerUrl: text("banner_url"), // 1080x721
+  postUrl: text("post_url"), // Link do post no perfil
+  status: text("status").notNull().default("aberta"), // aberta, em_andamento, encerrada
+  winner1st: text("winner_1st"),
+  winner2nd: text("winner_2nd"),
+  winner3rd: text("winner_3rd"),
+  specialWinner: text("special_winner"), // Top licker
+  rules: text("rules"),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});

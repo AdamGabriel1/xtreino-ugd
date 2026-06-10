@@ -20,6 +20,8 @@ import AdminScrims from "./pages/admin/Scrims";
 import AdminRankings from "./pages/admin/Rankings";
 import AdminConfiguracoes from "./pages/admin/Configuracoes";
 
+import SalinhaPerlotti from "./pages/salinhas/SalinhaPerlotti";
+
 export default function App() {
   return (
     <>
@@ -56,6 +58,9 @@ export default function App() {
         <Route path="/admin/scrims" element={<AdminScrims />} />
         <Route path="/admin/rankings" element={<AdminRankings />} />
         <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
+
+        {/* Salinha Routes */}
+        <Route path="/salinhas/perlotti" element={<SalinhaPerlotti />} />
       </Routes>
     </>
   );
