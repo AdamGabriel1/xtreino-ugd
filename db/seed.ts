@@ -4,5 +4,6 @@ import { seedLogos, seedLogosAuto } from "./seeds/seed-logos.js";
 import { seedXtreinoHistorico } from "./seeds/xtreino-historico.js";
 import { seedXtreino08062026 } from "./seeds/seed-xtreino-08062026.js";
 import { seedXtreino09062026 } from "./seeds/seed-xtreino-09062026.js";
+import { seedXtreino10062026 } from "./seeds/seed-xtreino-10062026.js";
 
-export { seed, seedMinimal, seedLogos, seedLogosAuto, seedXtreinoHistorico, seedXtreino08062026, seedXtreino09062026};
+export { seed, seedMinimal, seedLogos, seedLogosAuto, seedXtreinoHistorico, seedXtreino08062026, seedXtreino09062026, seedXtreino10062026};

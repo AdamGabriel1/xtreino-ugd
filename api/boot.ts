@@ -19,6 +19,7 @@ import {
   seedXtreinoHistorico,
   seedXtreino08062026,
   seedXtreino09062026,
+  seedXtreino10062026
 } from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
@@ -89,6 +90,7 @@ if (env.isProduction) {
     runSeedIfNeeded("logos", seedLogos);
     runSeedIfNeeded("xtreino_08062026", seedXtreino08062026);
     runSeedIfNeeded("xtreino_09062026", seedXtreino09062026);
+    runSeedIfNeeded("xtreino_10062026", seedXtreino10062026);
 
     console.log("[BOOT] All seeds processed");
 
