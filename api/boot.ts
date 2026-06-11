@@ -5,7 +5,7 @@ import { appRouter } from "./router.js";
 import { createContext } from "./context.js";
 import { env } from "./lib/env.js";
 import { getDb } from "./queries/connection.js";
-import { runSeedIfNeeded } from "../db/seed-runner.js";
+import { runSeedIfNeeded, clearSeedRuns } from "../db/seed-runner.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -16,10 +16,8 @@ import {
   seed,
   seedMinimal,
   seedLogos,
-  seedXtreinoHistorico,
-  seedXtreino08062026,
-  seedXtreino09062026,
-  seedXtreino10062026
+  seedLogosAuto,
+  seedAllXtreinos,  // 🆕 seed genérico de xtreinos
 } from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
@@ -86,11 +84,15 @@ if (env.isProduction) {
     // ============================================================
     console.log("[BOOT] Checking specific seeds...");
 
-    runSeedIfNeeded("xtreino_historico", seedXtreinoHistorico);
+    // Limpa seeds antigos de xtreino (só na migração, depois pode remover esta linha)
+    clearSeedRuns();
+
+    // 🆕 Seed genérico de todos os xtreinos (substitui os seeds individuais)
+    runSeedIfNeeded("xtreinos_all", seedAllXtreinos);
+
+    // Seed de logos (manual ou auto)
     runSeedIfNeeded("logos", seedLogos);
-    runSeedIfNeeded("xtreino_08062026", seedXtreino08062026);
-    runSeedIfNeeded("xtreino_09062026", seedXtreino09062026);
-    runSeedIfNeeded("xtreino_10062026", seedXtreino10062026);
+    // runSeedIfNeeded("logos_auto", () => seedLogosAuto("public")); // descomente se quiser auto
 
     console.log("[BOOT] All seeds processed");
 
@@ -115,9 +117,7 @@ if (env.isProduction) {
   app.use("/*", serveStatic({ root: "./dist/public" }));
 
   // SPA FALLBACK: serve index.html para rotas do React Router
-  // Isso deve ser a ÚLTIMA rota, depois de API e static
   app.notFound((c) => {
-    // Não faz fallback para rotas da API
     if (c.req.path.startsWith("/api/")) {
       return c.json({ error: "Not Found" }, 404);
     }

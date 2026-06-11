@@ -1,62 +1,349 @@
+// db/seeds/seed-initial.ts
+// Seed inicial: admins, settings, clans, teams, players
+// 🎯 Formato compacto — fácil de adicionar/mover/alterar
+
 import { getDb } from "../../api/queries/connection.js";
 import { admins, settings, xtreinos, clans, teams, players, seedRuns } from "../schema.js";
 import { eq } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
-import { WHATSAPP_TEMPLATE } from "./whatsapp-template.js";
+import { WHATSAPP_TEMPLATE } from "../seeds-backup/whatsapp-template.js";
+
+// ============================================================
+// HELPERS (não precisa mexer aqui)
+// ============================================================
 
 function upsertAdmin(db: ReturnType<typeof getDb>, data: typeof admins.$inferInsert) {
   const existing = db.select().from(admins).where(eq(admins.username, data.username)).get();
-  if (!existing) {
-    db.insert(admins).values(data).run();
-    return true;
-  }
+  if (!existing) { db.insert(admins).values(data).run(); return true; }
   return false;
 }
 
 function upsertSettings(db: ReturnType<typeof getDb>, data: typeof settings.$inferInsert) {
   const existing = db.select().from(settings).limit(1).get();
-  if (!existing) {
-    db.insert(settings).values(data).run();
-    return true;
-  }
+  if (!existing) { db.insert(settings).values(data).run(); return true; }
   return false;
 }
 
 function upsertClan(db: ReturnType<typeof getDb>, data: typeof clans.$inferInsert) {
   const existing = db.select().from(clans).where(eq(clans.name, data.name)).get();
-  if (!existing) {
-    db.insert(clans).values(data).run();
-    return true;
-  }
+  if (!existing) { db.insert(clans).values(data).run(); return true; }
   return false;
 }
 
 function upsertTeam(db: ReturnType<typeof getDb>, data: typeof teams.$inferInsert) {
   const existing = db.select().from(teams).where(eq(teams.name, data.name)).get();
-  if (!existing) {
-    db.insert(teams).values(data).run();
-    return true;
-  }
-  return false;
-}
-
-function upsertXtreino(db: ReturnType<typeof getDb>, data: typeof xtreinos.$inferInsert) {
-  const existing = db.select().from(xtreinos).where(eq(xtreinos.name, data.name)).get();
-  if (!existing) {
-    db.insert(xtreinos).values(data).run();
-    return true;
-  }
+  if (!existing) { db.insert(teams).values(data).run(); return true; }
   return false;
 }
 
 function upsertPlayer(db: ReturnType<typeof getDb>, data: typeof players.$inferInsert) {
   const existing = db.select().from(players).where(eq(players.nickname, data.nickname)).get();
-  if (!existing) {
-    db.insert(players).values(data).run();
-    return true;
-  }
+  if (!existing) { db.insert(players).values(data).run(); return true; }
   return false;
 }
+function upsertXtreino(db: ReturnType<typeof getDb>, data: typeof xtreinos.$inferInsert) {
+  const existing = db.select().from(xtreinos).where(eq(xtreinos.name, data.name)).get();
+  if (!existing) { db.insert(xtreinos).values(data).run(); return true; }
+  return false;
+}
+
+// ============================================================
+// DADOS — SÓ EDITE AQUI! 📝
+// ============================================================
+
+// --- CLANS ---
+// [nome, tag, cor, descrição]
+const CLANS_DATA: [string, string, string, string][] = [
+  ["Underground", "UGD", "#006400", "Clã Underground."],
+  ["FURY", "FURY", "#ff4444", "Clã FURY Rising"],
+  ["CMF", "CMF", "#4444ff", "Clã Comando Anfibrios."],
+  ["RED", "RED", "#ff0000", "Clã Red Devils"],
+  ["Eternity", "ETE", "#ffd700", "Clã Eternity."],
+  ["KOV", "KOV", "#800080", "Clã KOV."],
+  ["LMF", "LMF", "#ff8c00", "Clã Lá Mafia."],
+  ["INF", "INF", "#00ced1", "Clã Infinit Esports."],
+  ["Lambda", "Λつつ", "#ffffff", "Clã (Λつつ)."],
+  ["ODS", "ODS", "#228b22", "Clã ODS."],
+  ["7KW", "7KW", "#ffff00", "Clã 7KW."],
+  ["K4F", "K4F", "#ff69b4", "Clã Kill 4 Fun."],
+  ["Dev", "DEV", "#808080", "Clã Dev."],
+  ["EmE", "EME", "#008080", "Clã EmE."],
+  ["VOID STRIKE", "VOID", "#000000", "Clã VOID STRIKE."],
+];
+
+// --- TEAMS (Lines) ---
+// [nome, tag, clanName, status, descrição]
+// clanName = null → time avulso (sem clã)
+const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string][] = [
+  // Underground
+  ["UGD Threat", "UGD", "Underground", "active", "Line Threat da Underground."],
+  ["UGD Royal", "UGD", "Underground", "disbanded", "Line antiga da Underground. Desativada em 2026."],
+  ["UGD Light", "UGD", "Underground", "active", "Line dos Manitos da Underground."],
+  ["UGD LEGENDS", "UGD", "Underground", "active", "Line Legends da Underground."],
+  ["UGD OLYMPIQUE", "UGD", "Underground", "active", "Line Olympique da Underground."],
+
+  // FURY
+  ["FURY", "FURY", "FURY", "active", "Line principal da FURY."],
+  ["FURY ELITE", "FURY", "FURY", "active", "Line elite da FURY."],
+  ["FURY ROYAL", "FURY", "FURY", "active", "Line royal da FURY."],
+
+  // CMF
+  ["CMF", "CMF", "CMF", "active", "Line principal da CMF."],
+  ["CMF ATLANTIC", "CMF", "CMF", "active", "Line Atlantic da CMF."],
+  ["CMF ASSALT", "CMF", "CMF", "active", "Line Assalt da CMF."],
+
+  // RED
+  ["RED", "RED", "RED", "active", "Line principal da RED."],
+  ["RED Magic BR", "RED", "RED", "active", "Line Magic BR da RED."],
+  ["REÐ Outlaws", "RED", "RED", "active", "Line Outlaws da RED."],
+
+  // Outros clãs (1 line cada)
+  ["Eternity", "ETE", "Eternity", "active", "Line principal da Eternity."],
+  ["KOV", "KOV", "KOV", "active", "Line principal da KOV."],
+  ["LMF", "LMF", "LMF", "active", "Line principal da LMF."],
+  ["INF", "INF", "INF", "active", "Line principal da INF."],
+  ["Λつつ", "Λつつ", "Lambda", "active", "Line principal da Lambda."],
+  ["ODS", "ODS", "ODS", "active", "Line principal da ODS."],
+  ["7KW_LHETAL", "7KW", "7KW", "active", "Line principal da 7KW."],
+  ["K4F", "K4F", "K4F", "active", "Line principal da K4F."],
+  ["Dev", "DEV", "Dev", "active", "Line de desenvolvedores."],
+  ["EmE", "EME", "EmE", "active", "Line principal da EmE."],
+  ["♱VØID×STRIKE♱", "VOID", "VOID STRIKE", "active", "Line principal da VOID STRIKE."],
+
+  // Times avulsos (sem clã)
+  ["Misturado", "MIX", null, "active", "Time misto de jogadores de diferentes clãs."],
+  ["Time I", "TI", null, "active", "Time independente I."],
+  ["Time E", "TE", null, "active", "Time independente E."],
+];
+
+// --- PLAYERS ---
+// [nickname, teamName, role]
+// role: "cap" = captain | "off" = official | "res" = reserve
+const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
+  // CMF
+  ["CMF Leo", "CMF", "off"],
+  ["CMF Lyx7", "CMF", "off"],
+  ["CMF MOIZO", "CMF", "off"],
+  ["CMF Stygian", "CMF", "off"],
+  ["CMF Syx", "CMF", "cap"],
+  ["CMF Léo", "CMF ATLANTIC", "cap"],
+  ["CMF Kira", "CMF ATLANTIC", "off"],
+  ["CMF Moizo", "CMF ATLANTIC", "off"],
+  ["CMF Dnvy", "CMF ASSALT", "cap"],
+  ["CMF Lynx7", "CMF ASSALT", "off"],
+  ["CMF Max", "CMF ASSALT", "off"],
+  ["CMF Thxxxz", "CMF ASSALT", "res"],
+
+  // Eternity
+  ["Black 永", "Eternity", "off"],
+  ["Damøn.TTK", "Eternity", "off"],
+  ["DamønTTK 永", "Eternity", "off"],
+  ["Givas'xX 永", "Eternity", "off"],
+  ["Kennedy", "Eternity", "cap"],
+  ["Muggle", "Eternity", "off"],
+  ["Muggle 永", "Eternity", "off"],
+  ["Nofear", "Eternity", "off"],
+  ["RED REZE", "Eternity", "off"],
+  ["Shxrk", "Eternity", "res"],
+
+  // FURY
+  ["Creedz FURY", "FURY", "cap"],
+  ["Diana FURY", "FURY", "off"],
+  ["VN' FURY", "FURY", "off"],
+  ["perfection z", "FURY", "off"],
+  ["DIANA", "FURY ELITE", "cap"],
+  ["RAUAN", "FURY ELITE", "off"],
+  ["SUN", "FURY ELITE", "off"],
+  ["DEX", "FURY ELITE", "off"],
+  ["VN", "FURY ROYAL", "cap"],
+  ["NG", "FURY ROYAL", "off"],
+  ["EGOIST", "FURY ROYAL", "off"],
+  ["MARTNA", "FURY ROYAL", "off"],
+  ["OFF", "FURY ROYAL", "res"],
+
+  // INF
+  ["INF Noxz7", "INF", "off"],
+  ["INF GOAT", "INF", "cap"],
+  ["INF BARONI", "INF", "off"],
+  ["INF RINNEGA", "INF", "off"],
+  ["「INF」BLAZE", "INF", "off"],
+  ["「INF」GOAT", "INF", "off"],
+  ["「INF」Noxz7'", "INF", "off"],
+  ["「INF」RINNEGA", "INF", "res"],
+
+  // KOV
+  ["AET Jentexz", "KOV", "off"],
+  ["KOV ADAN", "KOV", "cap"],
+  ["KOV ALONE", "KOV", "off"],
+  ["KOV FushyX", "KOV", "off"],
+  ["TTKKAIKE", "KOV", "off"],
+  ["YoSurper", "KOV", "res"],
+
+  // LMF
+  ["LMF CALOP12", "LMF", "off"],
+  ["LMF LACERDA", "LMF", "cap"],
+  ["LMF XIT", "LMF", "off"],
+  ["LMF mtfacil", "LMF", "off"],
+  ["LMF_Boss", "LMF", "off"],
+  ["LMF_LACERDA", "LMF", "off"],
+  ["LMF_RICHIMO", "LMF", "res"],
+  ["LMF_XIT", "LMF", "off"],
+  ["LMF_mtfacil", "LMF", "off"],
+
+  // Misturado
+  ["INF BADBOY", "Misturado", "off"],
+  ["INF RONY", "Misturado", "off"],
+  ["REVERSE_", "Misturado", "cap"],
+  ["TOP FreeKill", "Misturado", "off"],
+
+  // ODS
+  ["Az Aamon", "ODS", "cap"],
+  ["[ODS] vantex", "ODS", "off"],
+  ["[ODS].STROG", "ODS", "off"],
+
+  // RED
+  ["CF ALMEIDA", "RED", "off"],
+  ["LMF Boss", "RED", "off"],
+  ["RED APENAS", "RED", "cap"],
+  ["RED snow777", "RED", "off"],
+  ["RED- REZE", "RED", "off"],
+  ["RED-Alemão", "RED", "off"],
+  ["RED-MOREIRA", "RED", "off"],
+  ["REÐ APENAS", "RED", "off"],
+  ["REÐ LANGØ", "RED", "off"],
+  ["REÐ M4RTINA", "RED", "off"],
+  ["REÐ Sunraku", "RED", "off"],
+  ["REÐ Zadock", "RED", "res"],
+  ["REÐ snow777", "RED", "off"],
+
+  // REÐ Outlaws
+  ["REÐ MoraesBC", "REÐ Outlaws", "cap"],
+  ["REÐ Felpz", "REÐ Outlaws", "off"],
+  ["REÐ Skibidi", "REÐ Outlaws", "off"],
+  ["REÐ Apenas", "REÐ Outlaws", "off"],
+
+  // RED Magic BR
+  ["LXELTINHO", "RED Magic BR", "cap"],
+  ["MOL ADRIAN", "RED Magic BR", "off"],
+  ["RED KENNZY", "RED Magic BR", "off"],
+  ["RED LANGO", "RED Magic BR", "off"],
+
+  // Time E
+  ["ONE-Javi", "Time E", "cap"],
+  ["PAIN SWAN", "Time E", "off"],
+  ["Poindexter", "Time E", "off"],
+  ["morqesb", "Time E", "off"],
+
+  // Time I
+  ["ASTRO", "Time I", "cap"],
+  ["AimColor", "Time I", "off"],
+  ["GzmAkaza", "Time I", "off"],
+  ["Jtpe", "Time I", "off"],
+  ["hcky", "Time I", "off"],
+  ["iDiaasz", "Time I", "res"],
+
+  // UGD Light
+  ["DEATH", "UGD Light", "off"],
+  ["I miss her", "UGD Light", "off"],
+  ["UGD Kyz", "UGD Light", "cap"],
+  ["UGD Psycho", "UGD Light", "off"],
+  ["Kyz", "UGD Light", "off"],
+  ["Zann", "UGD Light", "off"],
+  ["Psycho", "UGD Light", "off"],
+  ["Chino", "UGD Light", "res"],
+
+  // UGD Royal (desativada)
+  ["Dexz", "UGD Royal", "cap"],
+  ["MayaZ", "UGD Royal", "off"],
+  ["OFFz", "UGD Royal", "off"],
+
+  // UGD LEGENDS
+  ["Ohara", "UGD LEGENDS", "cap"],
+  ["Rafa", "UGD LEGENDS", "off"],
+  ["Xoxoto", "UGD LEGENDS", "off"],
+  ["Buzeira", "UGD LEGENDS", "off"],
+
+  // UGD OLYMPIQUE
+  ["Weenot", "UGD OLYMPIQUE", "cap"],
+  ["Duardin", "UGD OLYMPIQUE", "off"],
+  ["Striker", "UGD OLYMPIQUE", "off"],
+  ["Lorex", "UGD OLYMPIQUE", "off"],
+  ["CANTS", "UGD OLYMPIQUE", "res"],
+
+  // UGD Threat
+  ["Rivers AR", "UGD Threat", "off"],
+  ["UGD ARISE", "UGD Threat", "off"],
+  ["UGD Ares", "UGD Threat", "off"],
+  ["UGD Kaze", "UGD Threat", "cap"],
+  ["UGD Neo", "UGD Threat", "off"],
+  ["UGD Treon", "UGD Threat", "off"],
+  ["UGD cool7", "UGD Threat", "off"],
+  ["Cool", "UGD Threat", "off"],
+  ["Treon", "UGD Threat", "off"],
+  ["Kaze", "UGD Threat", "off"],
+  ["Arise", "UGD Threat", "off"],
+  ["Santz", "UGD Threat", "res"],
+
+  // Lambda
+  ["Striker71", "Λつつ", "off"],
+  ["Striker81", "Λつつ", "off"],
+  ["ØNE ???", "Λつつ", "cap"],
+  ["ΛΞT Jentexz", "Λつつ", "off"],
+  ["Λつつ Aninha", "Λつつ", "off"],
+  ["Λつつ Unknown", "Λつつ", "off"],
+  ["Λつつ_$CAVEIRA", "Λつつ", "off"],
+  ["『PsS-KINN-ボ", "Λつつ", "res"],
+
+  // Dev
+  ["DevNexT★", "Dev", "cap"],
+  ["DevBatata", "Dev", "off"],
+  ["DevPisca", "Dev", "off"],
+  ["DevThorfinn", "Dev", "off"],
+  ["Dev_Guizin", "Dev", "off"],
+  ["Dev_LTz", "Dev", "off"],
+  ["Dev Ana", "Dev", "res"],
+
+  // EmE
+  ["Yeezy", "EmE", "cap"],
+  ["geldeysito", "EmE", "off"],
+  ["EME々Akaza", "EmE", "off"],
+  ["EME々Lulu", "EmE", "off"],
+
+  // VOID STRIKE
+  ["♱Vøid♱.D_R", "♱VØID×STRIKE♱", "cap"],
+  ["♱Vøid♱+gute", "♱VØID×STRIKE♱", "off"],
+  ["♱Vøid♱.nino", "♱VØID×STRIKE♱", "off"],
+  ["™VØID°⁷⁷⁷", "♱VØID×STRIKE♱", "off"],
+
+  // 7KW
+  ["(NTC)patrikm", "7KW_LHETAL", "cap"],
+  ["_061_kakashi", "7KW_LHETAL", "off"],
+  ["RL.MATADOR☠️", "7KW_LHETAL", "off"],
+  ["Fefe_🎭🇧🇷", "7KW_LHETAL", "off"],
+
+  // K4F
+  ["k4F urso", "K4F", "cap"],
+  ["K4F nine", "K4F", "off"],
+  ["K4F gui", "K4F", "off"],
+  ["Alek", "K4F", "off"],
+];
+
+// --- XTREINOS (lista base, sem dados de jogadores) ---
+// [nome, data, status]
+const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
+  ["XTreino Underground - 30/04", "2026-04-30", "finalizado"],
+  ["XTreino Underground - 07/05", "2026-05-07", "finalizado"],
+  ["XTreino Underground - 19/05", "2026-05-19", "finalizado"],
+  ["XTreino Underground - 21/05", "2026-05-21", "finalizado"],
+  ["XTreino Underground - 08/06", "2026-06-08", "finalizado"],
+  ["XTreino Underground - 09/06", "2026-06-09", "finalizado"],
+  ["XTreino Underground - 10/06", "2026-06-10", "finalizado"],
+  ["XTreino Underground - 11/06", "2026-06-11", "aberto"],
+];
+
+// ============================================================
+// LÓGICA DO SEED (não precisa mexer daqui pra baixo)
+// ============================================================
 
 export const DEFAULT_FIXED_TEAMS = [
   "UGD Threat",
@@ -69,6 +356,7 @@ export function seed() {
   const db = getDb();
   console.log("[SEED] Starting initial seed...");
 
+  // Admin
   const adminCreated = upsertAdmin(db, {
     username: "admin",
     passwordHash: hashSync("admin123", 10),
@@ -76,6 +364,7 @@ export function seed() {
   });
   console.log(`[SEED] Admin ${adminCreated ? "created" : "already exists"} (admin/admin123)`);
 
+  // Settings
   const settingsCreated = upsertSettings(db, {
     orgName: "𝙐𝙉𝘿𝙀𝙍𝙂𝙍𝙊𝙐𝙉𝘿",
     discordLink: "https://discord.gg/QpvaHxzPW",
@@ -89,340 +378,52 @@ export function seed() {
   });
   console.log(`[SEED] Settings ${settingsCreated ? "created" : "already exists"}`);
 
-  // ============================================================
-  // CLANS
-  // ============================================================
-  const clansData = [
-    { name: "Underground", tag: "UGD", description: "Clã Underground.", color: "#006400" },
-    { name: "FURY", tag: "FURY", description: "Clã FURY Rising", color: "#ff4444" },
-    { name: "CMF", tag: "CMF", description: "Clã Comando Anfibrios.", color: "#4444ff" },
-    { name: "RED", tag: "RED", description: "Clã Red Devils", color: "#ff0000" },
-    { name: "Eternity", tag: "ETE", description: "Clã Eternity.", color: "#ffd700" },
-    { name: "KOV", tag: "KOV", description: "Clã KOV.", color: "#800080" },
-    { name: "LMF", tag: "LMF", description: "Clã Lá Mafia.", color: "#ff8c00" },
-    { name: "INF", tag: "INF", description: "Clã Infinit Esports.", color: "#00ced1" },
-    { name: "Lambda", tag: "Λつつ", description: "Clã (Λつつ).", color: "#ffffff" },
-    { name: "ODS", tag: "ODS", description: "Clã ODS.", color: "#228b22" },
-    { name: "7KW", tag: "7KW", description: "Clã 7KW.", color: "#ffff00" },
-    { name: "K4F", tag: "K4F", description: "Clã Kill 4 Fun.", color: "#ff69b4" },
-    { name: "Dev", tag: "DEV", description: "Clã Dev.", color: "#808080" },
-    { name: "EmE", tag: "EME", description: "Clã EmE.", color: "#008080" },
-    { name: "VOID STRIKE", tag: "VOID", description: "Clã VOID STRIKE.", color: "#000000" },
-  ];
-
+  // Clans
   let clansCount = 0;
-  for (const clanData of clansData) {
-    if (upsertClan(db, clanData)) clansCount++;
+  for (const [name, tag, color, description] of CLANS_DATA) {
+    if (upsertClan(db, { name, tag, description, color })) clansCount++;
   }
   console.log(`[SEED] ${clansCount} clans created`);
 
-  // ============================================================
-  // TEAMS (Lines)
-  // ============================================================
+  // Teams (precisa dos clans já inseridos)
   const allClans = db.select().from(clans).all();
   const clanIdMap = new Map(allClans.map(c => [c.name, c.id]));
 
-  const teamsData = [
-    // Underground lines (clanId: 1)
-    { name: "UGD Threat", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line Threat da Underground." },
-    { name: "UGD Royal", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "disbanded", description: "Line antiga da Underground. Desativada em 2026." },
-    { name: "UGD Light", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line dos Manitos da Underground." },
-    { name: "UGD LEGENDS", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line Legends da Underground." },
-    { name: "UGD OLYMPIQUE", tag: "UGD", clanId: clanIdMap.get("Underground"), status: "active", description: "Line Olympique da Underground." },
-
-    // FURY lines (clanId: 2)
-    { name: "FURY", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line principal da FURY." },
-    { name: "FURY ELITE", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line elite da FURY." },
-    { name: "FURY ROYAL", tag: "FURY", clanId: clanIdMap.get("FURY"), status: "active", description: "Line royal da FURY." },
-
-    // CMF lines (clanId: 3)
-    { name: "CMF", tag: "CMF", clanId: clanIdMap.get("CMF"), status: "active", description: "Line principal da CMF." },
-    { name: "CMF ATLANTIC", tag: "CMF", clanId: clanIdMap.get("CMF"), status: "active", description: "Line Atlantic da CMF." },
-    { name: "CMF ASSALT", tag: "CMF", clanId: clanIdMap.get("CMF"), status: "active", description: "Line Assalt da CMF." },
-
-    // RED lines (clanId: 4)
-    { name: "RED", tag: "RED", clanId: clanIdMap.get("RED"), status: "active", description: "Line principal da RED." },
-    { name: "RED Magic BR", tag: "RED", clanId: clanIdMap.get("RED"), status: "active", description: "Line Magic BR da RED." },
-    { name: "REÐ Outlaws", tag: "RED", clanId: clanIdMap.get("RED"), status: "active", description: "Line Outlaws da RED." },
-
-    // Outros clãs com 1 line (sem clanId = times avulsos)
-    { name: "Eternity", tag: "ETE", clanId: clanIdMap.get("Eternity"), status: "active", description: "Line principal da Eternity." },
-    { name: "KOV", tag: "KOV", clanId: clanIdMap.get("KOV"), status: "active", description: "Line principal da KOV." },
-    { name: "LMF", tag: "LMF", clanId: clanIdMap.get("LMF"), status: "active", description: "Line principal da LMF." },
-    { name: "INF", tag: "INF", clanId: clanIdMap.get("INF"), status: "active", description: "Line principal da INF." },
-    { name: "Λつつ", tag: "Λつつ", clanId: clanIdMap.get("Lambda"), status: "active", description: "Line principal da Lambda." },
-    { name: "ODS", tag: "ODS", clanId: clanIdMap.get("ODS"), status: "active", description: "Line principal da ODS." },
-    { name: "7KW_LHETAL", tag: "7KW", clanId: clanIdMap.get("7KW"), status: "active", description: "Line principal da 7KW." },
-    { name: "K4F", tag: "K4F", clanId: clanIdMap.get("K4F"), status: "active", description: "Line principal da K4F." },
-    { name: "Dev", tag: "DEV", clanId: clanIdMap.get("Dev"), status: "active", description: "Line de desenvolvedores." },
-    { name: "EmE", tag: "EME", clanId: clanIdMap.get("EmE"), status: "active", description: "Line principal da EmE." },
-    { name: "♱VØID×STRIKE♱", tag: "VOID", clanId: clanIdMap.get("VOID STRIKE"), status: "active", description: "Line principal da VOID STRIKE." },
-
-    // Times avulsos (sem clanId)
-    { name: "Misturado", tag: "MIX", clanId: null, status: "active", description: "Time misto de jogadores de diferentes clãs." },
-    { name: "Time I", tag: "TI", clanId: null, status: "active", description: "Time independente I." },
-    { name: "Time E", tag: "TE", clanId: null, status: "active", description: "Time independente E." },
-  ];
-
   let teamsCount = 0;
-  for (const teamData of teamsData) {
-    if (upsertTeam(db, teamData)) teamsCount++;
+  for (const [name, tag, clanName, status, description] of TEAMS_DATA) {
+    const clanId = clanName ? clanIdMap.get(clanName) : null;
+    if (clanName && !clanId) {
+      console.warn(`[SEED] Clan not found for team ${name}: ${clanName}`);
+      continue;
+    }
+    if (upsertTeam(db, { name, tag, clanId, status, description })) teamsCount++;
   }
   console.log(`[SEED] ${teamsCount} teams created`);
 
-  // ============================================================
-  // XTREINOS
-  // ============================================================
-  const xtreinosData = [
-    { name: "XTreino Underground - 30/04", date: "2026-04-30", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 07/05", date: "2026-05-07", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 19/05", date: "2026-05-19", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 21/05", date: "2026-05-21", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 08/06", date: "2026-06-08", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 09/06", date: "2026-06-09", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 10/06", date: "2026-06-10", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
-    { name: "XTreino Underground - 10/06", date: "2026-06-11", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "aberto" },
-  ];
-
+  // Xtreinos (lista base)
   let xtreinosCount = 0;
-  for (const xtData of xtreinosData) {
-    if (upsertXtreino(db, xtData)) xtreinosCount++;
+  for (const [name, date, status] of XTREINOS_DATA) {
+    if (upsertXtreino(db, { name, date, timeBr: "21:00", modality: "squad", maxTeams: 20, status })) xtreinosCount++;
   }
   console.log(`[SEED] ${xtreinosCount} xtreinos created`);
 
-  // ============================================================
-  // PLAYERS
-  // ============================================================
+  // Players (precisa dos teams já inseridos)
   const allTeams = db.select().from(teams).all();
   const teamIdMap = new Map(allTeams.map(t => [t.name, t.id]));
-
-  const playersData = [
-    // CMF
-    { nickname: "CMF Leo", teamName: "CMF", role: "official" },
-    { nickname: "CMF Lyx7", teamName: "CMF", role: "official" },
-    { nickname: "CMF MOIZO", teamName: "CMF", role: "official" },
-    { nickname: "CMF Stygian", teamName: "CMF", role: "official" },
-    { nickname: "CMF Syx", teamName: "CMF", role: "captain" },
-    { nickname: "CMF Léo", teamName: "CMF ATLANTIC", role: "captain" },
-    { nickname: "CMF Kira", teamName: "CMF ATLANTIC", role: "official" },
-    { nickname: "CMF Moizo", teamName: "CMF ATLANTIC", role: "official" },
-    { nickname: "CMF Dnvy", teamName: "CMF ASSALT", role: "captain" },
-    { nickname: "CMF Lynx7", teamName: "CMF ASSALT", role: "official" },
-    { nickname: "CMF Max", teamName: "CMF ASSALT", role: "official" },
-    { nickname: "CMF Thxxxz", teamName: "CMF ASSALT", role: "reserve" },
-
-    // Eternity
-    { nickname: "Black 永", teamName: "Eternity", role: "official" },
-    { nickname: "Damøn.TTK", teamName: "Eternity", role: "official" },
-    { nickname: "DamønTTK 永", teamName: "Eternity", role: "official" },
-    { nickname: "Givas'xX 永", teamName: "Eternity", role: "official" },
-    { nickname: "Kennedy", teamName: "Eternity", role: "captain" },
-    { nickname: "Muggle", teamName: "Eternity", role: "official" },
-    { nickname: "Muggle 永", teamName: "Eternity", role: "official" },
-    { nickname: "Nofear", teamName: "Eternity", role: "official" },
-    { nickname: "RED REZE", teamName: "Eternity", role: "official" },
-    { nickname: "Shxrk", teamName: "Eternity", role: "reserve" },
-
-    // FURY
-    { nickname: "Creedz FURY", teamName: "FURY", role: "captain" },
-    { nickname: "Diana FURY", teamName: "FURY", role: "official" },
-    { nickname: "VN' FURY", teamName: "FURY", role: "official" },
-    { nickname: "perfection z", teamName: "FURY", role: "official" },
-    { nickname: "DIANA", teamName: "FURY ELITE", role: "captain" },
-    { nickname: "RAUAN", teamName: "FURY ELITE", role: "official" },
-    { nickname: "SUN", teamName: "FURY ELITE", role: "official" },
-    { nickname: "DEX", teamName: "FURY ELITE", role: "official" },
-    { nickname: "VN", teamName: "FURY ROYAL", role: "captain" },
-    { nickname: "NG", teamName: "FURY ROYAL", role: "official" },
-    { nickname: "EGOIST", teamName: "FURY ROYAL", role: "official" },
-    { nickname: "MARTNA", teamName: "FURY ROYAL", role: "official" },
-    { nickname: "OFF", teamName: "FURY ROYAL", role: "reserve" },
-
-    // INF
-    { nickname: "INF Noxz7", teamName: "INF", role: "official" },
-    { nickname: "INF GOAT", teamName: "INF", role: "captain" },
-    { nickname: "INF BARONI", teamName: "INF", role: "official" },
-    { nickname: "INF RINNEGA", teamName: "INF", role: "official" },
-    { nickname: "「INF」BLAZE", teamName: "INF", role: "official" },
-    { nickname: "「INF」GOAT", teamName: "INF", role: "official" },
-    { nickname: "「INF」Noxz7'", teamName: "INF", role: "official" },
-    { nickname: "「INF」RINNEGA", teamName: "INF", role: "reserve" },
-
-    // KOV
-    { nickname: "AET Jentexz", teamName: "KOV", role: "official" },
-    { nickname: "KOV ADAN", teamName: "KOV", role: "captain" },
-    { nickname: "KOV ALONE", teamName: "KOV", role: "official" },
-    { nickname: "KOV FushyX", teamName: "KOV", role: "official" },
-    { nickname: "TTKKAIKE", teamName: "KOV", role: "official" },
-    { nickname: "YoSurper", teamName: "KOV", role: "reserve" },
-
-    // LMF
-    { nickname: "LMF CALOP12", teamName: "LMF", role: "official" },
-    { nickname: "LMF LACERDA", teamName: "LMF", role: "captain" },
-    { nickname: "LMF XIT", teamName: "LMF", role: "official" },
-    { nickname: "LMF mtfacil", teamName: "LMF", role: "official" },
-    { nickname: "LMF_Boss", teamName: "LMF", role: "official" },
-    { nickname: "LMF_LACERDA", teamName: "LMF", role: "official" },
-    { nickname: "LMF_RICHIMO", teamName: "LMF", role: "reserve" },
-    { nickname: "LMF_XIT", teamName: "LMF", role: "official" },
-    { nickname: "LMF_mtfacil", teamName: "LMF", role: "official" },
-
-    // Misturado
-    { nickname: "INF BADBOY", teamName: "Misturado", role: "official" },
-    { nickname: "INF RONY", teamName: "Misturado", role: "official" },
-    { nickname: "REVERSE_", teamName: "Misturado", role: "captain" },
-    { nickname: "TOP FreeKill", teamName: "Misturado", role: "official" },
-
-    // ODS
-    { nickname: "Az Aamon", teamName: "ODS", role: "captain" },
-    { nickname: "[ODS] vantex", teamName: "ODS", role: "official" },
-    { nickname: "[ODS].STROG", teamName: "ODS", role: "official" },
-
-    // RED
-    { nickname: "CF ALMEIDA", teamName: "RED", role: "official" },
-    { nickname: "LMF Boss", teamName: "RED", role: "official" },
-    { nickname: "RED APENAS", teamName: "RED", role: "captain" },
-    { nickname: "RED snow777", teamName: "RED", role: "official" },
-    { nickname: "RED- REZE", teamName: "RED", role: "official" },
-    { nickname: "RED-Alemão", teamName: "RED", role: "official" },
-    { nickname: "RED-MOREIRA", teamName: "RED", role: "official" },
-    { nickname: "REÐ APENAS", teamName: "RED", role: "official" },
-    { nickname: "REÐ LANGØ", teamName: "RED", role: "official" },
-    { nickname: "REÐ M4RTINA", teamName: "RED", role: "official" },
-    { nickname: "REÐ Sunraku", teamName: "RED", role: "official" },
-    { nickname: "REÐ Zadock", teamName: "RED", role: "reserve" },
-    { nickname: "REÐ snow777", teamName: "RED", role: "official" },
-
-    // REÐ Outlaws
-    { nickname: "REÐ MoraesBC", teamName: "REÐ Outlaws", role: "captain" },
-    { nickname: "REÐ Felpz", teamName: "REÐ Outlaws", role: "official" },
-    { nickname: "REÐ Skibidi", teamName: "REÐ Outlaws", role: "official" },
-    { nickname: "REÐ Apenas", teamName: "REÐ Outlaws", role: "official" },
-
-    // RED Magic BR
-    { nickname: "LXELTINHO", teamName: "RED Magic BR", role: "captain" },
-    { nickname: "MOL ADRIAN", teamName: "RED Magic BR", role: "official" },
-    { nickname: "RED KENNZY", teamName: "RED Magic BR", role: "official" },
-    { nickname: "RED LANGO", teamName: "RED Magic BR", role: "official" },
-
-    // Time E
-    { nickname: "ONE-Javi", teamName: "Time E", role: "captain" },
-    { nickname: "PAIN SWAN", teamName: "Time E", role: "official" },
-    { nickname: "Poindexter", teamName: "Time E", role: "official" },
-    { nickname: "morqesb", teamName: "Time E", role: "official" },
-
-    // Time I
-    { nickname: "ASTRO", teamName: "Time I", role: "captain" },
-    { nickname: "AimColor", teamName: "Time I", role: "official" },
-    { nickname: "GzmAkaza", teamName: "Time I", role: "official" },
-    { nickname: "Jtpe", teamName: "Time I", role: "official" },
-    { nickname: "hcky", teamName: "Time I", role: "official" },
-    { nickname: "iDiaasz", teamName: "Time I", role: "reserve" },
-
-    // UGD Light
-    { nickname: "DEATH", teamName: "UGD Light", role: "official" },
-    { nickname: "I miss her", teamName: "UGD Light", role: "official" },
-    { nickname: "UGD Kyz", teamName: "UGD Light", role: "captain" },
-    { nickname: "UGD Psycho", teamName: "UGD Light", role: "official" },
-    { nickname: "Kyz", teamName: "UGD Light", role: "official" },
-    { nickname: "Zann", teamName: "UGD Light", role: "official" },
-    { nickname: "Psycho", teamName: "UGD Light", role: "official" },
-    { nickname: "Chino", teamName: "UGD Light", role: "reserve" },
-
-    // UGD Royal (desativada - poucos jogadores)
-    { nickname: "Dexz", teamName: "UGD Royal", role: "captain" },
-    { nickname: "MayaZ", teamName: "UGD Royal", role: "official" },
-    { nickname: "OFFz", teamName: "UGD Royal", role: "official" },
-
-    // UGD LEGENDS
-    { nickname: "Ohara", teamName: "UGD LEGENDS", role: "captain" },
-    { nickname: "Rafa", teamName: "UGD LEGENDS", role: "official" },
-    { nickname: "Xoxoto", teamName: "UGD LEGENDS", role: "official" },
-    { nickname: "Buzeira", teamName: "UGD LEGENDS", role: "official" },
-
-    // UGD OLYMPIQUE
-    { nickname: "Weenot", teamName: "UGD OLYMPIQUE", role: "captain" },
-    { nickname: "Duardin", teamName: "UGD OLYMPIQUE", role: "official" },
-    { nickname: "Striker", teamName: "UGD OLYMPIQUE", role: "official" },
-    { nickname: "Lorex", teamName: "UGD OLYMPIQUE", role: "official" },
-    { nickname: "CANTS", teamName: "UGD OLYMPIQUE", role: "reserve" },
-
-    // UGD Threat
-    { nickname: "Rivers AR", teamName: "UGD Threat", role: "official" },
-    { nickname: "UGD ARISE", teamName: "UGD Threat", role: "official" },
-    { nickname: "UGD Ares", teamName: "UGD Threat", role: "official" },
-    { nickname: "UGD Kaze", teamName: "UGD Threat", role: "captain" },
-    { nickname: "UGD Neo", teamName: "UGD Threat", role: "official" },
-    { nickname: "UGD Treon", teamName: "UGD Threat", role: "official" },
-    { nickname: "UGD cool7", teamName: "UGD Threat", role: "official" },
-    { nickname: "Cool", teamName: "UGD Threat", role: "official" },
-    { nickname: "Treon", teamName: "UGD Threat", role: "official" },
-    { nickname: "Kaze", teamName: "UGD Threat", role: "official" },
-    { nickname: "Arise", teamName: "UGD Threat", role: "official" },
-    { nickname: "Santz", teamName: "UGD Threat", role: "reserve" },
-
-    // Lambda
-    { nickname: "Striker71", teamName: "Λつつ", role: "official" },
-    { nickname: "Striker81", teamName: "Λつつ", role: "official" },
-    { nickname: "ØNE ???", teamName: "Λつつ", role: "captain" },
-    { nickname: "ΛΞT Jentexz", teamName: "Λつつ", role: "official" },
-    { nickname: "Λつつ Aninha", teamName: "Λつつ", role: "official" },
-    { nickname: "Λつつ Unknown", teamName: "Λつつ", role: "official" },
-    { nickname: "Λつつ_$CAVEIRA", teamName: "Λつつ", role: "official" },
-    { nickname: "『PsS-KINN-ボ", teamName: "Λつつ", role: "reserve" },
-
-    // Dev
-    { nickname: "DevNexT★", teamName: "Dev", role: "captain" },
-    { nickname: "DevBatata", teamName: "Dev", role: "official" },
-    { nickname: "DevPisca", teamName: "Dev", role: "official" },
-    { nickname: "DevThorfinn", teamName: "Dev", role: "official" },
-    { nickname: "Dev_Guizin", teamName: "Dev", role: "official" },
-    { nickname: "Dev_LTz", teamName: "Dev", role: "official" },
-    { nickname: "Dev Ana", teamName: "Dev", role: "reserve" },
-
-    // EmE
-    { nickname: "Yeezy", teamName: "EmE", role: "captain" },
-    { nickname: "geldeysito", teamName: "EmE", role: "official" },
-    { nickname: "EME々Akaza", teamName: "EmE", role: "official" },
-    { nickname: "EME々Lulu", teamName: "EmE", role: "official" },
-
-    // VOID STRIKE
-    { nickname: "♱Vøid♱.D_R", teamName: "♱VØID×STRIKE♱", role: "captain" },
-    { nickname: "♱Vøid♱+gute", teamName: "♱VØID×STRIKE♱", role: "official" },
-    { nickname: "♱Vøid♱.nino", teamName: "♱VØID×STRIKE♱", role: "official" },
-    { nickname: "™VØID°⁷⁷⁷", teamName: "♱VØID×STRIKE♱", role: "official" },
-
-    // 7KW
-    { nickname: "(NTC)patrikm", teamName: "7KW_LHETAL", role: "captain" },
-    { nickname: "_061_kakashi", teamName: "7KW_LHETAL", role: "official" },
-    { nickname: "RL.MATADOR☠️", teamName: "7KW_LHETAL", role: "official" },
-    { nickname: "Fefe_🎭🇧🇷", teamName: "7KW_LHETAL", role: "official" },
-
-    // K4F
-    { nickname: "k4F urso", teamName: "K4F", role: "captain" },
-    { nickname: "K4F nine", teamName: "K4F", role: "official" },
-    { nickname: "K4F gui", teamName: "K4F", role: "official" },
-    { nickname: "Alek", teamName: "K4F", role: "official" },
-  ];
+  const roleMap = { cap: "captain", off: "official", res: "reserve" } as const;
 
   let playersCount = 0;
-  for (const playerData of playersData) {
-    const teamId = teamIdMap.get(playerData.teamName);
-    if (teamId) {
-      if (upsertPlayer(db, {
-        nickname: playerData.nickname,
-        teamId: teamId,
-        role: playerData.role,
-      })) playersCount++;
-    } else {
-      console.warn(`[SEED] Team not found for player ${playerData.nickname}: ${playerData.teamName}`);
+  for (const [nickname, teamName, roleShort] of PLAYERS_DATA) {
+    const teamId = teamIdMap.get(teamName);
+    if (!teamId) {
+      console.warn(`[SEED] Team not found for player ${nickname}: ${teamName}`);
+      continue;
     }
+    if (upsertPlayer(db, { nickname, teamId, role: roleMap[roleShort] })) playersCount++;
   }
   console.log(`[SEED] ${playersCount} players created`);
 
-  // ============================================================
-  // Atualizar captainId nos times
-  // ============================================================
+  // Atualiza captainId nos times
   const allPlayers = db.select().from(players).all();
   for (const player of allPlayers) {
     if (player.role === "captain" && player.teamId) {
@@ -434,6 +435,7 @@ export function seed() {
   }
   console.log("[SEED] Captain IDs updated");
 
+  // Registra seed run
   const seedName = "clans-v1";
   const existingSeed = db.select().from(seedRuns).where(eq(seedRuns.seedName, seedName)).get();
   if (!existingSeed) {
