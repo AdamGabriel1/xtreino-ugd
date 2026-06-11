@@ -105,7 +105,7 @@ export function seedXtreino10062026() {
     { date, xtreinoId, teamName: "CMF ASSALT", playerName: "CMF Lynx7", q1Kills: 0, q2Kills: 1, q3Kills: 0, totalKills: 1 },
     { date, xtreinoId, teamName: "CMF ASSALT", playerName: "CMF Max", q1Kills: 0, q2Kills: 0, q3Kills: 0, totalKills: 0 },
     { date, xtreinoId, teamName: "CMF ASSALT", playerName: "CMF Thxxxz", q1Kills: 0, q2Kills: 0, q3Kills: 0, totalKills: 0 },
-    { date, xtreinoId, teamName: "UGD Legends", playerName: "Weenot", q1Kills: 3, q2Kills: 9, q3Kills: 3, totalKills: 15 },
+    { date, xtreinoId, teamName: "UGD Threat + Olympique", playerName: "Weenot", q1Kills: 3, q2Kills: 9, q3Kills: 3, totalKills: 15 },
     { date, xtreinoId, teamName: "UGD Legends", playerName: "Duardin", q1Kills: 0, q2Kills: 0, q3Kills: 0, totalKills: 0 },
     { date, xtreinoId, teamName: "UGD Legends", playerName: "Lorex", q1Kills: 0, q2Kills: 0, q3Kills: 0, totalKills: 0 },
     { date, xtreinoId, teamName: "UGD Legends", playerName: "Cants", q1Kills: 0, q2Kills: 0, q3Kills: 0, totalKills: 0 },
