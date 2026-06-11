@@ -180,6 +180,8 @@ export function seed() {
     { name: "XTreino Underground - 21/05", date: "2026-05-21", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
     { name: "XTreino Underground - 08/06", date: "2026-06-08", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
     { name: "XTreino Underground - 09/06", date: "2026-06-09", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
+    { name: "XTreino Underground - 10/06", date: "2026-06-10", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "finalizado" },
+    { name: "XTreino Underground - 10/06", date: "2026-06-11", timeBr: "21:00", modality: "squad", maxTeams: 20, status: "aberto" },
   ];
 
   let xtreinosCount = 0;
