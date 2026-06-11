@@ -12,5 +12,5 @@ export const env = {
   appId: required("APP_ID") || "default-app-id",
   appSecret: required("APP_SECRET") || "default-secret-change-in-production",
   isProduction: process.env.NODE_ENV === "production",
-  databaseUrl: required("DATABASE_URL") || "data/sqlite.db",
+  databaseUrl: required("DATABASE_URL") || "sqlite.db",
 };

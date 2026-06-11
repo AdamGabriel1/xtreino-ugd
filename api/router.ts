@@ -6,7 +6,7 @@ import { playersRouter } from "./routers/players.js";
 import { championshipsRouter } from "./routers/championships.js";
 import { xtreinosRouter } from "./routers/xtreinos.js";
 import { scrimsRouter } from "./routers/scrims.js";
-import { registrationsRouter } from "./routers/registrations.js";
+import { xtreinoInscricoesRouter } from "./routers/xtreinoInscricoes.js";
 import { rankingsRouter } from "./routers/rankings.js";
 import { salinhasRouter } from "./routers/salinhas.js";
 
@@ -20,7 +20,7 @@ export const appRouter = createRouter({
   championships: championshipsRouter,
   xtreinos: xtreinosRouter,
   scrims: scrimsRouter,
-  registrations: registrationsRouter,
+  xtreinoInscricoes: xtreinoInscricoesRouter,
   rankings: rankingsRouter,
   salinhas: salinhasRouter,
 });

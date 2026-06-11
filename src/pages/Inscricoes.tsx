@@ -1,355 +1,425 @@
-import { useState } from "react";
-import { ClipboardList, Plus, Minus, Send, CheckCircle } from "lucide-react";
-import { trpc } from "@/providers/trpc";
-import MainLayout from "@/layout/MainLayout";
+import { useState, useMemo } from "react";
+import { Plus, Trash2, Users, CheckCircle2, Clock, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import type { InscricaoEquipe, XtreinoEvento } from "@/types/inscricoes";
 
-export default function Inscricoes() {
-  const [formData, setFormData] = useState({
-    type: "squad",
-    teamName: "",
-    teamTag: "",
-    captainName: "",
-    captainDiscord: "",
-    whatsapp: "",
-    teamLogo: "",
-    eventType: "campeonato",
-    eventId: "",
-  });
-  const [players, setPlayers] = useState([{ nickname: "", uid: "", discord: "" }]);
-  const [reserves, setReserves] = useState([{ nickname: "", uid: "", discord: "" }]);
-  const [submitted, setSubmitted] = useState(false);
+interface InscricoesManagerProps {
+  xtreino: XtreinoEvento;
+  inscricoes: InscricaoEquipe[];
+  fixedTeams: string[];
+  allTeams: Array<{ id: number; name: string; tag: string }> | undefined;
+  onRegister: (data: { teamName: string; players: string[]; isReserve: boolean }) => void;
+  onCancel: (data: { teamName: string }) => void;
+  onReactivate: (data: { teamName: string; players: string[]; isReserve: boolean }) => void;
+  onRemove: (data: { teamName: string }) => void;
+  isPending: boolean;
+  isAdmin?: boolean;
+}
 
-  const { data: championships } = trpc.championships.list.useQuery();
-  const { data: xtreinosList } = trpc.xtreinos.list.useQuery();
+export function InscricoesManager({
+  xtreino,
+  inscricoes,
+  fixedTeams,
+  allTeams,
+  onRegister,
+  onCancel,
+  onReactivate,
+  onRemove,
+  isPending,
+  isAdmin = false,
+}: InscricoesManagerProps) {
+  const [newTeamName, setNewTeamName] = useState("");
+  const [selectedExistingTeam, setSelectedExistingTeam] = useState("");
+  const [isNewTeam, setIsNewTeam] = useState(false);
+  const [playerInputs, setPlayerInputs] = useState<string[]>(["", "", "", ""]);
 
-  const createRegistration = trpc.registrations.create.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
-      toast.success("Inscricao enviada com sucesso!");
-    },
-    onError: (err) => {
-      toast.error("Erro ao enviar inscricao: " + err.message);
-    },
-  });
+  const fixedSet = useMemo(() => new Set(fixedTeams.map((t) => t.toLowerCase())), [fixedTeams]);
 
-  const handleAddPlayer = () => setPlayers([...players, { nickname: "", uid: "", discord: "" }]);
-  const handleRemovePlayer = (i: number) => setPlayers(players.filter((_, idx) => idx !== i));
-  const handlePlayerChange = (i: number, field: string, value: string) => {
-    const updated = [...players];
-    updated[i] = { ...updated[i], [field]: value };
-    setPlayers(updated);
+  const confirmedTeams = useMemo(() => {
+    return inscricoes
+      .filter((r) => r.status === "confirmada")
+      .sort((a, b) => (a.slotNumber ?? 0) - (b.slotNumber ?? 0));
+  }, [inscricoes]);
+
+  const pendingTeams = useMemo(() => {
+    return inscricoes
+      .filter((r) => r.status === "pendente")
+      .sort((a, b) => (a.slotNumber ?? 0) - (b.slotNumber ?? 0));
+  }, [inscricoes]);
+
+  const cancelledTeams = useMemo(() => {
+    return inscricoes
+      .filter((r) => r.status === "cancelada")
+      .sort((a, b) => (a.slotNumber ?? 0) - (b.slotNumber ?? 0));
+  }, [inscricoes]);
+
+  const availableTeams = useMemo(() => {
+    if (!allTeams) return [];
+    const registeredNames = new Set(inscricoes.map((r) => r.teamName.toLowerCase()));
+    return allTeams.filter((t) => !registeredNames.has(t.name.toLowerCase()));
+  }, [allTeams, inscricoes]);
+
+  const handleAddPlayerInput = () => {
+    if (playerInputs.length < 6) setPlayerInputs([...playerInputs, ""]);
   };
 
-  const handleAddReserve = () => setReserves([...reserves, { nickname: "", uid: "", discord: "" }]);
-  const handleRemoveReserve = (i: number) => setReserves(reserves.filter((_, idx) => idx !== i));
-  const handleReserveChange = (i: number, field: string, value: string) => {
-    const updated = [...reserves];
-    updated[i] = { ...updated[i], [field]: value };
-    setReserves(updated);
+  const handlePlayerInputChange = (index: number, value: string) => {
+    const newInputs = [...playerInputs];
+    newInputs[index] = value;
+    setPlayerInputs(newInputs);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setFormData({ ...formData, teamLogo: reader.result as string });
-      reader.readAsDataURL(file);
+  const handleRemovePlayerInput = (index: number) => {
+    if (playerInputs.length > 1) {
+      setPlayerInputs(playerInputs.filter((_, i) => i !== index));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.teamName || !formData.eventId) {
-      toast.error("Preencha todos os campos obrigatorios");
+  const handleAddTeam = () => {
+    const teamName = isNewTeam ? newTeamName.trim() : selectedExistingTeam;
+    if (!teamName) {
+      toast.error("Selecione ou digite um nome de time");
       return;
     }
 
-    createRegistration.mutate({
-      ...formData,
-      eventId: parseInt(formData.eventId),
-      playersData: JSON.stringify(players),
-      reservesData: JSON.stringify(reserves),
-    });
+    const players = playerInputs.map((p) => p.trim()).filter((p) => p.length > 0);
+    if (players.length === 0) {
+      toast.error("Adicione pelo menos um jogador");
+      return;
+    }
+
+    if (players.length > 6) {
+      toast.error("Máximo de 6 jogadores por equipe");
+      return;
+    }
+
+    const isReserve = confirmedTeams.length >= xtreino.maxTeams;
+    onRegister({ teamName, players, isReserve });
+    setNewTeamName("");
+    setSelectedExistingTeam("");
+    setIsNewTeam(false);
+    setPlayerInputs(["", "", "", ""]);
   };
 
-  if (submitted) {
-    return (
-      <MainLayout>
-        <div className="max-w-2xl mx-auto px-4 py-24 text-center">
-          <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-[#f0f0f5] mb-2">Inscricao Enviada!</h2>
-          <p className="text-[#8a8a9e] mb-6">Sua inscricao foi recebida e sera analisada pela equipe.</p>
-          <button
-            onClick={() => {
-              setSubmitted(false);
-              setFormData({ type: "squad", teamName: "", teamTag: "", captainName: "", captainDiscord: "", whatsapp: "", teamLogo: "", eventType: "campeonato", eventId: "" });
-              setPlayers([{ nickname: "", uid: "", discord: "" }]);
-              setReserves([{ nickname: "", uid: "", discord: "" }]);
-            }}
-            className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-all"
-          >
-            Nova Inscricao
-          </button>
-        </div>
-      </MainLayout>
-    );
-  }
+  const handleCancel = (teamName: string) => {
+    if (confirm(`Cancelar inscrição de "${teamName}"?`)) {
+      onCancel({ teamName });
+    }
+  };
+
+  const handleReactivate = (teamName: string, players: string[]) => {
+    if (confirm(`Reativar inscrição de "${teamName}"?`)) {
+      const isReserve = confirmedTeams.length >= xtreino.maxTeams;
+      onReactivate({ teamName, players, isReserve });
+    }
+  };
+
+  const handleRemove = (teamName: string) => {
+    if (confirm(`Remover "${teamName}" permanentemente?`)) {
+      onRemove({ teamName });
+    }
+  };
+
+  const isXtreinoAberto = xtreino.status === "aberto";
 
   return (
-    <MainLayout>
-      <div className="bg-[#12121a] border-b border-[#2a2a3a]">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
-          <div className="flex items-center gap-3 mb-2">
-            <ClipboardList className="w-8 h-8 text-red-400" />
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Inscricoes</h1>
+    <div className="space-y-6">
+      {/* Adicionar Time */}
+      {isXtreinoAberto && (
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
+          <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+            <Plus className="w-4 h-4 text-red-400" />
+            Inscrever Equipe
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              {isNewTeam ? (
+                <input
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  placeholder="Nome do novo time..."
+                  className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                />
+              ) : (
+                <select
+                  value={selectedExistingTeam}
+                  onChange={(e) => setSelectedExistingTeam(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                >
+                  <option value="">Selecione um time...</option>
+                  {availableTeams.map((team) => (
+                    <option key={team.id} value={team.name}>
+                      {team.name} {fixedSet.has(team.name.toLowerCase()) ? "📌" : "🎫"}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <button
+                onClick={() => setIsNewTeam(!isNewTeam)}
+                className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm hover:text-[#f0f0f5] transition-all"
+              >
+                {isNewTeam ? "Usar existente" : "Novo time"}
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm text-[#8a8a9e] mb-2">Jogadores (1-6)</label>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {playerInputs.map((player, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      value={player}
+                      onChange={(e) => handlePlayerInputChange(index, e.target.value)}
+                      placeholder={`Jogador ${index + 1}`}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                    />
+                    {playerInputs.length > 1 && (
+                      <button
+                        onClick={() => handleRemovePlayerInput(index)}
+                        className="px-2 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-red-400 hover:bg-red-500/10 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {playerInputs.length < 6 && (
+                <button
+                  onClick={handleAddPlayerInput}
+                  className="mt-2 text-sm text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors"
+                >
+                  + Adicionar jogador
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={handleAddTeam}
+              disabled={isPending}
+              className="w-full px-6 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
+            >
+              {isPending ? "Inscrevendo..." : "Inscrever Equipe"}
+            </button>
           </div>
-          <p className="text-[#8a8a9e]">Inscreva-se em campeonatos e xtreinos</p>
+        </div>
+      )}
+
+      {/* Lista de Confirmados */}
+      <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
+          <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+            <Users className="w-4 h-4 text-green-400" />
+            Confirmados ({confirmedTeams.length}/{xtreino.maxTeams})
+          </h3>
+        </div>
+
+        <div className="divide-y divide-[#2a2a3a]">
+          {confirmedTeams.length === 0 && (
+            <div className="px-6 py-8 text-center text-[#5a5a6e]">
+              <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p>Nenhuma equipe confirmada ainda</p>
+            </div>
+          )}
+
+          {confirmedTeams.map((team, index) => {
+            const isFixed = fixedSet.has(team.teamName.toLowerCase());
+            return (
+              <div key={team.id} className="px-6 py-4 hover:bg-[#1a1a24] group">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-mono text-[#5a5a6e] w-6">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-lg">{isFixed ? "📌" : "🎫"}</span>
+                    <div>
+                      <span
+                        className={`text-sm font-medium ${
+                          isFixed ? "text-[#f0f0f5]" : "text-[#8a8a9e]"
+                        }`}
+                      >
+                        {team.teamName}
+                      </span>
+                      {isFixed && (
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                          FIXO
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isXtreinoAberto && (
+                      <button
+                        onClick={() => handleCancel(team.teamName)}
+                        title="Cancelar inscrição"
+                        className="p-1.5 rounded hover:bg-amber-500/10 text-amber-400 transition-all"
+                      >
+                        <Clock className="w-4 h-4" />
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleRemove(team.teamName)}
+                        className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
+                        title="Remover permanentemente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Jogadores da equipe */}
+                <div className="mt-2 ml-12 flex flex-wrap gap-2">
+                  {team.players?.map((player: string, pi: number) => (
+                    <span
+                      key={pi}
+                      className="text-xs px-2 py-1 rounded bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e]"
+                    >
+                      {player}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Slots vazios */}
+          {isXtreinoAberto &&
+            Array.from({
+              length: Math.max(0, xtreino.maxTeams - confirmedTeams.length),
+            }).map((_, i) => (
+              <div
+                key={`empty-${i}`}
+                className="px-6 py-3 flex items-center gap-3 opacity-30"
+              >
+                <span className="text-sm font-mono text-[#5a5a6e] w-6">
+                  {String(confirmedTeams.length + i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-lg">🎫</span>
+                <span className="text-sm text-[#5a5a6e]">Vaga disponível</span>
+              </div>
+            ))}
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 lg:px-8 py-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Event Selection */}
-          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-            <h3 className="font-bold text-[#f0f0f5] mb-4">Evento</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Tipo de Evento</label>
-                <select
-                  value={formData.eventType}
-                  onChange={(e) => setFormData({ ...formData, eventType: e.target.value, eventId: "" })}
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                >
-                  <option value="campeonato">Campeonato</option>
-                  <option value="xtreino">XTreino</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Evento *</label>
-                <select
-                  value={formData.eventId}
-                  onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
-                  required
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                >
-                  <option value="">Selecione...</option>
-                  {formData.eventType === "campeonato"
-                    ? championships?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)
-                    : xtreinosList?.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)
-                  }
-                </select>
-              </div>
-            </div>
+      {/* Lista de Pendentes */}
+      {pendingTeams.length > 0 && (
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#2a2a3a]">
+            <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-400" />
+              Pendentes ({pendingTeams.length})
+            </h3>
           </div>
-
-          {/* Team Info */}
-          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-            <h3 className="font-bold text-[#f0f0f5] mb-4">Informacoes da Equipe</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Tipo de Inscricao</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                >
-                  <option value="solo">Solo</option>
-                  <option value="duo">Duo</option>
-                  <option value="squad">Squad</option>
-                  <option value="4v4">4v4</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Nome da Equipe *</label>
-                <input
-                  type="text"
-                  value={formData.teamName}
-                  onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                  required
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Tag</label>
-                <input
-                  type="text"
-                  value={formData.teamTag}
-                  onChange={(e) => setFormData({ ...formData, teamTag: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Logo da Equipe</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="w-full px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-red-500 file:text-white file:text-xs"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Captain Info */}
-          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-            <h3 className="font-bold text-[#f0f0f5] mb-4">Capitao</h3>
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Nome</label>
-                <input
-                  type="text"
-                  value={formData.captainName}
-                  onChange={(e) => setFormData({ ...formData, captainName: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">Discord</label>
-                <input
-                  type="text"
-                  value={formData.captainDiscord}
-                  onChange={(e) => setFormData({ ...formData, captainDiscord: e.target.value })}
-                  placeholder="usuario#1234"
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-[#8a8a9e] mb-2">WhatsApp</label>
-                <input
-                  type="text"
-                  value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                  placeholder="5511999999999"
-                  className="w-full px-4 py-2.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Players */}
-          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-[#f0f0f5]">Jogadores</h3>
-              <button
-                type="button"
-                onClick={handleAddPlayer}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20 transition-all"
+          <div className="divide-y divide-[#2a2a3a]">
+            {pendingTeams.map((team) => (
+              <div
+                key={team.id}
+                className="px-6 py-3 flex items-center justify-between hover:bg-[#1a1a24] group"
               >
-                <Plus className="w-4 h-4" /> Adicionar
-              </button>
-            </div>
-            {players.map((p, i) => (
-              <div key={i} className="grid sm:grid-cols-3 gap-3 mb-3 items-end">
-                <div>
-                  <label className="block text-xs text-[#5a5a6e] mb-1">Nickname</label>
-                  <input
-                    type="text"
-                    value={p.nickname}
-                    onChange={(e) => handlePlayerChange(i, "nickname", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                  />
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🎫</span>
+                  <span className="text-sm text-[#8a8a9e]">{team.teamName}</span>
                 </div>
-                <div>
-                  <label className="block text-xs text-[#5a5a6e] mb-1">UID</label>
-                  <input
-                    type="text"
-                    value={p.uid}
-                    onChange={(e) => handlePlayerChange(i, "uid", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <label className="block text-xs text-[#5a5a6e] mb-1">Discord</label>
-                    <input
-                      type="text"
-                      value={p.discord}
-                      onChange={(e) => handlePlayerChange(i, "discord", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                    />
-                  </div>
-                  {players.length > 1 && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleReactivate(team.teamName, team.players || [])}
+                    className="p-1.5 rounded hover:bg-green-500/10 text-green-400 transition-all"
+                    title="Reativar"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                  {isAdmin && (
                     <button
-                      type="button"
-                      onClick={() => handleRemovePlayer(i)}
-                      className="px-2 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                      onClick={() => handleRemove(team.teamName)}
+                      className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
 
-          {/* Reserves */}
-          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-[#f0f0f5]">Reservas</h3>
-              <button
-                type="button"
-                onClick={handleAddReserve}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#1a1a24] text-[#8a8a9e] text-sm hover:bg-[#22222e] transition-all border border-[#2a2a3a]"
+      {/* Lista de Cancelados */}
+      {cancelledTeams.length > 0 && (
+        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden opacity-60">
+          <div className="px-6 py-4 border-b border-[#2a2a3a]">
+            <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-red-400" />
+              Cancelados ({cancelledTeams.length})
+            </h3>
+          </div>
+          <div className="divide-y divide-[#2a2a3a]">
+            {cancelledTeams.map((team) => (
+              <div
+                key={team.id}
+                className="px-6 py-3 flex items-center justify-between hover:bg-[#1a1a24] group"
               >
-                <Plus className="w-4 h-4" /> Adicionar
-              </button>
-            </div>
-            {reserves.map((p, i) => (
-              <div key={i} className="grid sm:grid-cols-3 gap-3 mb-3 items-end">
-                <div>
-                  <label className="block text-xs text-[#5a5a6e] mb-1">Nickname</label>
-                  <input
-                    type="text"
-                    value={p.nickname}
-                    onChange={(e) => handleReserveChange(i, "nickname", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                  />
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🎫</span>
+                  <span className="text-sm text-[#5a5a6e] line-through">
+                    {team.teamName}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-xs text-[#5a5a6e] mb-1">UID</label>
-                  <input
-                    type="text"
-                    value={p.uid}
-                    onChange={(e) => handleReserveChange(i, "uid", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <label className="block text-xs text-[#5a5a6e] mb-1">Discord</label>
-                    <input
-                      type="text"
-                      value={p.discord}
-                      onChange={(e) => handleReserveChange(i, "discord", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                    />
-                  </div>
-                  {reserves.length > 1 && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleReactivate(team.teamName, team.players || [])}
+                    className="p-1.5 rounded hover:bg-green-500/10 text-green-400 transition-all"
+                    title="Reativar"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                  {isAdmin && (
                     <button
-                      type="button"
-                      onClick={() => handleRemoveReserve(i)}
-                      className="px-2 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                      onClick={() => handleRemove(team.teamName)}
+                      className="p-1.5 rounded hover:bg-red-500/10 text-red-400 transition-all"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={createRegistration.isPending}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold transition-all disabled:opacity-50"
-          >
-            <Send className="w-5 h-5" />
-            {createRegistration.isPending ? "Enviando..." : "Confirmar Inscricao"}
-          </button>
-        </form>
+      {/* Times Fixos */}
+      <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
+        <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-yellow-400" />
+          Times Fixos da Underground
+        </h3>
+        <p className="text-sm text-[#5a5a6e] mb-4">
+          Times marcados como fixos aparecem automaticamente com 📌 em todos os
+          xtreinos.
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {fixedTeams.map((teamName) => (
+            <div
+              key={teamName}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm"
+            >
+              <CheckCircle2 className="w-3 h-3" />
+              {teamName}
+            </div>
+          ))}
+          {fixedTeams.length === 0 && (
+            <span className="text-sm text-[#5a5a6e]">
+              Nenhum time fixo configurado
+            </span>
+          )}
+        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }
