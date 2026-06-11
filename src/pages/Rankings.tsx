@@ -5,14 +5,10 @@ import {
   BarChart3,
   Users,
   CalendarDays,
-  Target,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";
 
-// ============================================================
-// TIPOS
-// ============================================================
 type TabKey = "xtreinos" | "geral" | "mensal" | "jogadores";
 
 interface TabConfig {
@@ -22,10 +18,6 @@ interface TabConfig {
   description: string;
 }
 
-// ============================================================
-// CONFIGURAÇÃO DAS ABAS
-// Adicione novas abas aqui facilmente
-// ============================================================
 const TABS: TabConfig[] = [
   {
     key: "xtreinos",
@@ -53,15 +45,12 @@ const TABS: TabConfig[] = [
   },
 ];
 
-// ============================================================
-// PLACEHOLDERS PARA ABAS FUTURAS
-// ============================================================
 function RankingGeralTab() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <Trophy className="w-16 h-16 text-[#2a2a3a] mb-4" />
-      <h3 className="text-xl font-bold text-[#f0f0f5] mb-2">Ranking Geral</h3>
-      <p className="text-[#5a5a6e] max-w-md">
+      <Trophy className="w-16 h-16 text-[#1a3a1a] mb-4" />
+      <h3 className="text-xl font-bold text-[#e0f0e0] mb-2">Ranking Geral</h3>
+      <p className="text-[#4a6e4a] max-w-md">
         Em breve: Ranking acumulado de todas as edições dos X-Treinos.
         Aqui você verá a pontuação total de cada time ao longo de todo o histórico.
       </p>
@@ -72,9 +61,9 @@ function RankingGeralTab() {
 function RankingMensalTab() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <CalendarDays className="w-16 h-16 text-[#2a2a3a] mb-4" />
-      <h3 className="text-xl font-bold text-[#f0f0f5] mb-2">Ranking Mensal</h3>
-      <p className="text-[#5a5a6e] max-w-md">
+      <CalendarDays className="w-16 h-16 text-[#1a3a1a] mb-4" />
+      <h3 className="text-xl font-bold text-[#e0f0e0] mb-2">Ranking Mensal</h3>
+      <p className="text-[#4a6e4a] max-w-md">
         Em breve: Ranking consolidado por mês com destaque para o time do mês,
         evolução de posições e comparativos entre meses.
       </p>
@@ -85,9 +74,9 @@ function RankingMensalTab() {
 function JogadoresTab() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <Users className="w-16 h-16 text-[#2a2a3a] mb-4" />
-      <h3 className="text-xl font-bold text-[#f0f0f5] mb-2">Estatísticas de Jogadores</h3>
-      <p className="text-[#5a5a6e] max-w-md">
+      <Users className="w-16 h-16 text-[#1a3a1a] mb-4" />
+      <h3 className="text-xl font-bold text-[#e0f0e0] mb-2">Estatísticas de Jogadores</h3>
+      <p className="text-[#4a6e4a] max-w-md">
         Em breve: Ranking individual de jogadores, top fraggers,
         média de kills por partida e histórico pessoal.
       </p>
@@ -95,32 +84,28 @@ function JogadoresTab() {
   );
 }
 
-// ============================================================
-// COMPONENTE PRINCIPAL
-// ============================================================
 export default function Rankings() {
   const [activeTab, setActiveTab] = useState<TabKey>("xtreinos");
-
   const activeTabConfig = TABS.find((t) => t.key === activeTab)!;
 
   return (
     <MainLayout>
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
         {/* Header */}
-        <div className="bg-[#12121a] border-b border-[#2a2a3a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-12 mb-8">
+        <div className="bg-[#0d1a0d] border-b border-[#1a3a1a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-12 mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-red-400" />
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
+            <BarChart3 className="w-8 h-8 text-emerald-400" />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#e0f0e0]">
               Rankings
             </h1>
           </div>
-          <p className="text-[#8a8a9e]">
+          <p className="text-[#6a8e6a]">
             {activeTabConfig.description}
           </p>
         </div>
 
-        {/* Tabs Navigation */}
-        <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-1 mb-6">
+        {/* Tabs Navigation — Green Theme */}
+        <div className="bg-[#0d1a0d] rounded-xl border border-[#1a3a1a] p-1 mb-6">
           <div className="flex flex-wrap gap-1">
             {TABS.map((tab) => (
               <button
@@ -130,8 +115,8 @@ export default function Rankings() {
                   flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
                   ${
                     activeTab === tab.key
-                      ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                      : "text-[#5a5a6e] hover:text-[#8a8a9e] hover:bg-[#1a1a24]"
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      : "text-[#4a6e4a] hover:text-[#6a8e6a] hover:bg-[#0f1f0f]"
                   }
                 `}
               >
