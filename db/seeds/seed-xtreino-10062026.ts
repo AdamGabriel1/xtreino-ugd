@@ -20,10 +20,10 @@ export function seedXtreino10062026() {
 
   const xtreinoColocacoesData = [
     { date, xtreinoId, teamName: "CMF ATLANTIC", q1Pos: 1, q2Pos: 7, q3Pos: 3 },
-    { date, xtreinoId, teamName: "UGD Threat + Olympique", q1Pos: 2, q2Pos: 1, q3Pos: 6 },
+    { date, xtreinoId, teamName: "UGD Threat + Olympique", q1Pos: 2, q2Pos: 1, q3Pos: 4 },
     { date, xtreinoId, teamName: "FURY ROYAL", q1Pos: 3, q2Pos: 3, q3Pos: 1 },
     { date, xtreinoId, teamName: "EmE", q1Pos: 4, q2Pos: 2, q3Pos: 10 },
-    { date, xtreinoId, teamName: "UGD Legends", q1Pos: 6, q2Pos: 5, q3Pos: 4 },
+    { date, xtreinoId, teamName: "UGD Legends", q1Pos: 6, q2Pos: 5, q3Pos: 6 },
     { date, xtreinoId, teamName: "CMF ASSALT", q1Pos: 7, q2Pos: 10, q3Pos: 7 },
     { date, xtreinoId, teamName: "FURY ELITE", q1Pos: 8, q2Pos: 4, q3Pos: 5 },
     { date, xtreinoId, teamName: "UGD LIGHT", q1Pos: 9, q2Pos: 8, q3Pos: 2 },
