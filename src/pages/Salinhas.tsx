@@ -452,7 +452,7 @@ export default function Salinhas() {
                     Salinhas Perlotti — 3 Salas Premiadas
                   </h2>
                   <p className="text-[#8a8a9e] text-sm mt-1">
-                    Modo Solo • 19:00 BRT • Premiação total de 1.965 Golds + 1k Top Licker
+                    Modo Solo • 19:00 BRT • Premiação total de 3.895 Golds + 1k Top Licker
                   </p>
                 </div>
               </div>

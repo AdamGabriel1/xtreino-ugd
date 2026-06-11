@@ -277,7 +277,7 @@ export default function SalinhaPerlotti() {
               </h1>
               <p className="text-lg text-[#8a8a9e] max-w-xl">
                 3 salas premiadas no domingo, 14 de junho de 2026. 
-                Modo Solo. Premiação total de <span className="text-amber-400 font-bold">1.965 Golds</span>!
+                Modo Solo. Premiação total de <span className="text-amber-400 font-bold">3.895 Golds</span>!
               </p>
             </div>
             
