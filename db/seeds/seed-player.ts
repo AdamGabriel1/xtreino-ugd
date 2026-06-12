@@ -1,5 +1,6 @@
-// db/seeds/seed-merges.ts
-// Seed inteligente: merge de jogadores duplicados (mesma pessoa, IDs diferentes)
+// db/seeds/seed-player.ts
+// Seed unificado: trata todos os nicks (antigos/atuais) como a mesma pessoa
+// O master é o nick atual. Todos os outros são merged (somem da listagem, stats vão pro master).
 
 import { getDb } from "../../api/queries/connection.js";
 import { playerMerges, players } from "../schema.js";
@@ -14,22 +15,22 @@ function getPlayerIdByNick(db: ReturnType<typeof getDb>, nickname: string): numb
   return player?.id ?? null;
 }
 
-export function seedMerges() {
+export function seedPlayerUnified() {
   const db = getDb();
 
-  // Verifica se já tem merges cadastrados
+  // Verifica se já foi rodado
   const existing = db.select().from(playerMerges).all();
   if (existing.length > 0) {
-    console.log("[SEED] Merges already exist, skipping");
+    console.log("[SEED] Player unified already seeded, skipping");
     return;
   }
 
   // ============================================================
-  // MAPEAMENTO: Nick Master → [Nicks Duplicados]
-  // O master é o jogador que fica visível na listagem.
-  // Os duplicados somem da listagem e seus stats vão pro master.
+  // MAPEAMENTO: Nick Atual (Master) → [Nicks Antigos/Duplicados]
+  // Todos os nicks listados aqui serão tratados como a mesma pessoa.
+  // O master fica visível na listagem. Os outros somem e viram "histórico".
   // ============================================================
-  const mergeMap: Record<string, string[]> = {
+  const unifiedMap: Record<string, string[]> = {
     "Cool": ["UGD cool7", "Rivers AR", "UGD Ares", "cool"],
     "Santz": ["UGD Sant", "UGD Neo"],
     "CMF Moizo": ["CMF MOIZO"],
@@ -46,41 +47,45 @@ export function seedMerges() {
     "Apenas": ["REÐ APENAS", "REÐ Apenas", "RED APENAS"],
     "MARTNA": ["REÐ M4RTINA"],
     "EME々Akaza": ["GzmAkaza"],
-
-    // Adicione seus merges aqui:
-    // "Nick Master": ["Duplicado 1", "Duplicado 2"],
+    // Adicione mais: "Nick Atual": ["antigo1", "antigo2", "antigo3"],
   };
 
   let inserted = 0;
   let skipped = 0;
 
-  for (const [masterNick, mergedNicks] of Object.entries(mergeMap)) {
+  for (const [masterNick, otherNicks] of Object.entries(unifiedMap)) {
     const masterId = getPlayerIdByNick(db, masterNick);
 
     if (!masterId) {
       console.log(`[SEED] ⚠️ Master "${masterNick}" not found in database`);
-      skipped += mergedNicks.length;
+      skipped += otherNicks.length;
       continue;
     }
 
-    for (const mergedNick of mergedNicks) {
-      const mergedId = getPlayerIdByNick(db, mergedNick);
+    for (const otherNick of otherNicks) {
+      const otherId = getPlayerIdByNick(db, otherNick);
 
-      if (!mergedId) {
-        console.log(`[SEED] ⚠️ Merged "${mergedNick}" not found`);
-        skipped++;
+      if (!otherId) {
+        // Nick não existe como jogador cadastrado — é só um nick antigo nos xtreinos
+        // Não precisa de merge, o router já busca pelo nome nos xtreinos
+        console.log(`[SEED] ℹ️ "${otherNick}" not a registered player — will be found via xtreino stats`);
+        continue;
+      }
+
+      if (masterId === otherId) {
+        console.log(`[SEED] ℹ️ "${otherNick}" is the same ID as master — skipping`);
         continue;
       }
 
       try {
         db.insert(playerMerges).values({
           masterPlayerId: masterId,
-          mergedPlayerId: mergedId,
+          mergedPlayerId: otherId,
         }).run();
-        console.log(`[SEED] ✅ Merged "${mergedNick}" (ID:${mergedId}) → "${masterNick}" (ID:${masterId})`);
+        console.log(`[SEED] ✅ "${otherNick}" (ID:${otherId}) → "${masterNick}" (ID:${masterId})`);
         inserted++;
       } catch (e) {
-        console.log(`[SEED] ⚠️ Merge already exists or error`);
+        console.log(`[SEED] ⚠️ "${otherNick}" already merged or error`);
       }
     }
   }

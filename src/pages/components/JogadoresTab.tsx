@@ -64,14 +64,14 @@ export default function JogadoresTab() {
 
   const isSingleXtreino = !!selectedDate;
 
-  // Enriched players com aliases
+  // Enriched players com merges (previousNicks)
   const enrichedPlayers = useMemo(() => {
     if (!playersList) return [];
 
     return playersList.map((p) => {
       const nameKey = p.nickname.trim().toLowerCase();
-      const aliasKeys = (p.aliases ?? []).map((a: string) => a.trim().toLowerCase());
-      const allNicks = [nameKey, ...aliasKeys];
+      const previousKeys = (p.previousNicks ?? []).map((n: string) => n.trim().toLowerCase());
+      const allNicks = [nameKey, ...previousKeys];
 
       if (isSingleXtreino) {
         const dayStats = playerXtreinoStats.find(
@@ -82,7 +82,7 @@ export default function JogadoresTab() {
           return {
             id: p.id,
             nickname: p.nickname,
-            aliases: p.aliases ?? [],
+            previousNicks: p.previousNicks ?? [],
             teamId: p.teamId,
             teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
             totalKills: dayStats.totalKills,
@@ -98,7 +98,7 @@ export default function JogadoresTab() {
         return {
           id: p.id,
           nickname: p.nickname,
-          aliases: p.aliases ?? [],
+          previousNicks: p.previousNicks ?? [],
           teamId: p.teamId,
           teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
           totalKills: 0,
@@ -112,12 +112,11 @@ export default function JogadoresTab() {
         };
       }
 
-      // Modo acumulado: busca stats por qualquer nick (atual ou alias)
+      // Modo acumulado: busca stats por qualquer nick (atual + previousNicks)
       const allStats = playerAccumulated.filter(
         (s) => allNicks.includes(s.playerName.trim().toLowerCase())
       );
 
-      // Soma stats de todos os nicks
       const totalKills = allStats.reduce((sum, s) => sum + (s.totalKills ?? 0), 0);
       const totalQ1 = allStats.reduce((sum, s) => sum + (s.totalQ1Kills ?? 0), 0);
       const totalQ2 = allStats.reduce((sum, s) => sum + (s.totalQ2Kills ?? 0), 0);
@@ -128,7 +127,7 @@ export default function JogadoresTab() {
       return {
         id: p.id,
         nickname: p.nickname,
-        aliases: p.aliases ?? [],
+        previousNicks: p.previousNicks ?? [],
         teamId: p.teamId,
         teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
         totalKills: totalKills || (p.xtreinoKills ?? 0),
@@ -153,7 +152,7 @@ export default function JogadoresTab() {
 
   const selectedPlayerXtreinoHistory = useMemo(() => {
     if (!playerDetail) return [];
-    const allNicks = [playerDetail.nickname, ...(playerDetail.aliases ?? [])];
+    const allNicks = [playerDetail.nickname, ...(playerDetail.previousNicks ?? [])];
     return playerXtreinoStats.filter(
       (s) => allNicks.includes(s.playerName)
     );
@@ -278,21 +277,21 @@ export default function JogadoresTab() {
             </button>
           </div>
 
-          {/* Aliases / Nicks antigos */}
-          {(playerDetail.aliases ?? []).length > 0 && (
+          {/* Nicks Anteriores */}
+          {(playerDetail.previousNicks ?? []).length > 0 && (
             <div className="mb-6 bg-[#0a0a0f] rounded-lg border border-[#2a2a3a] p-4">
               <div className="flex items-center gap-2 mb-2">
                 <History className="w-4 h-4 text-[#5a5a6e]" />
                 <span className="text-xs text-[#5a5a6e] uppercase font-medium">Nicks Anteriores</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {playerDetail.aliases.map((alias: string) => (
+                {playerDetail.previousNicks.map((nick: string) => (
                   <span
-                    key={alias}
+                    key={nick}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1a1a24] border border-[#2a2a3a] text-sm text-[#8a8a9e]"
                   >
                     <Tag className="w-3 h-3 text-[#5a5a6e]" />
-                    {alias}
+                    {nick}
                   </span>
                 ))}
               </div>
@@ -597,9 +596,9 @@ export default function JogadoresTab() {
               </div>
               <h3 className="text-lg font-bold text-[#f0f0f5] mb-1">{p.nickname}</h3>
               <p className="text-sm text-[#8a8a9e] mb-2">{p.teamName}</p>
-              {(p.aliases ?? []).length > 0 && (
+              {(p.previousNicks ?? []).length > 0 && (
                 <p className="text-xs text-[#5a5a6e] mb-3 truncate">
-                  aka {p.aliases.join(", ")}
+                  aka {p.previousNicks.join(", ")}
                 </p>
               )}
               <div className="flex items-center gap-4">
@@ -717,9 +716,9 @@ export default function JogadoresTab() {
                           </div>
                           <span className="text-sm font-bold text-[#f0f0f5]">{p.nickname}</span>
                         </div>
-                        {(p.aliases ?? []).length > 0 && (
+                        {(p.previousNicks ?? []).length > 0 && (
                           <span className="text-xs text-[#5a5a6e] ml-11">
-                            aka {p.aliases.join(", ")}
+                            aka {p.previousNicks.join(", ")}
                           </span>
                         )}
                       </div>

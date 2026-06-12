@@ -18,8 +18,7 @@ import {
   seedLogos,
   seedLogosAuto,
   seedAllXtreinos,  // 🆕 seed genérico de xtreinos
-  seedAliases,
-  seedMerges,
+  seedPlayerUnified,
 } from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
@@ -86,14 +85,11 @@ if (env.isProduction) {
     // ============================================================
     console.log("[BOOT] Checking specific seeds...");
 
-    // Na seção de seeds:
-    runSeedIfNeeded("merges", seedMerges);
-
     // 🆕 Seed genérico de todos os xtreinos
     runSeedIfNeeded("xtreinos_all", seedAllXtreinos);
 
-    // Seed de aliases (nicks antigos dos jogadores)
-    runSeedIfNeeded("aliases", seedAliases);  // ← ADICIONE
+    // Na seção de seeds:
+    runSeedIfNeeded("player_unified", seedPlayerUnified);
 
     // Seed de logos (manual ou auto)
     runSeedIfNeeded("logos", seedLogos);
