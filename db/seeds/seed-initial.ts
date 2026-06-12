@@ -69,6 +69,7 @@ const CLANS_DATA: [string, string, string, string][] = [
   ["Dev", "DEV", "#808080", "Clã Dev."],
   ["EmE", "EME", "#008080", "Clã EmE."],
   ["VOID STRIKE", "VOID", "#000000", "Clã VOID STRIKE."],
+  ["CPF", "CPF", "#a52a2a", "Clã CPF."],
 ];
 
 // --- TEAMS (Lines) ---
@@ -109,7 +110,7 @@ const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string
   ["Dev", "DEV", "Dev", "active", "Line da Dev Esports."],
   ["EmE", "EME", "EmE", "active", "Line principal da EmE."],
   ["♱VØID×STRIKE♱", "VOID", "VOID STRIKE", "active", "Line principal da VOID STRIKE."],
-  ["CPF CANCELADO", "CPF", "CPF CANCELADO", "active", "Line principal da CPF."],
+  ["CPF CANCELADO", "CPF", "CPF", "active", "Line principal da CPF."],
 
   // Times avulsos (sem clã)
   ["Misturado", "MIX", null, "active", "Time misto de jogadores de diferentes clãs."],
