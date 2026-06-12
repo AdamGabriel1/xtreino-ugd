@@ -30,7 +30,7 @@ export function seedMerges() {
   // Os duplicados somem da listagem e seus stats vão pro master.
   // ============================================================
   const mergeMap: Record<string, string[]> = {
-    "CMF MOIZO": ["CMF Moizo"],
+    "CMF Moizo": ["CMF MOIZO"],
 
     // Adicione seus merges aqui:
     // "Nick Master": ["Duplicado 1", "Duplicado 2"],
