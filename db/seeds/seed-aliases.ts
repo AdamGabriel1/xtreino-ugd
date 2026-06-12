@@ -24,7 +24,7 @@ export function seedAliases() {
 
   // Mapeamento: nick atual → [nicks antigos]
   const aliasMap: Record<string, string[]> = {
-    "cool": ["UGD cool7", "Rivers AR", "UGD Ares"],
+    "Cool": ["UGD cool7", "Rivers AR", "UGD Ares", "cool"],
     "Santz": ["UGD Sant", "UGD Neo"],
     // Adicione mais aqui: "Nick Atual": ["antigo1", "antigo2"]
   };
