@@ -30,7 +30,22 @@ export function seedMerges() {
   // Os duplicados somem da listagem e seus stats vão pro master.
   // ============================================================
   const mergeMap: Record<string, string[]> = {
+    "Cool": ["UGD cool7", "Rivers AR", "UGD Ares", "cool"],
+    "Santz": ["UGD Sant", "UGD Neo"],
     "CMF Moizo": ["CMF MOIZO"],
+    "Kaze": ["UGD Kaze"],
+    "Treon": ["UGD Treon"],
+    "CMF Léo": ["CMF Leo"],
+    "VN": ["VN' FURY"],
+    "Arise": ["UGD Arise"],
+    "snow777": ["RED snow777", "REÐ snow777"],
+    "Lango": ["REÐ LANGØ", "RED LANGO"],
+    "DEX": ["Dexz"],
+    "OFF": ["OFFz"],
+    "NG": ["MayaZ"],
+    "Apenas": ["REÐ APENAS", "REÐ Apenas", "RED APENAS"],
+    "MARTNA": ["REÐ M4RTINA"],
+    "EME々Akaza": ["GzmAkaza"],
 
     // Adicione seus merges aqui:
     // "Nick Master": ["Duplicado 1", "Duplicado 2"],
