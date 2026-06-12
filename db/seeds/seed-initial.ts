@@ -106,7 +106,7 @@ const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string
   ["ODS", "ODS", "ODS", "active", "Line principal da ODS."],
   ["7KW_LHETAL", "7KW", "7KW", "active", "Line principal da 7KW."],
   ["K4F", "K4F", "K4F", "active", "Line principal da K4F."],
-  ["Dev", "DEV", "Dev", "active", "Line de desenvolvedores."],
+  ["Dev", "DEV", "Dev", "active", "Line da Dev Esports."],
   ["EmE", "EME", "EmE", "active", "Line principal da EmE."],
   ["♱VØID×STRIKE♱", "VOID", "VOID STRIKE", "active", "Line principal da VOID STRIKE."],
 

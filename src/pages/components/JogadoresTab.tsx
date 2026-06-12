@@ -28,7 +28,7 @@ type SortDir = "asc" | "desc";
 
 export default function JogadoresTab() {
   const [search, setSearch] = useState("");
-  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField>("totalKills");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -43,12 +43,14 @@ export default function JogadoresTab() {
   const { data: teamsList } = trpc.teams.list.useQuery();
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats, isLoading: statsLoading } = trpc.xtreinos.listPlayerStats.useQuery();
-  const { data: playerDetail } = trpc.players.getById.useQuery(
-    { id: selectedPlayer ? parseInt(selectedPlayer) : 0 },
-    { enabled: !!selectedPlayer && !isNaN(parseInt(selectedPlayer)) }
+
+  // Query do detalhe do jogador - só executa quando tem ID válido
+  const { data: playerDetail, isLoading: detailLoading } = trpc.players.getById.useQuery(
+    { id: selectedPlayerId ?? 0 },
+    { enabled: !!selectedPlayerId && selectedPlayerId > 0 }
   );
 
-  // Hook de cálculos — AGORA COM 'results' PARA availableMonths/availableDates FUNCIONAREM
+  // Hook de cálculos
   const {
     playerAccumulated,
     playerXtreinoStats,
@@ -62,17 +64,15 @@ export default function JogadoresTab() {
     selectedDate,
   });
 
-  // Verifica se está filtrando por um xtreino específico (um único dia)
   const isSingleXtreino = !!selectedDate;
 
-  // Merge com dados do DB (times, etc)
+  // Merge com dados do DB
   const enrichedPlayers = useMemo(() => {
     if (!playersList) return [];
 
     return playersList.map((p) => {
       const nameKey = p.nickname.trim().toLowerCase();
 
-      // Se estiver vendo um xtreino específico, pega os stats daquele dia
       if (isSingleXtreino) {
         const dayStats = playerXtreinoStats.find(
           (s) => s.playerName.trim().toLowerCase() === nameKey && s.date === selectedDate
@@ -94,7 +94,6 @@ export default function JogadoresTab() {
             xtreinoDates: [selectedDate],
           };
         }
-        // Se o jogador não participou desse xtreino, retorna zeros
         return {
           id: p.id,
           nickname: p.nickname,
@@ -111,7 +110,6 @@ export default function JogadoresTab() {
         };
       }
 
-      // Modo acumulado (todos os xtreinos do período)
       const stats = playerAccumulated.find(
         (s) => s.playerName.trim().toLowerCase() === nameKey
       );
@@ -142,14 +140,14 @@ export default function JogadoresTab() {
     });
   }, [enrichedPlayers, sortField, sortDir]);
 
-  // Stats do jogador selecionado (do hook)
-  const selectedPlayerStats = useMemo(() => {
-    if (!selectedPlayer) return null;
-    const nameKey = selectedPlayer.toLowerCase();
+  // Stats do jogador selecionado (histórico de xtreinos) - busca pelo nickname do playerDetail
+  const selectedPlayerXtreinoHistory = useMemo(() => {
+    if (!playerDetail) return [];
+    const nameKey = playerDetail.nickname.toLowerCase();
     return playerXtreinoStats.filter(
       (s) => s.playerName.toLowerCase() === nameKey
     );
-  }, [selectedPlayer, playerXtreinoStats]);
+  }, [playerDetail, playerXtreinoStats]);
 
   // ===== HELPERS =====
   const getRankIcon = (index: number) => {
@@ -189,8 +187,62 @@ export default function JogadoresTab() {
 
   const isLoading = playersLoading || statsLoading;
 
-  // ===== DETALHE DO JOGADOR =====
-  if (selectedPlayer && playerDetail) {
+  // ===== VIEW: DETALHE DO JOGADOR =====
+  if (selectedPlayerId !== null) {
+    // Loading state
+    if (detailLoading) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setSelectedPlayerId(null)}
+                className="p-2 rounded-lg hover:bg-[#1a1a24] text-[#5a5a6e] hover:text-[#f0f0f5] transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-12 h-12 rounded-full bg-green-500/10 animate-pulse" />
+              <div className="space-y-2">
+                <div className="w-32 h-5 bg-[#2a2a3a] rounded animate-pulse" />
+                <div className="w-20 h-3 bg-[#2a2a3a] rounded animate-pulse" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="bg-[#1a1a24] rounded-lg p-4">
+                  <div className="w-16 h-3 bg-[#2a2a3a] rounded animate-pulse mb-2" />
+                  <div className="w-12 h-6 bg-[#2a2a3a] rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Error / Not found state
+    if (!playerDetail) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
+            <button
+              onClick={() => setSelectedPlayerId(null)}
+              className="flex items-center gap-2 text-[#5a5a6e] hover:text-[#f0f0f5] transition-colors mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Voltar</span>
+            </button>
+            <div className="text-center py-12">
+              <Target className="w-12 h-12 mx-auto mb-4 text-[#2a2a3a]" />
+              <p className="text-[#5a5a6e] text-lg font-medium">Jogador não encontrado</p>
+              <p className="text-[#3a3a4e] text-sm mt-1">ID: {selectedPlayerId}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Success state - mostra o detalhe do jogador
     return (
       <div className="space-y-6">
         {/* Header do jogador */}
@@ -198,7 +250,7 @@ export default function JogadoresTab() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setSelectedPlayer(null)}
+                onClick={() => setSelectedPlayerId(null)}
                 className="p-2 rounded-lg hover:bg-[#1a1a24] text-[#5a5a6e] hover:text-[#f0f0f5] transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -209,18 +261,19 @@ export default function JogadoresTab() {
               <div>
                 <h2 className="text-xl font-bold text-[#f0f0f5]">{playerDetail.nickname}</h2>
                 <p className="text-sm text-[#8a8a9e]">
-                  {teamsList?.find((t) => t.id === playerDetail.teamId)?.name ?? "Sem equipe"}
+                  {playerDetail.teamName ?? teamsList?.find((t) => t.id === playerDetail.teamId)?.name ?? "Sem equipe"}
                 </p>
               </div>
             </div>
             <button
-              onClick={() => setSelectedPlayer(null)}
+              onClick={() => setSelectedPlayerId(null)}
               className="p-2 rounded-lg hover:bg-[#1a1a24] text-[#5a5a6e] hover:text-[#f0f0f5] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
+          {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-[#1a1a24] rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -260,8 +313,26 @@ export default function JogadoresTab() {
             </div>
           </div>
 
-          {/* Histórico de XTreinos do período filtrado */}
-          {selectedPlayerStats && selectedPlayerStats.length > 0 && (
+          {/* Melhor performance */}
+          {playerDetail.bestXtreinoKills && playerDetail.bestXtreinoKills > 0 && (
+            <div className="bg-gradient-to-r from-green-500/10 to-transparent border border-green-500/20 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <Trophy className="w-4 h-4 text-green-400" />
+                <span className="text-xs text-green-400 font-medium uppercase">Melhor XTreino</span>
+              </div>
+              <p className="text-lg font-bold text-[#f0f0f5]">
+                {playerDetail.bestXtreinoKills} kills
+                {playerDetail.bestXtreinoDate && (
+                  <span className="text-sm font-normal text-[#8a8a9e] ml-2">
+                    em {playerDetail.bestXtreinoDate.split("-")[2]}/{playerDetail.bestXtreinoDate.split("-")[1]}/{playerDetail.bestXtreinoDate.split("-")[0]}
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Histórico de XTreinos */}
+          {selectedPlayerXtreinoHistory.length > 0 && (
             <div>
               <h4 className="text-sm font-bold text-[#f0f0f5] mb-3 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-green-400" />
@@ -286,7 +357,7 @@ export default function JogadoresTab() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2a2a3a]">
-                    {selectedPlayerStats.map((stat) => (
+                    {selectedPlayerXtreinoHistory.map((stat) => (
                       <tr key={`${stat.date}-${stat.xtreinoId}`} className="hover:bg-[#1a1a24]">
                         <td className="px-4 py-2 text-sm text-[#f0f0f5]">{stat.date}</td>
                         <td className="px-4 py-2 text-sm text-[#8a8a9e]">{stat.teamName}</td>
@@ -302,11 +373,19 @@ export default function JogadoresTab() {
               </div>
             </div>
           )}
+
+          {selectedPlayerXtreinoHistory.length === 0 && (
+            <div className="text-center py-8">
+              <BarChart3 className="w-10 h-10 mx-auto mb-3 text-[#2a2a3a]" />
+              <p className="text-[#5a5a6e] text-sm">Nenhum histórico de xtreino encontrado</p>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
+  // ===== VIEW: LISTAGEM / RANKING =====
   return (
     <div className="space-y-6">
       {/* ===== FILTROS ===== */}
@@ -454,12 +533,12 @@ export default function JogadoresTab() {
       )}
 
       {/* ===== TOP 3 PODIUM ===== */}
-      {!selectedPlayer && sortedPlayers.length > 0 && (
+      {!isLoading && sortedPlayers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {sortedPlayers.slice(0, 3).map((p, i) => (
             <div
               key={p.id}
-              onClick={() => setSelectedPlayer(p.nickname)}
+              onClick={() => setSelectedPlayerId(p.id)}
               className={`rounded-xl border border-[#2a2a3a] p-6 cursor-pointer transition-all hover:-translate-y-1 ${
                 i === 0
                   ? "bg-gradient-to-b from-green-500/10 to-[#12121a] border-green-400/30"
@@ -532,7 +611,7 @@ export default function JogadoresTab() {
       )}
 
       {/* ===== TABELA DE RANKING ===== */}
-      {!selectedPlayer && (
+      {!isLoading && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
           <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
             <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
@@ -594,7 +673,7 @@ export default function JogadoresTab() {
                   <tr
                     key={p.id}
                     className={`${getRankStyle(i)} cursor-pointer transition-colors`}
-                    onClick={() => setSelectedPlayer(p.nickname)}
+                    onClick={() => setSelectedPlayerId(p.id)}
                   >
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">{getRankIcon(i)}</div>
@@ -616,7 +695,7 @@ export default function JogadoresTab() {
                     <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q3Kills}</td>
                     {!isSingleXtreino && (
                       <>
-                        <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">
+                        <td className="px-6 py-3 text-sm text-center text-[#8a8a6e]">
                           {p.participations}
                         </td>
                         <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">
@@ -630,7 +709,7 @@ export default function JogadoresTab() {
             </table>
           </div>
 
-          {sortedPlayers.length === 0 && !isLoading && (
+          {sortedPlayers.length === 0 && (
             <div className="px-6 py-16 text-center">
               <Target className="w-12 h-12 mx-auto mb-4 text-[#2a2a3a]" />
               <p className="text-[#5a5a6e] text-lg font-medium">Nenhum jogador encontrado</p>
