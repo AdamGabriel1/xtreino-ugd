@@ -47,6 +47,7 @@ export function seedPlayerUnified() {
     "Apenas": ["REÐ APENAS", "REÐ Apenas", "RED APENAS"],
     "MARTNA": ["REÐ M4RTINA"],
     "EME々Akaza": ["GzmAkaza"],
+    "NOKI": ["Noki"]
     // Adicione mais: "Nick Atual": ["antigo1", "antigo2", "antigo3"],
   };
 

@@ -161,6 +161,7 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["EGOIST", "FURY ROYAL", "off"],
   ["MARTNA", "FURY ROYAL", "off"],
   ["OFF", "FURY ROYAL", "res"],
+  ["NOKI", "FURY ROYAL", "res"],
 
   // INF
   ["INF Noxz7", "INF", "off"],
