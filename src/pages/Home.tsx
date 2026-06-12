@@ -29,29 +29,15 @@ import {
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
+import {
+  useXtreinoCalculations,
+} from "@/hooks/useXtreinoCalculations";
 
 type RankCategory = "xtreino" | "campeonato" | "scrim";
 
 // ==================== TIPOS INFERIDOS DO BACKEND ====================
-
-// Tipos inferidos das queries do tRPC (evita conflito com tipos do backend)
-type XtreinoItem = {
-  id: number;
-  name: string;
-  date: string | null;
-  timeMx: string | null;
-  timeBr: string | null;
-  modality: string | null;
-  maxTeams: number | null;
-  rules: string | null;
-  discordLink: string | null;
-  whatsappLink: string | null;
-  status: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
 
 type ChampionshipItem = {
   id: number;
@@ -211,6 +197,16 @@ export default function Home() {
   const { data: allChampionships } = trpc.championships.list.useQuery({});
   const { data: allScrims } = trpc.scrims.list.useQuery();
 
+  // NOVO: Busca dados reais de resultados dos xtreinos para estatísticas detalhadas
+  const { data: allResults } = trpc.xtreinos.listResults.useQuery();
+  const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
+
+  // Usa o hook de cálculos para obter estatísticas reais dos xtreinos
+  const { teamRanking, teamPlayersGrouped } = useXtreinoCalculations({
+    results: allResults ?? [],
+    playerStats: allPlayerStats ?? [],
+  });
+
   // Rankings
   const {
     data: allTeamRankings,
@@ -238,7 +234,7 @@ export default function Home() {
     },
   });
 
-  // ============ ESTATÍSTICAS DETALHADAS ============
+  // ============ ESTATÍSTICAS DETALHADAS (DADOS REAIS DOS XTREINOS) ============
 
   // Contagem de XTreinos por status
   const xtreinoStats = {
@@ -263,6 +259,34 @@ export default function Home() {
     emAndamento: allScrims?.filter((s) => s.status === "em_andamento").length ?? 0,
     finalizados: allScrims?.filter((s) => s.status === "finalizado").length ?? 0,
   };
+
+  // Estatísticas REAIS dos xtreinos (baseadas nos resultados)
+  const xtreinoRealStats = useMemo(() => {
+    if (!teamRanking || teamRanking.length === 0) {
+      return {
+        totalTeams: 0,
+        totalKills: 0,
+        totalPosPoints: 0,
+        totalPoints: 0,
+        totalXtreinos: 0,
+        topTeams: [] as typeof teamRanking,
+      };
+    }
+
+    const totalKills = teamRanking.reduce((acc, t) => acc + t.totalKills, 0);
+    const totalPosPoints = teamRanking.reduce((acc, t) => acc + t.totalPosPoints, 0);
+    const totalPoints = teamRanking.reduce((acc, t) => acc + t.totalPoints, 0);
+    const totalXtreinos = teamRanking.reduce((acc, t) => acc + t.xtreinosPlayed, 0);
+
+    return {
+      totalTeams: teamRanking.length,
+      totalKills,
+      totalPosPoints,
+      totalPoints,
+      totalXtreinos,
+      topTeams: teamRanking.slice(0, 3),
+    };
+  }, [teamRanking]);
 
   // Próximos eventos = xtreinos + campeonatos + scrims ordenados por data
   const upcomingEvents = [
@@ -295,21 +319,108 @@ export default function Home() {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5);
 
-  // Atividade recente baseada em dados reais
-  const recentActivities = [
-    ...(allXtreinos?.slice(-3).map((x) => ({
-      id: x.id,
-      text: `XTreino "${x.name}" ${x.status === "aberto" ? "aberto para inscrições" : x.status === "em_andamento" ? "em andamento" : "finalizado"}`,
-      time: x.date || "Recente",
-      type: x.status === "fechado" ? "result" : "match",
-    })) || []),
-    ...(allChampionships?.slice(-2).map((c) => ({
-      id: c.id + 20000,
-      text: `Campeonato "${c.name}" ${c.status === "ativo" ? "iniciado" : c.status === "inscricoes" ? "recebendo inscrições" : "encerrado"}`,
-      time: c.startDate || "Recente",
-      type: c.status === "encerrado" ? "result" : "registration",
-    })) || []),
-  ].slice(0, 5);
+  // Atividade recente baseada em dados reais dos xtreinos
+  const recentActivities = useMemo(() => {
+    const activities: Array<{
+      id: number;
+      text: string;
+      time: string;
+      type: "match" | "result" | "registration" | "ranking";
+    }> = [];
+
+    // Últimos xtreinos com resultados
+    if (teamRanking && teamRanking.length > 0) {
+      // Pega os xtreinos mais recentes dos top times
+      const recentXtreinos = new Map<string, { date: string; teamName: string; totalPoints: number }>();
+
+      for (const team of teamRanking.slice(0, 5)) {
+        for (const xt of team.xtreinos.slice(-1)) {
+          const key = `${xt.date}-${team.teamName}`;
+          if (!recentXtreinos.has(key)) {
+            recentXtreinos.set(key, {
+              date: xt.date,
+              teamName: team.teamName,
+              totalPoints: xt.totalPoints,
+            });
+          }
+        }
+      }
+
+      const sortedXtreinos = Array.from(recentXtreinos.values())
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 3);
+
+      for (const xt of sortedXtreinos) {
+        activities.push({
+          id: activities.length + 1,
+          text: `Time "${xt.teamName}" marcou ${xt.totalPoints} pts no xtreino de ${xt.date.split("-")[2]}/${xt.date.split("-")[1]}`,
+          time: xt.date,
+          type: "result",
+        });
+      }
+    }
+
+    // Campeonatos recentes
+    if (allChampionships && allChampionships.length > 0) {
+      for (const champ of allChampionships.slice(-2)) {
+        activities.push({
+          id: activities.length + 1,
+          text: `Campeonato "${champ.name}" ${champ.status === "ativo" ? "iniciado" : champ.status === "inscricoes" ? "recebendo inscrições" : "encerrado"}`,
+          time: champ.startDate || "Recente",
+          type: champ.status === "encerrado" ? "result" : "registration",
+        });
+      }
+    }
+
+    return activities.slice(0, 5);
+  }, [teamRanking, allChampionships]);
+
+  // Top jogadores dos xtreinos (baseado em kills totais)
+  const topXtreinoPlayers = useMemo(() => {
+    if (!teamPlayersGrouped || teamPlayersGrouped.size === 0) return [];
+
+    const allPlayers: Array<{
+      playerName: string;
+      totalKills: number;
+      participations: number;
+      avgKills: number;
+      teamName: string;
+    }> = [];
+
+    for (const [teamName, players] of teamPlayersGrouped.entries()) {
+      for (const player of players) {
+        allPlayers.push({
+          ...player,
+          teamName,
+        });
+      }
+    }
+
+    // Agrupa por jogador (pode ter jogado em múltiplos times)
+    const playerMap = new Map<string, typeof allPlayers[0]>();
+    for (const p of allPlayers) {
+      const key = p.playerName.trim().toLowerCase();
+      if (playerMap.has(key)) {
+        const existing = playerMap.get(key)!;
+        existing.totalKills += p.totalKills;
+        existing.participations += p.participations;
+        existing.avgKills = Number((existing.totalKills / existing.participations).toFixed(1));
+      } else {
+        playerMap.set(key, { ...p });
+      }
+    }
+
+    return Array.from(playerMap.values())
+      .sort((a, b) => b.totalKills - a.totalKills)
+      .slice(0, 3)
+      .map((p) => ({
+        name: p.playerName,
+        entityName: p.playerName,
+        points: p.totalKills,
+        kills: p.totalKills,
+        wins: p.participations,
+      }));
+  }, [teamPlayersGrouped]);
 
   // ============ STATS CARDS ============
 
@@ -538,7 +649,7 @@ export default function Home() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* XTreinos Stats */}
+          {/* XTreinos Stats - COM DADOS REAIS */}
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -546,7 +657,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-bold text-[#f0f0f5]">XTreinos</h3>
-                <p className="text-[#5a5a6e] text-xs">{xtreinoStats.total} total</p>
+                <p className="text-[#5a5a6e] text-xs">{xtreinoStats.total} eventos · {xtreinoRealStats.totalXtreinos} resultados</p>
               </div>
             </div>
             <div className="p-6 grid grid-cols-3 gap-4">
@@ -563,6 +674,21 @@ export default function Home() {
                 <p className="text-[#5a5a6e] text-xs mt-1">Fechados</p>
               </div>
             </div>
+            {/* Stats reais dos xtreinos */}
+            {xtreinoRealStats.totalTeams > 0 && (
+              <div className="px-6 pb-4 pt-0 border-t border-[#2a2a3a]/50">
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-green-400">{xtreinoRealStats.totalKills}</p>
+                    <p className="text-[#5a5a6e] text-[10px]">Kills Totais</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-yellow-400">{xtreinoRealStats.totalPoints}</p>
+                    <p className="text-[#5a5a6e] text-[10px]">Pontos Totais</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Campeonatos Stats */}
@@ -718,19 +844,25 @@ export default function Home() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Top 3 Jogadores */}
+          {/* Top 3 Jogadores - DADOS REAIS DOS XTREINOS */}
           <div className="lg:col-span-1">
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden h-full">
               <div className="px-6 py-4 border-b border-[#2a2a3a]">
                 <div className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-emerald-400" />
-                  <h3 className="font-bold text-[#f0f0f5]">Top Jogadores</h3>
+                  <h3 className="font-bold text-[#f0f0f5]">Top Jogadores — XTreinos</h3>
                 </div>
               </div>
               <div className="p-4 space-y-3">
-                {allPlayerRankings?.slice(0, 3).map((player, idx) => (
-                  <FeaturedPlayerCard key={player.id} player={player} rank={idx + 1} />
-                )) || (
+                {topXtreinoPlayers.length > 0 ? (
+                  topXtreinoPlayers.map((player, idx) => (
+                    <FeaturedPlayerCard key={player.name} player={player} rank={idx + 1} />
+                  ))
+                ) : allPlayerRankings && allPlayerRankings.length > 0 ? (
+                  allPlayerRankings.slice(0, 3).map((player, idx) => (
+                    <FeaturedPlayerCard key={player.id} player={player} rank={idx + 1} />
+                  ))
+                ) : (
                   <div className="text-center py-8 text-[#5a5a6e] text-sm">
                     <Medal className="w-8 h-8 mx-auto mb-2 text-[#3a3a4e]" />
                     Nenhum jogador no ranking ainda
@@ -792,7 +924,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Atividade Recente - DADOS REAIS */}
+          {/* Atividade Recente - DADOS REAIS DOS XTREINOS */}
           <div className="lg:col-span-1">
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden h-full">
               <div className="px-6 py-4 border-b border-[#2a2a3a]">
