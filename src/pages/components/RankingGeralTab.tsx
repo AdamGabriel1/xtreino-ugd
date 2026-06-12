@@ -19,6 +19,7 @@ import {
   useXtreinoCalculations,
   POSITION_POINTS,
   KILL_POINTS,
+  playerPlayedForTeam,
 } from "@/hooks/useXtreinoCalculations";
 
 export default function RankingGeralTab() {
@@ -29,7 +30,7 @@ export default function RankingGeralTab() {
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
   const { data: playersList } = trpc.players.list.useQuery();
 
-  const { teamRanking, teamPlayersGrouped } = useXtreinoCalculations({
+  const { teamRanking, playerGlobalStats } = useXtreinoCalculations({
     results: allResults ?? [],
     playerStats: allPlayerStats ?? [],
   });
@@ -78,9 +79,34 @@ export default function RankingGeralTab() {
     }
   }, [teamRanking, sortBy]);
 
+  // Busca jogadores que jogaram para este time (ou variações do nome)
   const getTeamPlayers = (teamName: string) => {
-    const key = teamName.trim().toLowerCase();
-    return teamPlayersGrouped.get(key) ?? [];
+    const players: Array<{
+      playerName: string;
+      totalKills: number;
+      totalQ1Kills: number;
+      totalQ2Kills: number;
+      totalQ3Kills: number;
+      participations: number;
+      avgKills: number;
+    }> = [];
+
+    for (const player of playerGlobalStats.values()) {
+      if (playerPlayedForTeam(player, teamName)) {
+        players.push({
+          playerName: player.playerName,
+          totalKills: player.totalKills,
+          totalQ1Kills: player.totalQ1Kills,
+          totalQ2Kills: player.totalQ2Kills,
+          totalQ3Kills: player.totalQ3Kills,
+          participations: player.participations,
+          avgKills: player.avgKills,
+        });
+      }
+    }
+
+    // Ordena por total de kills (maior primeiro)
+    return players.sort((a, b) => b.totalKills - a.totalKills);
   };
 
   const findPlayerByName = (name: string) => {
@@ -116,7 +142,7 @@ export default function RankingGeralTab() {
       totalKills: teamRanking.reduce((acc, t) => acc + t.totalKills, 0),
       totalPosPoints: teamRanking.reduce((acc, t) => acc + t.totalPosPoints, 0),
       totalPoints: teamRanking.reduce((acc, t) => acc + t.totalPoints, 0),
-      totalXtreinos: totalXtreinosUnicos, // USA O CONTADOR DE X-TREINOS ÚNICOS
+      totalXtreinos: totalXtreinosUnicos,
     };
   }, [teamRanking, totalXtreinosUnicos]);
 
@@ -336,7 +362,7 @@ export default function RankingGeralTab() {
                               </div>
                             </div>
 
-                            {/* Jogadores do time — com playerId e previousNicks */}
+                            {/* Jogadores do time — SEM DUPLICATAS */}
                             {teamPlayers.length > 0 && (
                               <div>
                                 <h4 className="text-xs font-medium text-[#5a5a6e] mb-3 flex items-center gap-2">

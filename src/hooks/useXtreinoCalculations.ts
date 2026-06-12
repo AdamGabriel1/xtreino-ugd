@@ -426,6 +426,19 @@ export function calcTeamPlayersGrouped(
   return result;
 }
 
+// ===== NOVO: Verifica se jogador jogou para um time =====
+export function playerPlayedForTeam(
+  player: PlayerAccumulatedStats | TeamPlayerGrouped,
+  teamName: string
+): boolean {
+  // Se for TeamPlayerGrouped, verifica pelo teamName implícito no contexto
+  // Se for PlayerAccumulatedStats, verifica a propriedade teamName
+  if ("teamName" in player && player.teamName) {
+    return player.teamName.trim().toLowerCase() === teamName.trim().toLowerCase();
+  }
+  return false;
+}
+
 /** Filtra dados por mês e/ou dia */
 export function filterByDate<T extends { date: string }>(
   data: T[],
@@ -478,6 +491,7 @@ export interface UseXtreinoCalculationsReturn {
   teamXtreinoStats: TeamXtreinoStats[];
   playerXtreinoStats: PlayerXtreinoStats[];
   playerAccumulated: PlayerAccumulatedStats[];
+  playerGlobalStats: Map<string, PlayerAccumulatedStats>;
   teamAccumulated: TeamAccumulatedStats[];
   teamRanking: TeamRankingStats[];
   teamPlayersGrouped: Map<string, TeamPlayerGrouped[]>;
@@ -530,6 +544,15 @@ export function useXtreinoCalculations({
     [filteredPlayerStats]
   );
 
+  // ===== NOVO: playerGlobalStats como Map para lookup rápido =====
+  const playerGlobalStats = useMemo(() => {
+    const map = new Map<string, PlayerAccumulatedStats>();
+    for (const player of playerAccumulated) {
+      map.set(player.playerName.trim().toLowerCase(), player);
+    }
+    return map;
+  }, [playerAccumulated]);
+
   const teamAccumulated = useMemo(
     () => calcTeamAccumulatedStats(filteredResults, filteredPlayerStats),
     [filteredResults, filteredPlayerStats]
@@ -579,6 +602,7 @@ export function useXtreinoCalculations({
     teamXtreinoStats,
     playerXtreinoStats,
     playerAccumulated,
+    playerGlobalStats,
     teamAccumulated,
     teamRanking,
     teamPlayersGrouped,
