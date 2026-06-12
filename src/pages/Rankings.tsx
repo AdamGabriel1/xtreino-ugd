@@ -5,7 +5,6 @@ import {
   BarChart3,
   Users,
   CalendarDays,
-  Target,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";

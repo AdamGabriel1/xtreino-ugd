@@ -109,6 +109,7 @@ const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string
   ["Dev", "DEV", "Dev", "active", "Line da Dev Esports."],
   ["EmE", "EME", "EmE", "active", "Line principal da EmE."],
   ["♱VØID×STRIKE♱", "VOID", "VOID STRIKE", "active", "Line principal da VOID STRIKE."],
+  ["CPF CANCELADO", "CPF", "CPF CANCELADO", "active", "Line principal da CPF."],
 
   // Times avulsos (sem clã)
   ["Misturado", "MIX", null, "active", "Time misto de jogadores de diferentes clãs."],
@@ -329,6 +330,17 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["K4F gui", "K4F", "off"],
   ["Alek", "K4F", "off"],
 
+  // CPF
+  ["CPF FLAX", "CPF CANCELADO", "cap"],
+  ["CPF GBZIN", "CPF CANCELADO", "off"],
+  ["CPF KROM", "CPF CANCELADO", "off"],
+  ["CPF PHAX", "CPF CANCELADO", "off"],
+  ["CPF BISCOITO", "CPF CANCELADO", "res"],
+  ["CPF LCZ", "CPF CANCELADO", "res"],
+  ["CPF LUIZ", "CPF CANCELADO", "res"],
+  ["CPF XITADO", "CPF CANCELADO", "res"],
+  ["CPF ICE!", "CPF CANCELADO", "res"],
+
   ["sinner boy", "Randolinhas", "off"],
   ["Miag", "Randolinhas", "off"],
   ["VAL Yzzi⁷", "Randolinhas", "off"],
@@ -354,6 +366,7 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 09/06", "2026-06-09", "finalizado"],
   ["XTreino Underground - 10/06", "2026-06-10", "finalizado"],
   ["XTreino Underground - 11/06", "2026-06-11", "finalizado"],
+  ["XTreino Underground - 12/06", "2026-06-12", "aberto"],
 ];
 
 // ============================================================
