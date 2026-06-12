@@ -11,6 +11,8 @@ import {
   Zap,
   Users,
   Calendar,
+  Tag,
+  History,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import {
@@ -25,11 +27,42 @@ export default function RankingGeralTab() {
 
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
+  const { data: playersList } = trpc.players.list.useQuery();
 
   const { teamRanking, teamPlayersGrouped } = useXtreinoCalculations({
     results: allResults ?? [],
     playerStats: allPlayerStats ?? [],
   });
+
+  // Conta xtreinos únicos (igual a Home faz)
+  const totalXtreinosUnicos = useMemo(() => {
+    const uniqueXtreinoIds = new Set<number>();
+    allResults?.forEach((r) => uniqueXtreinoIds.add(r.xtreinoId));
+    return uniqueXtreinoIds.size;
+  }, [allResults]);
+
+  // Map de jogadores por nome (para lookup rápido)
+  const playersByName = useMemo(() => {
+    const map = new Map<string, { id: number; nickname: string; previousNicks: string[] }>();
+    if (!playersList) return map;
+
+    for (const p of playersList) {
+      const key = p.nickname.trim().toLowerCase();
+      map.set(key, {
+        id: p.id,
+        nickname: p.nickname,
+        previousNicks: p.previousNicks ?? [],
+      });
+      for (const nick of (p.previousNicks ?? [])) {
+        map.set(nick.trim().toLowerCase(), {
+          id: p.id,
+          nickname: p.nickname,
+          previousNicks: p.previousNicks ?? [],
+        });
+      }
+    }
+    return map;
+  }, [playersList]);
 
   const sortedRanking = useMemo(() => {
     const sorted = [...teamRanking];
@@ -48,6 +81,11 @@ export default function RankingGeralTab() {
   const getTeamPlayers = (teamName: string) => {
     const key = teamName.trim().toLowerCase();
     return teamPlayersGrouped.get(key) ?? [];
+  };
+
+  const findPlayerByName = (name: string) => {
+    const key = name.trim().toLowerCase();
+    return playersByName.get(key);
   };
 
   const getRankStyle = (index: number) => {
@@ -78,9 +116,9 @@ export default function RankingGeralTab() {
       totalKills: teamRanking.reduce((acc, t) => acc + t.totalKills, 0),
       totalPosPoints: teamRanking.reduce((acc, t) => acc + t.totalPosPoints, 0),
       totalPoints: teamRanking.reduce((acc, t) => acc + t.totalPoints, 0),
-      totalXtreinos: teamRanking.reduce((acc, t) => acc + t.xtreinosPlayed, 0),
+      totalXtreinos: totalXtreinosUnicos, // USA O CONTADOR DE X-TREINOS ÚNICOS
     };
-  }, [teamRanking]);
+  }, [teamRanking, totalXtreinosUnicos]);
 
   return (
     <div>
@@ -298,7 +336,7 @@ export default function RankingGeralTab() {
                               </div>
                             </div>
 
-                            {/* Jogadores do time — AGRUPADOS (igual JogadoresTab) */}
+                            {/* Jogadores do time — com playerId e previousNicks */}
                             {teamPlayers.length > 0 && (
                               <div>
                                 <h4 className="text-xs font-medium text-[#5a5a6e] mb-3 flex items-center gap-2">
@@ -320,25 +358,57 @@ export default function RankingGeralTab() {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#2a2a3a]/50">
-                                      {teamPlayers.map((player, idx) => (
-                                        <tr key={player.playerName} className="hover:bg-[#1a1a24]/50">
-                                          <td className="px-3 py-2 text-[#5a5a6e] text-xs">{idx + 1}</td>
-                                          <td className="px-3 py-2">
-                                            <div className="flex items-center gap-2">
-                                              <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
-                                                <Target className="w-3 h-3 text-green-400" />
+                                      {teamPlayers.map((player, idx) => {
+                                        const playerInfo = findPlayerByName(player.playerName);
+                                        const hasPreviousNicks = playerInfo && (playerInfo.previousNicks ?? []).length > 0;
+
+                                        return (
+                                          <tr key={player.playerName} className="hover:bg-[#1a1a24]/50">
+                                            <td className="px-3 py-2 text-[#5a5a6e] text-xs">{idx + 1}</td>
+                                            <td className="px-3 py-2">
+                                              <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2">
+                                                  <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                                                    <Target className="w-3 h-3 text-green-400" />
+                                                  </div>
+                                                  <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-[#f0f0f5]">
+                                                      {playerInfo?.nickname ?? player.playerName}
+                                                    </span>
+                                                    {playerInfo && (
+                                                      <span className="text-[10px] text-[#5a5a6e]">
+                                                        ID: {playerInfo.id}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                {hasPreviousNicks && (
+                                                  <div className="flex items-center gap-1 ml-8">
+                                                    <History className="w-3 h-3 text-[#5a5a6e]" />
+                                                    <div className="flex flex-wrap gap-1">
+                                                      {playerInfo.previousNicks.map((nick) => (
+                                                        <span
+                                                          key={nick}
+                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1a1a24] border border-[#2a2a3a] text-[10px] text-[#8a8a9e]"
+                                                        >
+                                                          <Tag className="w-2 h-2 text-[#5a5a6e]" />
+                                                          {nick}
+                                                        </span>
+                                                      ))}
+                                                    </div>
+                                                  </div>
+                                                )}
                                               </div>
-                                              <span className="text-sm font-medium text-[#f0f0f5]">{player.playerName}</span>
-                                            </div>
-                                          </td>
-                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ1Kills}</td>
-                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ2Kills}</td>
-                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ3Kills}</td>
-                                          <td className="px-3 py-2 text-center text-green-400 font-bold">{player.totalKills}</td>
-                                          <td className="px-3 py-2 text-center text-[#5a5a6e]">{player.participations}</td>
-                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.avgKills}</td>
-                                        </tr>
-                                      ))}
+                                            </td>
+                                            <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ1Kills}</td>
+                                            <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ2Kills}</td>
+                                            <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ3Kills}</td>
+                                            <td className="px-3 py-2 text-center text-green-400 font-bold">{player.totalKills}</td>
+                                            <td className="px-3 py-2 text-center text-[#5a5a6e]">{player.participations}</td>
+                                            <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.avgKills}</td>
+                                          </tr>
+                                        );
+                                      })}
                                     </tbody>
                                   </table>
                                 </div>
