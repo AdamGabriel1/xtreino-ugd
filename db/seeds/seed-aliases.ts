@@ -39,6 +39,7 @@ export function seedAliases() {
     "NG": ["MayaZ"],
     "Apenas": ["REÐ APENAS, REÐ Apenas, RED APENAS"],
     "MARTNA": ["REÐ M4RTINA"],
+    "EME々Akaza": ["GzmAkaza"],
     // Adicione mais aqui: "Nick Atual": ["antigo1", "antigo2"]
   };
 
