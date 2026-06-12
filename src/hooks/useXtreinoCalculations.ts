@@ -132,6 +132,17 @@ export interface TeamRankingStats {
   xtreinos: TeamRankingHistoryItem[];
 }
 
+// ===== NOVO: Jogador agrupado por time (para expandable) =====
+export interface TeamPlayerGrouped {
+  playerName: string;
+  totalKills: number;
+  totalQ1Kills: number;
+  totalQ2Kills: number;
+  totalQ3Kills: number;
+  participations: number;
+  avgKills: number;
+}
+
 // ============================================================
 // FUNÇÕES DE CÁLCULO PURAS (sem React)
 // ============================================================
@@ -364,6 +375,57 @@ export function calcTeamRankingStats(
   return Array.from(map.values());
 }
 
+// ===== NOVO: Agrupa jogadores por time (somando todas as participações) =====
+export function calcTeamPlayersGrouped(
+  playerStats: XtreinoPlayerStat[]
+): Map<string, TeamPlayerGrouped[]> {
+  const teamMap = new Map<string, Map<string, TeamPlayerGrouped>>();
+
+  for (const stat of playerStats) {
+    const teamKey = stat.teamName.trim().toLowerCase();
+    const playerKey = stat.playerName.trim().toLowerCase();
+
+    if (!teamMap.has(teamKey)) {
+      teamMap.set(teamKey, new Map());
+    }
+
+    const playerMap = teamMap.get(teamKey)!;
+    const existing = playerMap.get(playerKey);
+
+    if (existing) {
+      existing.totalKills += stat.totalKills || 0;
+      existing.totalQ1Kills += stat.q1Kills || 0;
+      existing.totalQ2Kills += stat.q2Kills || 0;
+      existing.totalQ3Kills += stat.q3Kills || 0;
+      existing.participations += 1;
+    } else {
+      playerMap.set(playerKey, {
+        playerName: stat.playerName,
+        totalKills: stat.totalKills || 0,
+        totalQ1Kills: stat.q1Kills || 0,
+        totalQ2Kills: stat.q2Kills || 0,
+        totalQ3Kills: stat.q3Kills || 0,
+        participations: 1,
+        avgKills: 0,
+      });
+    }
+  }
+
+  // Calcula média e converte para array
+  const result = new Map<string, TeamPlayerGrouped[]>();
+  for (const [teamName, playerMap] of teamMap) {
+    const players = Array.from(playerMap.values()).map((p) => ({
+      ...p,
+      avgKills: p.participations > 0 ? Math.round((p.totalKills / p.participations) * 10) / 10 : 0,
+    }));
+    // Ordena por total de kills (maior primeiro)
+    players.sort((a, b) => b.totalKills - a.totalKills);
+    result.set(teamName, players);
+  }
+
+  return result;
+}
+
 /** Filtra dados por mês e/ou dia */
 export function filterByDate<T extends { date: string }>(
   data: T[],
@@ -418,6 +480,7 @@ export interface UseXtreinoCalculationsReturn {
   playerAccumulated: PlayerAccumulatedStats[];
   teamAccumulated: TeamAccumulatedStats[];
   teamRanking: TeamRankingStats[];
+  teamPlayersGrouped: Map<string, TeamPlayerGrouped[]>;
   periodSummary: {
     totalKills: number;
     totalPosPoints: number;
@@ -472,10 +535,15 @@ export function useXtreinoCalculations({
     [filteredResults, filteredPlayerStats]
   );
 
-  // ===== NOVO: Ranking Geral (sempre calcula sobre todos os dados, não filtrados) =====
   const teamRanking = useMemo(
     () => calcTeamRankingStats(results, playerStats),
     [results, playerStats]
+  );
+
+  // ===== NOVO: Jogadores agrupados por time (sobre todos os dados) =====
+  const teamPlayersGrouped = useMemo(
+    () => calcTeamPlayersGrouped(playerStats),
+    [playerStats]
   );
 
   const periodSummary = useMemo(() => {
@@ -513,6 +581,7 @@ export function useXtreinoCalculations({
     playerAccumulated,
     teamAccumulated,
     teamRanking,
+    teamPlayersGrouped,
     periodSummary,
   };
 }

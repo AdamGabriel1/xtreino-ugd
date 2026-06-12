@@ -26,7 +26,7 @@ export default function RankingGeralTab() {
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
 
-  const { teamRanking, playerXtreinoStats } = useXtreinoCalculations({
+  const { teamRanking, teamPlayersGrouped } = useXtreinoCalculations({
     results: allResults ?? [],
     playerStats: allPlayerStats ?? [],
   });
@@ -46,7 +46,8 @@ export default function RankingGeralTab() {
   }, [teamRanking, sortBy]);
 
   const getTeamPlayers = (teamName: string) => {
-    return playerXtreinoStats.filter((p) => p.teamName === teamName);
+    const key = teamName.trim().toLowerCase();
+    return teamPlayersGrouped.get(key) ?? [];
   };
 
   const getRankStyle = (index: number) => {
@@ -297,24 +298,49 @@ export default function RankingGeralTab() {
                               </div>
                             </div>
 
-                            {/* Jogadores do time */}
+                            {/* Jogadores do time — AGRUPADOS (igual JogadoresTab) */}
                             {teamPlayers.length > 0 && (
                               <div>
-                                <h4 className="text-xs font-medium text-[#5a5a6e] mb-2 flex items-center gap-2">
+                                <h4 className="text-xs font-medium text-[#5a5a6e] mb-3 flex items-center gap-2">
                                   <Users className="w-3 h-3" />
                                   Jogadores ({teamPlayers.length})
                                 </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {teamPlayers.map((player) => (
-                                    <div key={player.playerName} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a]">
-                                      <Target className="w-3 h-3 text-green-400" />
-                                      <span className="text-sm text-[#f0f0f5]">{player.playerName}</span>
-                                      <span className="text-xs text-green-400 font-bold">{player.totalKills}k</span>
-                                      <span className="text-xs text-[#5a5a6e]">
-                                        ({player.q1Kills}/{player.q2Kills}/{player.q3Kills})
-                                      </span>
-                                    </div>
-                                  ))}
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-[#2a2a3a]">
+                                        <th className="px-3 py-2 text-left text-xs text-[#5a5a6e]">#</th>
+                                        <th className="px-3 py-2 text-left text-xs text-[#5a5a6e]">Jogador</th>
+                                        <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Q1</th>
+                                        <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Q2</th>
+                                        <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Q3</th>
+                                        <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Total</th>
+                                        <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Partic.</th>
+                                        <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Média</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#2a2a3a]/50">
+                                      {teamPlayers.map((player, idx) => (
+                                        <tr key={player.playerName} className="hover:bg-[#1a1a24]/50">
+                                          <td className="px-3 py-2 text-[#5a5a6e] text-xs">{idx + 1}</td>
+                                          <td className="px-3 py-2">
+                                            <div className="flex items-center gap-2">
+                                              <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                                                <Target className="w-3 h-3 text-green-400" />
+                                              </div>
+                                              <span className="text-sm font-medium text-[#f0f0f5]">{player.playerName}</span>
+                                            </div>
+                                          </td>
+                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ1Kills}</td>
+                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ2Kills}</td>
+                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.totalQ3Kills}</td>
+                                          <td className="px-3 py-2 text-center text-green-400 font-bold">{player.totalKills}</td>
+                                          <td className="px-3 py-2 text-center text-[#5a5a6e]">{player.participations}</td>
+                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{player.avgKills}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
                                 </div>
                               </div>
                             )}
