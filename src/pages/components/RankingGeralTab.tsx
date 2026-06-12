@@ -64,6 +64,93 @@ export default function RankingGeralTab() {
     return map;
   }, [playersList]);
 
+  // ===== NOVO: Merge jogadores por ID (unifica nicks diferentes) =====
+  const mergePlayersById = (
+    players: Array<{
+      playerName: string;
+      totalKills: number;
+      totalQ1Kills: number;
+      totalQ2Kills: number;
+      totalQ3Kills: number;
+      participations: number;
+      avgKills: number;
+    }>
+  ) => {
+    const mergedMap = new Map<
+      number,
+      {
+        id: number;
+        nickname: string;
+        playerName: string;
+        totalKills: number;
+        totalQ1Kills: number;
+        totalQ2Kills: number;
+        totalQ3Kills: number;
+        participations: number;
+        previousNicks: string[];
+      }
+    >();
+
+    for (const player of players) {
+      const playerInfo = playersByName.get(player.playerName.trim().toLowerCase());
+      
+      if (playerInfo) {
+        // Jogador cadastrado — agrupa por ID
+        const existing = mergedMap.get(playerInfo.id);
+        if (existing) {
+          existing.totalKills += player.totalKills;
+          existing.totalQ1Kills += player.totalQ1Kills;
+          existing.totalQ2Kills += player.totalQ2Kills;
+          existing.totalQ3Kills += player.totalQ3Kills;
+          existing.participations += player.participations;
+        } else {
+          mergedMap.set(playerInfo.id, {
+            id: playerInfo.id,
+            nickname: playerInfo.nickname,
+            playerName: playerInfo.nickname, // usa o nome oficial
+            totalKills: player.totalKills,
+            totalQ1Kills: player.totalQ1Kills,
+            totalQ2Kills: player.totalQ2Kills,
+            totalQ3Kills: player.totalQ3Kills,
+            participations: player.participations,
+            previousNicks: playerInfo.previousNicks,
+          });
+        }
+      } else {
+        // Jogador não cadastrado — cria ID negativo temporário para não perder
+        const tempId = -Math.abs(player.playerName.toLowerCase().split('').reduce((a, b) => a + b.charCodeAt(0), 0));
+        const existing = mergedMap.get(tempId);
+        if (existing) {
+          existing.totalKills += player.totalKills;
+          existing.totalQ1Kills += player.totalQ1Kills;
+          existing.totalQ2Kills += player.totalQ2Kills;
+          existing.totalQ3Kills += player.totalQ3Kills;
+          existing.participations += player.participations;
+        } else {
+          mergedMap.set(tempId, {
+            id: tempId,
+            nickname: player.playerName,
+            playerName: player.playerName,
+            totalKills: player.totalKills,
+            totalQ1Kills: player.totalQ1Kills,
+            totalQ2Kills: player.totalQ2Kills,
+            totalQ3Kills: player.totalQ3Kills,
+            participations: player.participations,
+            previousNicks: [],
+          });
+        }
+      }
+    }
+
+    // Converte para array e calcula média
+    return Array.from(mergedMap.values())
+      .map((p) => ({
+        ...p,
+        avgKills: p.participations > 0 ? Math.round((p.totalKills / p.participations) * 10) / 10 : 0,
+      }))
+      .sort((a, b) => b.totalKills - a.totalKills);
+  };
+
   const sortedRanking = useMemo(() => {
     const sorted = [...teamRanking];
     switch (sortBy) {
@@ -78,15 +165,11 @@ export default function RankingGeralTab() {
     }
   }, [teamRanking, sortBy]);
 
-  // Busca jogadores do time usando teamPlayersGrouped (sem duplicatas)
+  // Busca jogadores do time e merge por ID
   const getTeamPlayers = (teamName: string) => {
     const teamKey = teamName.trim().toLowerCase();
-    return teamPlayersGrouped.get(teamKey) ?? [];
-  };
-
-  const findPlayerByName = (name: string) => {
-    const key = name.trim().toLowerCase();
-    return playersByName.get(key);
+    const players = teamPlayersGrouped.get(teamKey) ?? [];
+    return mergePlayersById(players);
   };
 
   const getRankStyle = (index: number) => {
@@ -337,7 +420,7 @@ export default function RankingGeralTab() {
                               </div>
                             </div>
 
-                            {/* Jogadores do time — SEM DUPLICATAS */}
+                            {/* Jogadores do time — UNIFICADOS POR ID */}
                             {teamPlayers.length > 0 && (
                               <div>
                                 <h4 className="text-xs font-medium text-[#5a5a6e] mb-3 flex items-center gap-2">
@@ -360,11 +443,10 @@ export default function RankingGeralTab() {
                                     </thead>
                                     <tbody className="divide-y divide-[#2a2a3a]/50">
                                       {teamPlayers.map((player, idx) => {
-                                        const playerInfo = findPlayerByName(player.playerName);
-                                        const hasPreviousNicks = playerInfo && (playerInfo.previousNicks ?? []).length > 0;
+                                        const hasPreviousNicks = player.previousNicks.length > 0;
 
                                         return (
-                                          <tr key={player.playerName} className="hover:bg-[#1a1a24]/50">
+                                          <tr key={player.id} className="hover:bg-[#1a1a24]/50">
                                             <td className="px-3 py-2 text-[#5a5a6e] text-xs">{idx + 1}</td>
                                             <td className="px-3 py-2">
                                               <div className="flex flex-col gap-1">
@@ -374,11 +456,11 @@ export default function RankingGeralTab() {
                                                   </div>
                                                   <div className="flex flex-col">
                                                     <span className="text-sm font-medium text-[#f0f0f5]">
-                                                      {playerInfo?.nickname ?? player.playerName}
+                                                      {player.nickname}
                                                     </span>
-                                                    {playerInfo && (
+                                                    {player.id > 0 && (
                                                       <span className="text-[10px] text-[#5a5a6e]">
-                                                        ID: {playerInfo.id}
+                                                        ID: {player.id}
                                                       </span>
                                                     )}
                                                   </div>
@@ -387,7 +469,7 @@ export default function RankingGeralTab() {
                                                   <div className="flex items-center gap-1 ml-8">
                                                     <History className="w-3 h-3 text-[#5a5a6e]" />
                                                     <div className="flex flex-wrap gap-1">
-                                                      {playerInfo.previousNicks.map((nick) => (
+                                                      {player.previousNicks.map((nick) => (
                                                         <span
                                                           key={nick}
                                                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1a1a24] border border-[#2a2a3a] text-[10px] text-[#8a8a9e]"
