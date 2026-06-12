@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { ArrowLeft, Shield, Star, Layers, ExternalLink, Crown, Users, RotateCcw, Swords, Award, ChevronRight } from "lucide-react";
-import { ClanItem, TeamItem, PlayerItem, EnrichedPlayerItem } from "../types/clans";
+import type { ClanItem, TeamItem, PlayerItem, EnrichedPlayerItem } from "../types/clans";
 import StatsCards from "./StatsCards";
 
 interface ClanDetailProps {
