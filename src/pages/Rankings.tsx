@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";
+import JogadoresTab from "./components/JogadoresTab";
 
 // ============================================================
 // TIPOS
@@ -77,19 +78,6 @@ function RankingMensalTab() {
       <p className="text-[#4a6b4a] max-w-md">
         Em breve: Ranking consolidado por mês com destaque para o time do mês,
         evolução de posições e comparativos entre meses.
-      </p>
-    </div>
-  );
-}
-
-function JogadoresTab() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <Users className="w-16 h-16 text-[#1a2a1a] mb-4" />
-      <h3 className="text-xl font-bold text-[#e8f5e9] mb-2">Estatísticas de Jogadores</h3>
-      <p className="text-[#4a6b4a] max-w-md">
-        Em breve: Ranking individual de jogadores, top fraggers,
-        média de kills por partida e histórico pessoal.
       </p>
     </div>
   );
