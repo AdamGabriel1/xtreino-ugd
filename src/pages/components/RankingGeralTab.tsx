@@ -10,6 +10,7 @@ import {
   Award,
   Zap,
   Users,
+  Calendar,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import {
@@ -191,59 +192,138 @@ export default function RankingGeralTab() {
                 const teamPlayers = getTeamPlayers(team.teamName);
 
                 return (
-                  <tr
-                    key={team.teamName}
-                    className={`hover:bg-[#1a1a24] transition-colors cursor-pointer ${getRankStyle(index)}`}
-                    onClick={() => setExpandedTeam(isExpanded ? null : team.teamName)}
-                  >
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center">
-                        {getRankIcon(index)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-bold text-[#f0f0f5]">{team.teamName}</p>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-sm font-medium text-purple-400">{team.xtreinosPlayed}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2 text-xs">
-                        {team.top1Count > 0 && (
-                          <span className="text-yellow-400 font-bold">{team.top1Count}🥇</span>
-                        )}
-                        {team.top2Count > 0 && (
-                          <span className="text-gray-300 font-bold">{team.top2Count}🥈</span>
-                        )}
-                        {team.top3Count > 0 && (
-                          <span className="text-amber-500 font-bold">{team.top3Count}🥉</span>
-                        )}
-                        {team.top1Count === 0 && team.top2Count === 0 && team.top3Count === 0 && (
-                          <span className="text-[#5a5a6e]">-</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`text-sm font-bold ${team.bestPosition && team.bestPosition <= 3 ? getPosColor(team.bestPosition) : "text-[#8a8a9e]"}`}>
-                        {team.bestPosition ? `${team.bestPosition}º` : "-"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center bg-yellow-500/5">
-                      <span className="text-sm font-bold text-yellow-400">{team.totalPosPoints}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-sm text-[#8a8a9e]">{team.totalKills}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center bg-red-500/5">
-                      <span className="text-sm font-bold text-red-400">{team.totalKillPoints}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center bg-green-500/5">
-                      <span className="text-lg font-bold text-green-400">{team.totalPoints}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <ChevronDown className={`w-4 h-4 text-[#5a5a6e] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                    </td>
-                  </tr>
+                  <>
+                    <tr
+                      key={team.teamName}
+                      className={`hover:bg-[#1a1a24] transition-colors cursor-pointer ${getRankStyle(index)}`}
+                      onClick={() => setExpandedTeam(isExpanded ? null : team.teamName)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center">
+                          {getRankIcon(index)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-bold text-[#f0f0f5]">{team.teamName}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-sm font-medium text-purple-400">{team.xtreinosPlayed}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2 text-xs">
+                          {team.top1Count > 0 && (
+                            <span className="text-yellow-400 font-bold">{team.top1Count}🥇</span>
+                          )}
+                          {team.top2Count > 0 && (
+                            <span className="text-gray-300 font-bold">{team.top2Count}🥈</span>
+                          )}
+                          {team.top3Count > 0 && (
+                            <span className="text-amber-500 font-bold">{team.top3Count}🥉</span>
+                          )}
+                          {team.top1Count === 0 && team.top2Count === 0 && team.top3Count === 0 && (
+                            <span className="text-[#5a5a6e]">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`text-sm font-bold ${team.bestPosition && team.bestPosition <= 3 ? getPosColor(team.bestPosition) : "text-[#8a8a9e]"}`}>
+                          {team.bestPosition ? `${team.bestPosition}º` : "-"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center bg-yellow-500/5">
+                        <span className="text-sm font-bold text-yellow-400">{team.totalPosPoints}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-sm text-[#8a8a9e]">{team.totalKills}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center bg-red-500/5">
+                        <span className="text-sm font-bold text-red-400">{team.totalKillPoints}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center bg-green-500/5">
+                        <span className="text-lg font-bold text-green-400">{team.totalPoints}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <ChevronDown className={`w-4 h-4 text-[#5a5a6e] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </td>
+                    </tr>
+
+                    {/* Expandable: histórico de xtreinos e jogadores */}
+                    {isExpanded && (
+                      <tr className="bg-[#0a0a0f]">
+                        <td colSpan={10} className="px-4 py-4">
+                          <div className="ml-4 space-y-4">
+                            {/* Histórico de X-Treinos */}
+                            <div>
+                              <h4 className="text-xs font-medium text-[#5a5a6e] mb-3 flex items-center gap-2">
+                                <Calendar className="w-3 h-3" />
+                                Histórico de X-Treinos ({team.xtreinos.length})
+                              </h4>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b border-[#2a2a3a]">
+                                      <th className="px-3 py-2 text-left text-xs text-[#5a5a6e]">Data</th>
+                                      <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Q1</th>
+                                      <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Q2</th>
+                                      <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Q3</th>
+                                      <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Pts Pos</th>
+                                      <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Kills</th>
+                                      <th className="px-3 py-2 text-center text-xs text-[#5a5a6e]">Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-[#2a2a3a]/50">
+                                    {team.xtreinos
+                                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                      .map((xt) => (
+                                        <tr key={xt.date} className="hover:bg-[#1a1a24]/50">
+                                          <td className="px-3 py-2 text-[#8a8a9e]">
+                                            {xt.date.split("-")[2]}/{xt.date.split("-")[1]}
+                                          </td>
+                                          <td className="px-3 py-2 text-center">
+                                            <span className={getPosColor(xt.q1Pos)}>{xt.q1Pos ?? "-"}</span>
+                                          </td>
+                                          <td className="px-3 py-2 text-center">
+                                            <span className={getPosColor(xt.q2Pos)}>{xt.q2Pos ?? "-"}</span>
+                                          </td>
+                                          <td className="px-3 py-2 text-center">
+                                            <span className={getPosColor(xt.q3Pos)}>{xt.q3Pos ?? "-"}</span>
+                                          </td>
+                                          <td className="px-3 py-2 text-center text-yellow-400 font-bold">{xt.totalPosPoints}</td>
+                                          <td className="px-3 py-2 text-center text-[#8a8a9e]">{xt.totalKills}</td>
+                                          <td className="px-3 py-2 text-center text-green-400 font-bold">{xt.totalPoints}</td>
+                                        </tr>
+                                      ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+
+                            {/* Jogadores do time */}
+                            {teamPlayers.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-medium text-[#5a5a6e] mb-2 flex items-center gap-2">
+                                  <Users className="w-3 h-3" />
+                                  Jogadores ({teamPlayers.length})
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {teamPlayers.map((player) => (
+                                    <div key={player.playerName} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a24] border border-[#2a2a3a]">
+                                      <Target className="w-3 h-3 text-green-400" />
+                                      <span className="text-sm text-[#f0f0f5]">{player.playerName}</span>
+                                      <span className="text-xs text-green-400 font-bold">{player.totalKills}k</span>
+                                      <span className="text-xs text-[#5a5a6e]">
+                                        ({player.q1Kills}/{player.q2Kills}/{player.q3Kills})
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 );
               })}
             </tbody>
