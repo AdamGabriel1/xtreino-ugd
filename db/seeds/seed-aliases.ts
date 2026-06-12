@@ -28,6 +28,17 @@ export function seedAliases() {
     "Santz": ["UGD Sant", "UGD Neo"],
     "MOIZO": ["CMF MOIZO", "CMF Moizo"],
     "Kaze": ["UGD Kaze"],
+    "Treon": ["UGD Treon"],
+    "CMF Léo": ["CMF Leo"],
+    "VN": ["VN' FURY"],
+    "Arise": ["UGD Arise"],
+    "snow777": ["RED snow777", "REÐ snow777"],
+    "Lango": ["REÐ LANGØ", "RED LANGO"],
+    "DEX": ["Dexz"],
+    "OFF": ["OFFz"],
+    "NG": ["MayaZ"],
+    "Apenas": ["REÐ APENAS, REÐ Apenas, RED APENAS"],
+    "MARTNA": ["REÐ M4RTINA"],
     // Adicione mais aqui: "Nick Atual": ["antigo1", "antigo2"]
   };
 
