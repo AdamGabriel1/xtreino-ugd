@@ -9,6 +9,7 @@ import {
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";
 import JogadoresTab from "./components/JogadoresTab";
+import RankingGeralTab from "./components/RankingGeralTab";
 
 // ============================================================
 // TIPOS
@@ -56,18 +57,6 @@ const TABS: TabConfig[] = [
 // ============================================================
 // PLACEHOLDERS PARA ABAS FUTURAS
 // ============================================================
-function RankingGeralTab() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <Trophy className="w-16 h-16 text-[#1a2a1a] mb-4" />
-      <h3 className="text-xl font-bold text-[#e8f5e9] mb-2">Ranking Geral</h3>
-      <p className="text-[#4a6b4a] max-w-md">
-        Em breve: Ranking acumulado de todas as edições dos X-Treinos.
-        Aqui você verá a pontuação total de cada time ao longo de todo o histórico.
-      </p>
-    </div>
-  );
-}
 
 function RankingMensalTab() {
   return (

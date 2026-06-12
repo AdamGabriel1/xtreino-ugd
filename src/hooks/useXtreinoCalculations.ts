@@ -49,23 +49,18 @@ export interface TeamXtreinoStats {
   teamName: string;
   date: string;
   xtreinoId: number;
-  // Posições
   q1Pos: number | null;
   q2Pos: number | null;
   q3Pos: number | null;
-  // Pontos por posição
   q1PosPoints: number;
   q2PosPoints: number;
   q3PosPoints: number;
   totalPosPoints: number;
-  // Kills
   q1Kills: number;
   q2Kills: number;
   q3Kills: number;
   totalKills: number;
-  // Pontos por kills
   totalKillPoints: number;
-  // Total geral
   totalPoints: number;
 }
 
@@ -108,6 +103,33 @@ export interface TeamAccumulatedStats {
   participations: number;
   avgPoints: number;
   xtreinoDates: string[];
+}
+
+// ===== NOVO: Stats para Ranking Geral =====
+export interface TeamRankingHistoryItem {
+  date: string;
+  xtreinoId: number;
+  q1Pos: number | null;
+  q2Pos: number | null;
+  q3Pos: number | null;
+  totalPosPoints: number;
+  totalKills: number;
+  totalKillPoints: number;
+  totalPoints: number;
+}
+
+export interface TeamRankingStats {
+  teamName: string;
+  totalPoints: number;
+  totalKills: number;
+  totalKillPoints: number;
+  totalPosPoints: number;
+  xtreinosPlayed: number;
+  top1Count: number;
+  top2Count: number;
+  top3Count: number;
+  bestPosition: number | null;
+  xtreinos: TeamRankingHistoryItem[];
 }
 
 // ============================================================
@@ -271,6 +293,77 @@ export function calcTeamAccumulatedStats(
   }));
 }
 
+// ===== NOVO: Calcula stats de ranking geral por time =====
+export function calcTeamRankingStats(
+  results: XtreinoResult[],
+  playerStats: XtreinoPlayerStat[]
+): TeamRankingStats[] {
+  const map = new Map<string, TeamRankingStats>();
+
+  for (const result of results) {
+    const stats = calcTeamXtreinoStats(result, playerStats);
+    const existing = map.get(result.teamName);
+
+    const historyItem: TeamRankingHistoryItem = {
+      date: result.date,
+      xtreinoId: result.xtreinoId,
+      q1Pos: result.q1Pos,
+      q2Pos: result.q2Pos,
+      q3Pos: result.q3Pos,
+      totalPosPoints: stats.totalPosPoints,
+      totalKills: stats.totalKills,
+      totalKillPoints: stats.totalKillPoints,
+      totalPoints: stats.totalPoints,
+    };
+
+    if (!existing) {
+      const positions = [result.q1Pos, result.q2Pos, result.q3Pos].filter(
+        (p): p is number => p !== null
+      );
+      const bestPos = positions.length > 0 ? Math.min(...positions) : null;
+
+      map.set(result.teamName, {
+        teamName: result.teamName,
+        totalPoints: stats.totalPoints,
+        totalKills: stats.totalKills,
+        totalKillPoints: stats.totalKillPoints,
+        totalPosPoints: stats.totalPosPoints,
+        xtreinosPlayed: 1,
+        top1Count: [result.q1Pos, result.q2Pos, result.q3Pos].filter((p) => p === 1).length,
+        top2Count: [result.q1Pos, result.q2Pos, result.q3Pos].filter((p) => p === 2).length,
+        top3Count: [result.q1Pos, result.q2Pos, result.q3Pos].filter((p) => p === 3).length,
+        bestPosition: bestPos,
+        xtreinos: [historyItem],
+      });
+    } else {
+      existing.totalPoints += stats.totalPoints;
+      existing.totalKills += stats.totalKills;
+      existing.totalKillPoints += stats.totalKillPoints;
+      existing.totalPosPoints += stats.totalPosPoints;
+      existing.xtreinosPlayed += 1;
+
+      const podiums = [result.q1Pos, result.q2Pos, result.q3Pos];
+      existing.top1Count += podiums.filter((p) => p === 1).length;
+      existing.top2Count += podiums.filter((p) => p === 2).length;
+      existing.top3Count += podiums.filter((p) => p === 3).length;
+
+      const positions = [result.q1Pos, result.q2Pos, result.q3Pos].filter(
+        (p): p is number => p !== null
+      );
+      if (positions.length > 0) {
+        const minPos = Math.min(...positions);
+        existing.bestPosition = existing.bestPosition
+          ? Math.min(existing.bestPosition, minPos)
+          : minPos;
+      }
+
+      existing.xtreinos.push(historyItem);
+    }
+  }
+
+  return Array.from(map.values());
+}
+
 /** Filtra dados por mês e/ou dia */
 export function filterByDate<T extends { date: string }>(
   data: T[],
@@ -316,21 +409,15 @@ export interface UseXtreinoCalculationsProps {
 }
 
 export interface UseXtreinoCalculationsReturn {
-  // Dados filtrados
   filteredResults: XtreinoResult[];
   filteredPlayerStats: XtreinoPlayerStat[];
-
-  // Meses e dias disponíveis
   availableMonths: string[];
   availableDates: string[];
-
-  // Stats calculadas
   teamXtreinoStats: TeamXtreinoStats[];
   playerXtreinoStats: PlayerXtreinoStats[];
   playerAccumulated: PlayerAccumulatedStats[];
   teamAccumulated: TeamAccumulatedStats[];
-
-  // Resumo do período
+  teamRanking: TeamRankingStats[];
   periodSummary: {
     totalKills: number;
     totalPosPoints: number;
@@ -349,7 +436,6 @@ export function useXtreinoCalculations({
   selectedDate = "",
 }: UseXtreinoCalculationsProps): UseXtreinoCalculationsReturn {
 
-  // Dados filtrados
   const filteredResults = useMemo(
     () => filterByDate(results, selectedMonth, selectedDate),
     [results, selectedMonth, selectedDate]
@@ -360,14 +446,12 @@ export function useXtreinoCalculations({
     [playerStats, selectedMonth, selectedDate]
   );
 
-  // Meses e dias disponíveis
   const availableMonths = useMemo(() => extractMonths(results), [results]);
   const availableDates = useMemo(
     () => (selectedMonth ? extractDays(results, selectedMonth) : []),
     [results, selectedMonth]
   );
 
-  // Stats por xtreino
   const teamXtreinoStats = useMemo(
     () => filteredResults.map((r) => calcTeamXtreinoStats(r, filteredPlayerStats)),
     [filteredResults, filteredPlayerStats]
@@ -378,7 +462,6 @@ export function useXtreinoCalculations({
     [filteredPlayerStats]
   );
 
-  // Stats acumuladas
   const playerAccumulated = useMemo(
     () => calcPlayerAccumulatedStats(filteredPlayerStats),
     [filteredPlayerStats]
@@ -389,7 +472,12 @@ export function useXtreinoCalculations({
     [filteredResults, filteredPlayerStats]
   );
 
-  // Resumo do período
+  // ===== NOVO: Ranking Geral (sempre calcula sobre todos os dados, não filtrados) =====
+  const teamRanking = useMemo(
+    () => calcTeamRankingStats(results, playerStats),
+    [results, playerStats]
+  );
+
   const periodSummary = useMemo(() => {
     if (!filteredResults.length && !filteredPlayerStats.length) return null;
 
@@ -424,6 +512,7 @@ export function useXtreinoCalculations({
     playerXtreinoStats,
     playerAccumulated,
     teamAccumulated,
+    teamRanking,
     periodSummary,
   };
 }

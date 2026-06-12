@@ -41,6 +41,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src"
-, "src/hooks/useXTreinos.ts"  ]
+    "src" ]
 }
