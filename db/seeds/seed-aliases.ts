@@ -26,6 +26,8 @@ export function seedAliases() {
   const aliasMap: Record<string, string[]> = {
     "Cool": ["UGD cool7", "Rivers AR", "UGD Ares", "cool"],
     "Santz": ["UGD Sant", "UGD Neo"],
+    "MOIZO": ["CMF MOIZO", "CMF Moizo"],
+    "Kaze": ["UGD Kaze"],
     // Adicione mais aqui: "Nick Atual": ["antigo1", "antigo2"]
   };
 
