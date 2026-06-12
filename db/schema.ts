@@ -364,3 +364,10 @@ export const playerAliases = sqliteTable("player_aliases", {
   alias: text("alias").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+export const playerMerges = sqliteTable("player_merges", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  masterPlayerId: integer("master_player_id", { mode: "number" }).notNull().references(() => players.id, { onDelete: "cascade" }),
+  mergedPlayerId: integer("merged_player_id", { mode: "number" }).notNull().references(() => players.id, { onDelete: "cascade" }).unique(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
