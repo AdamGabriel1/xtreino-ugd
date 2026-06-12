@@ -357,3 +357,10 @@ export const salinhas = sqliteTable("salinhas", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+export const playerAliases = sqliteTable("player_aliases", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  playerId: integer("player_id", { mode: "number" }).notNull().references(() => players.id, { onDelete: "cascade" }),
+  alias: text("alias").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});

@@ -16,6 +16,8 @@ import {
   Users,
   Award,
   ArrowLeft,
+  Tag,
+  History,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import {
@@ -32,11 +34,9 @@ export default function JogadoresTab() {
   const [sortField, setSortField] = useState<SortField>("totalKills");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
-  // Filtros de mês e dia do xtreino
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
 
-  // Queries
   const { data: playersList, isLoading: playersLoading } = trpc.players.list.useQuery(
     search ? { search } : undefined
   );
@@ -44,13 +44,11 @@ export default function JogadoresTab() {
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats, isLoading: statsLoading } = trpc.xtreinos.listPlayerStats.useQuery();
 
-  // Query do detalhe do jogador - só executa quando tem ID válido
   const { data: playerDetail, isLoading: detailLoading } = trpc.players.getById.useQuery(
     { id: selectedPlayerId ?? 0 },
     { enabled: !!selectedPlayerId && selectedPlayerId > 0 }
   );
 
-  // Hook de cálculos
   const {
     playerAccumulated,
     playerXtreinoStats,
@@ -66,22 +64,25 @@ export default function JogadoresTab() {
 
   const isSingleXtreino = !!selectedDate;
 
-  // Merge com dados do DB
+  // Enriched players com aliases
   const enrichedPlayers = useMemo(() => {
     if (!playersList) return [];
 
     return playersList.map((p) => {
       const nameKey = p.nickname.trim().toLowerCase();
+      const aliasKeys = (p.aliases ?? []).map((a: string) => a.trim().toLowerCase());
+      const allNicks = [nameKey, ...aliasKeys];
 
       if (isSingleXtreino) {
         const dayStats = playerXtreinoStats.find(
-          (s) => s.playerName.trim().toLowerCase() === nameKey && s.date === selectedDate
+          (s) => allNicks.includes(s.playerName.trim().toLowerCase()) && s.date === selectedDate
         );
 
         if (dayStats) {
           return {
             id: p.id,
             nickname: p.nickname,
+            aliases: p.aliases ?? [],
             teamId: p.teamId,
             teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
             totalKills: dayStats.totalKills,
@@ -97,6 +98,7 @@ export default function JogadoresTab() {
         return {
           id: p.id,
           nickname: p.nickname,
+          aliases: p.aliases ?? [],
           teamId: p.teamId,
           teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
           totalKills: 0,
@@ -110,28 +112,37 @@ export default function JogadoresTab() {
         };
       }
 
-      const stats = playerAccumulated.find(
-        (s) => s.playerName.trim().toLowerCase() === nameKey
+      // Modo acumulado: busca stats por qualquer nick (atual ou alias)
+      const allStats = playerAccumulated.filter(
+        (s) => allNicks.includes(s.playerName.trim().toLowerCase())
       );
+
+      // Soma stats de todos os nicks
+      const totalKills = allStats.reduce((sum, s) => sum + (s.totalKills ?? 0), 0);
+      const totalQ1 = allStats.reduce((sum, s) => sum + (s.totalQ1Kills ?? 0), 0);
+      const totalQ2 = allStats.reduce((sum, s) => sum + (s.totalQ2Kills ?? 0), 0);
+      const totalQ3 = allStats.reduce((sum, s) => sum + (s.totalQ3Kills ?? 0), 0);
+      const totalPart = allStats.reduce((sum, s) => sum + (s.participations ?? 0), 0);
+      const allDates = [...new Set(allStats.flatMap((s) => s.xtreinoDates ?? []))];
 
       return {
         id: p.id,
         nickname: p.nickname,
+        aliases: p.aliases ?? [],
         teamId: p.teamId,
         teamName: teamsList?.find((t) => t.id === p.teamId)?.name ?? "Sem equipe",
-        totalKills: stats?.totalKills ?? p.xtreinoKills ?? 0,
-        q1Kills: stats?.totalQ1Kills ?? 0,
-        q2Kills: stats?.totalQ2Kills ?? 0,
-        q3Kills: stats?.totalQ3Kills ?? 0,
-        participations: stats?.participations ?? p.xtreinoParticipations ?? 0,
-        avgKills: stats?.avgKills ?? 0,
-        killPoints: calcKillPoints(stats?.totalKills ?? p.xtreinoKills ?? 0),
-        xtreinoDates: stats?.xtreinoDates ?? [],
+        totalKills: totalKills || (p.xtreinoKills ?? 0),
+        q1Kills: totalQ1,
+        q2Kills: totalQ2,
+        q3Kills: totalQ3,
+        participations: totalPart || (p.xtreinoParticipations ?? 0),
+        avgKills: totalPart > 0 ? Number((totalKills / totalPart).toFixed(1)) : 0,
+        killPoints: calcKillPoints(totalKills || (p.xtreinoKills ?? 0)),
+        xtreinoDates: allDates,
       };
     });
   }, [playersList, playerAccumulated, playerXtreinoStats, teamsList, isSingleXtreino, selectedDate]);
 
-  // Ordenar
   const sortedPlayers = useMemo(() => {
     return [...enrichedPlayers].sort((a, b) => {
       const aVal = a[sortField] ?? 0;
@@ -140,16 +151,14 @@ export default function JogadoresTab() {
     });
   }, [enrichedPlayers, sortField, sortDir]);
 
-  // Stats do jogador selecionado (histórico de xtreinos) - busca pelo nickname do playerDetail
   const selectedPlayerXtreinoHistory = useMemo(() => {
     if (!playerDetail) return [];
-    const nameKey = playerDetail.nickname.toLowerCase();
+    const allNicks = [playerDetail.nickname, ...(playerDetail.aliases ?? [])];
     return playerXtreinoStats.filter(
-      (s) => s.playerName.toLowerCase() === nameKey
+      (s) => allNicks.includes(s.playerName)
     );
   }, [playerDetail, playerXtreinoStats]);
 
-  // ===== HELPERS =====
   const getRankIcon = (index: number) => {
     if (index === 0) return <Trophy className="w-5 h-5 text-green-400" />;
     if (index === 1) return <Medal className="w-5 h-5 text-green-300" />;
@@ -189,7 +198,6 @@ export default function JogadoresTab() {
 
   // ===== VIEW: DETALHE DO JOGADOR =====
   if (selectedPlayerId !== null) {
-    // Loading state
     if (detailLoading) {
       return (
         <div className="space-y-6">
@@ -220,7 +228,6 @@ export default function JogadoresTab() {
       );
     }
 
-    // Error / Not found state
     if (!playerDetail) {
       return (
         <div className="space-y-6">
@@ -242,10 +249,8 @@ export default function JogadoresTab() {
       );
     }
 
-    // Success state - mostra o detalhe do jogador
     return (
       <div className="space-y-6">
-        {/* Header do jogador */}
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -272,6 +277,27 @@ export default function JogadoresTab() {
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Aliases / Nicks antigos */}
+          {(playerDetail.aliases ?? []).length > 0 && (
+            <div className="mb-6 bg-[#0a0a0f] rounded-lg border border-[#2a2a3a] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <History className="w-4 h-4 text-[#5a5a6e]" />
+                <span className="text-xs text-[#5a5a6e] uppercase font-medium">Nicks Anteriores</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {playerDetail.aliases.map((alias: string) => (
+                  <span
+                    key={alias}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1a1a24] border border-[#2a2a3a] text-sm text-[#8a8a9e]"
+                  >
+                    <Tag className="w-3 h-3 text-[#5a5a6e]" />
+                    {alias}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -570,7 +596,12 @@ export default function JogadoresTab() {
                 />
               </div>
               <h3 className="text-lg font-bold text-[#f0f0f5] mb-1">{p.nickname}</h3>
-              <p className="text-sm text-[#8a8a9e] mb-3">{p.teamName}</p>
+              <p className="text-sm text-[#8a8a9e] mb-2">{p.teamName}</p>
+              {(p.aliases ?? []).length > 0 && (
+                <p className="text-xs text-[#5a5a6e] mb-3 truncate">
+                  aka {p.aliases.join(", ")}
+                </p>
+              )}
               <div className="flex items-center gap-4">
                 <div>
                   <p className="text-xs text-[#5a5a6e]">Kills XT</p>
@@ -679,11 +710,18 @@ export default function JogadoresTab() {
                       <div className="flex items-center gap-2">{getRankIcon(i)}</div>
                     </td>
                     <td className="px-6 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <Target className="w-4 h-4 text-green-400" />
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                            <Target className="w-4 h-4 text-green-400" />
+                          </div>
+                          <span className="text-sm font-bold text-[#f0f0f5]">{p.nickname}</span>
                         </div>
-                        <span className="text-sm font-bold text-[#f0f0f5]">{p.nickname}</span>
+                        {(p.aliases ?? []).length > 0 && (
+                          <span className="text-xs text-[#5a5a6e] ml-11">
+                            aka {p.aliases.join(", ")}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-3 text-sm text-[#8a8a9e]">{p.teamName}</td>
@@ -695,7 +733,7 @@ export default function JogadoresTab() {
                     <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q3Kills}</td>
                     {!isSingleXtreino && (
                       <>
-                        <td className="px-6 py-3 text-sm text-center text-[#8a8a6e]">
+                        <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">
                           {p.participations}
                         </td>
                         <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">

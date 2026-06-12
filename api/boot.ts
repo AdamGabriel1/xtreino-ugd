@@ -18,6 +18,7 @@ import {
   seedLogos,
   seedLogosAuto,
   seedAllXtreinos,  // 🆕 seed genérico de xtreinos
+  seedAliases,
 } from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
@@ -87,8 +88,11 @@ if (env.isProduction) {
     // Limpa seeds antigos de xtreino (só na migração, depois pode remover esta linha)
     clearSeedRuns();
 
-    // 🆕 Seed genérico de todos os xtreinos (substitui os seeds individuais)
+    // 🆕 Seed genérico de todos os xtreinos
     runSeedIfNeeded("xtreinos_all", seedAllXtreinos);
+
+    // Seed de aliases (nicks antigos dos jogadores)
+    runSeedIfNeeded("aliases", seedAliases);  // ← ADICIONE
 
     // Seed de logos (manual ou auto)
     runSeedIfNeeded("logos", seedLogos);
