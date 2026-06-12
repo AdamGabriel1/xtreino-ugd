@@ -254,6 +254,7 @@ export default function Clans() {
     );
   }, [selectedPlayer, playerXtreinoStats]);
 
+  // @ts-expect-error — usado na seção de listagem de clãs
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDir(sortDir === "desc" ? "asc" : "desc");

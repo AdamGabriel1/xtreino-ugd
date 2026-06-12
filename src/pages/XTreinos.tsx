@@ -1,7 +1,5 @@
-import { useState } from "react";
 import {
   Dumbbell,
-  BarChart3,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";
