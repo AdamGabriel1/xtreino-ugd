@@ -176,7 +176,7 @@ export default function Scrims() {
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
           <div className="flex items-center gap-3 mb-2">
-            <Swords className="w-8 h-8 text-red-400" />
+            <Swords className="w-8 h-8 text-emerald-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Scrims</h1>
           </div>
           <p className="text-[#8a8a9e]">{getTitle()}</p>
@@ -190,7 +190,7 @@ export default function Scrims() {
             onClick={() => { setTab("agendados"); setSelectedDate("all"); }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               tab === "agendados"
-                ? "bg-red-500 text-white"
+                ? "bg-emerald-500 text-white"
                 : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
             }`}
           >
@@ -201,7 +201,7 @@ export default function Scrims() {
             onClick={() => { setTab("historico-times"); setSelectedDate("all"); }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               tab === "historico-times"
-                ? "bg-red-500 text-white"
+                ? "bg-emerald-500 text-white"
                 : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
             }`}
           >
@@ -212,7 +212,7 @@ export default function Scrims() {
             onClick={() => { setTab("historico-jogadores"); setSelectedDate("all"); }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               tab === "historico-jogadores"
-                ? "bg-red-500 text-white"
+                ? "bg-emerald-500 text-white"
                 : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
             }`}
           >
@@ -231,7 +231,7 @@ export default function Scrims() {
                   onClick={() => setFilterModality(m)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     filterModality === m
-                      ? "bg-red-500 text-white"
+                      ? "bg-emerald-500 text-white"
                       : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
                   }`}
                 >
@@ -254,7 +254,7 @@ export default function Scrims() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 rounded-full bg-[#1a1a24] border border-[#2a2a3a] flex items-center justify-center">
-                          <Swords className="w-5 h-5 text-red-400" />
+                          <Swords className="w-5 h-5 text-emerald-400" />
                         </div>
                       </div>
                       <div className="text-center min-w-[100px]">
@@ -284,7 +284,7 @@ export default function Scrims() {
                   {scrim.result && (
                     <div className="mt-4 pt-4 border-t border-[#2a2a3a]">
                       <p className="text-sm text-[#8a8a9e]">
-                        <span className="text-green-400 font-medium">Resultado:</span> {scrim.result}
+                        <span className="text-emerald-400 font-medium">Resultado:</span> {scrim.result}
                       </p>
                     </div>
                   )}
@@ -312,7 +312,7 @@ export default function Scrims() {
               <select
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-[#12121a] text-[#f0f0f5] text-sm px-4 py-2 rounded-lg border border-[#2a2a3a] focus:outline-none focus:border-red-500 transition-colors"
+                className="bg-[#12121a] text-[#f0f0f5] text-sm px-4 py-2 rounded-lg border border-[#2a2a3a] focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 <option value="all">Todos os tempos</option>
                 {availableDates?.map((date) => (
@@ -324,7 +324,7 @@ export default function Scrims() {
               {selectedDate !== "all" && (
                 <button
                   onClick={() => setSelectedDate("all")}
-                  className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
                   Limpar filtro
                 </button>
@@ -381,7 +381,7 @@ export default function Scrims() {
                           </td>
                         )}
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm font-bold text-red-400">{r.points ?? 0}</span>
+                          <span className="text-sm font-bold text-emerald-400">{r.points ?? 0}</span>
                         </td>
                         <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.kills ?? 0}</td>
                         <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">{r.wins ?? 0}</td>

@@ -302,7 +302,7 @@ export default function Clans() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active": return "bg-green-500/10 text-green-400 border-green-500/20";
+      case "active": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
       case "disbanded": return "bg-red-500/10 text-red-400 border-red-500/20";
       case "inactive": return "bg-[#1a1a24] text-[#5a5a6e] border-[#2a2a3a]";
       default: return "bg-[#1a1a24] text-[#5a5a6e] border-[#2a2a3a]";
@@ -310,16 +310,16 @@ export default function Clans() {
   };
 
   const getRankIcon = (index: number) => {
-    if (index === 0) return <Trophy className="w-5 h-5 text-green-400" />;
-    if (index === 1) return <Medal className="w-5 h-5 text-green-300" />;
-    if (index === 2) return <Medal className="w-5 h-5 text-green-500" />;
+    if (index === 0) return <Trophy className="w-5 h-5 text-emerald-400" />;
+    if (index === 1) return <Medal className="w-5 h-5 text-emerald-300" />;
+    if (index === 2) return <Medal className="w-5 h-5 text-emerald-500" />;
     return <span className="w-5 text-center text-sm font-bold text-[#5a5a6e]">{index + 1}</span>;
   };
 
   const getRankStyle = (index: number) => {
-    if (index === 0) return "bg-gradient-to-r from-green-500/10 to-transparent border-l-2 border-green-400";
-    if (index === 1) return "bg-gradient-to-r from-green-400/10 to-transparent border-l-2 border-green-300";
-    if (index === 2) return "bg-gradient-to-r from-green-600/10 to-transparent border-l-2 border-green-500";
+    if (index === 0) return "bg-gradient-to-r from-emerald-500/10 to-transparent border-l-2 border-emerald-400";
+    if (index === 1) return "bg-gradient-to-r from-emerald-400/10 to-transparent border-l-2 border-emerald-300";
+    if (index === 2) return "bg-gradient-to-r from-emerald-600/10 to-transparent border-l-2 border-emerald-500";
     return "hover:bg-[#1a1a24]";
   };
 
@@ -353,8 +353,8 @@ export default function Clans() {
               </button>
 
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-900/30 to-green-600/10 flex items-center justify-center shrink-0 border border-[#2a2a3a]">
-                  <Target className="w-8 h-8 text-green-400/50" />
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-900/30 to-emerald-600/10 flex items-center justify-center shrink-0 border border-[#2a2a3a]">
+                  <Target className="w-8 h-8 text-emerald-400/50" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-[#f0f0f5]">{playerDetail.nickname}</h1>
@@ -371,7 +371,7 @@ export default function Clans() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-4 h-4 text-green-400" />
+                  <Target className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">K/D Geral</span>
                 </div>
                 <p className="text-xl font-bold text-[#f0f0f5]">
@@ -382,23 +382,23 @@ export default function Clans() {
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Swords className="w-4 h-4 text-green-400" />
+                  <Swords className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Kills Geral</span>
                 </div>
                 <p className="text-xl font-bold text-[#f0f0f5]">{playerDetail.kills}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-4 h-4 text-green-400" />
+                  <Award className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">XT Kills</span>
                 </div>
-                <p className="text-xl font-bold text-green-400">
+                <p className="text-xl font-bold text-emerald-400">
                   {playerDetail.totalXtreinoKills ?? 0}
                 </p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-4 h-4 text-green-400" />
+                  <Calendar className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">XT Partic.</span>
                 </div>
                 <p className="text-xl font-bold text-[#f0f0f5]">
@@ -412,7 +412,7 @@ export default function Clans() {
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
                 <div className="px-6 py-4 border-b border-[#2a2a3a]">
                   <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-green-400" />
+                    <BarChart3 className="w-5 h-5 text-emerald-400" />
                     Histórico de XTreinos
                     {selectedMonth && (
                       <span className="text-sm font-normal text-[#5a5a6e]">
@@ -442,8 +442,8 @@ export default function Clans() {
                           <td className="px-4 py-3 text-sm text-center text-[#8a8a9e]">{stat.q1Kills}</td>
                           <td className="px-4 py-3 text-sm text-center text-[#8a8a9e]">{stat.q2Kills}</td>
                           <td className="px-4 py-3 text-sm text-center text-[#8a8a9e]">{stat.q3Kills}</td>
-                          <td className="px-4 py-3 text-sm text-center text-green-400 font-bold">{stat.totalKills}</td>
-                          <td className="px-4 py-3 text-sm text-center text-green-400">{stat.killPoints}</td>
+                          <td className="px-4 py-3 text-sm text-center text-emerald-400 font-bold">{stat.totalKills}</td>
+                          <td className="px-4 py-3 text-sm text-center text-emerald-400">{stat.killPoints}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -496,11 +496,11 @@ export default function Clans() {
               </button>
 
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-red-900/30 to-red-600/10 flex items-center justify-center shrink-0 border border-[#2a2a3a]">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-900/30 to-emerald-600/10 flex items-center justify-center shrink-0 border border-[#2a2a3a]">
                   {teamDetail.logo ? (
                     <img src={teamDetail.logo} alt={teamDetail.name} className="w-12 h-12 rounded-lg object-cover" />
                   ) : (
-                    <Shield className="w-8 h-8 text-red-400/50" />
+                    <Shield className="w-8 h-8 text-emerald-400/50" />
                   )}
                 </div>
                 <div>
@@ -535,7 +535,7 @@ export default function Clans() {
                     <select
                       value={selectedMonth}
                       onChange={(e) => { setSelectedMonth(e.target.value); setSelectedDate(""); }}
-                      className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50 min-w-[140px]"
+                      className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-emerald-500/50 min-w-[140px]"
                     >
                       <option value="">Todos os meses</option>
                       {availableMonths.map((m) => (
@@ -551,7 +551,7 @@ export default function Clans() {
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
                       disabled={!selectedMonth}
-                      className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-green-500/50 min-w-[140px] disabled:opacity-40"
+                      className="px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-emerald-500/50 min-w-[140px] disabled:opacity-40"
                     >
                       <option value="">Todos os dias</option>
                       {availableDates.map((d) => (
@@ -565,7 +565,7 @@ export default function Clans() {
                 {(selectedMonth || selectedDate) && (
                   <button
                     onClick={() => { setSelectedMonth(""); setSelectedDate(""); }}
-                    className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                    className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
                   >
                     Limpar filtros
                   </button>
@@ -598,10 +598,10 @@ export default function Clans() {
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-4 h-4 text-green-400" />
+                  <Target className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Jogadores</span>
                 </div>
-                <p className="text-2xl font-bold text-green-400">{teamPlayers.length}</p>
+                <p className="text-2xl font-bold text-emerald-400">{teamPlayers.length}</p>
               </div>
             </div>
 
@@ -609,28 +609,28 @@ export default function Clans() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Swords className="w-4 h-4 text-green-400" />
+                  <Swords className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Kills XT</span>
                 </div>
-                <p className="text-2xl font-bold text-green-400">{teamTotalKills}</p>
+                <p className="text-2xl font-bold text-emerald-400">{teamTotalKills}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-4 h-4 text-green-400" />
+                  <Award className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Pts</span>
                 </div>
                 <p className="text-2xl font-bold text-[#f0f0f5]">{teamTotalPoints}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-4 h-4 text-green-400" />
+                  <Calendar className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Participações</span>
                 </div>
                 <p className="text-2xl font-bold text-[#f0f0f5]">{teamTotalParticipations}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-green-400" />
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Média/Player</span>
                 </div>
                 <p className="text-2xl font-bold text-[#f0f0f5]">
@@ -643,7 +643,7 @@ export default function Clans() {
             <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
               <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
                 <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
-                  <Users className="w-5 h-5 text-red-400" />
+                  <Users className="w-5 h-5 text-emerald-400" />
                   Elenco Completo
                   {isSingleXtreino && (
                     <span className="text-sm font-normal text-[#5a5a6e]">
@@ -715,7 +715,7 @@ export default function Clans() {
                                 {getRoleLabel(p.role)}
                               </span>
                             </td>
-                            <td className="px-6 py-3 text-sm text-center font-bold text-green-400">{p.totalXtreinoKills}</td>
+                            <td className="px-6 py-3 text-sm text-center font-bold text-emerald-400">{p.totalXtreinoKills}</td>
                             <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q1Kills}</td>
                             <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q2Kills}</td>
                             <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.q3Kills}</td>
@@ -725,7 +725,7 @@ export default function Clans() {
                                 <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{p.avgKills}</td>
                               </>
                             )}
-                            <td className="px-6 py-3 text-sm text-center text-green-400">{p.killPoints}</td>
+                            <td className="px-6 py-3 text-sm text-center text-emerald-400">{p.killPoints}</td>
                             <td className="px-6 py-3 text-sm text-center text-red-400 font-bold">{kd}</td>
                           </tr>
                         );
@@ -778,13 +778,13 @@ export default function Clans() {
                   style={{
                     background: clanDetail.color
                       ? `linear-gradient(135deg, ${clanDetail.color}30, ${clanDetail.color}10)`
-                      : "linear-gradient(135deg, rgba(255,59,59,0.2), rgba(255,59,59,0.05))",
+                      : "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05))",
                   }}
                 >
                   {clanDetail.logo ? (
                     <img src={clanDetail.logo} alt={clanDetail.name} className="w-16 h-16 rounded-xl object-cover" />
                   ) : (
-                    <Shield className="w-10 h-10" style={{ color: clanDetail.color ?? "#ff3b3b" }} />
+                    <Shield className="w-10 h-10" style={{ color: clanDetail.color ?? "#10b981" }} />
                   )}
                 </div>
                 <div className="flex-1">
@@ -805,7 +805,7 @@ export default function Clans() {
                       href={clanDetail.discord}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 mt-2 transition-colors"
+                      className="inline-flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300 mt-2 transition-colors"
                     >
                       <ExternalLink className="w-3 h-3" />
                       Discord do Clã
@@ -821,10 +821,10 @@ export default function Clans() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Layers className="w-4 h-4 text-red-400" />
+                  <Layers className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Lines</span>
                 </div>
-                <p className="text-2xl font-bold text-red-400">{clanTeams.length}</p>
+                <p className="text-2xl font-bold text-emerald-400">{clanTeams.length}</p>
                 <p className="text-xs text-[#5a5a6e] mt-1">{activeTeams.length} ativas</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
@@ -838,14 +838,14 @@ export default function Clans() {
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Swords className="w-4 h-4 text-green-400" />
+                  <Swords className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Kills XT</span>
                 </div>
-                <p className="text-2xl font-bold text-green-400">{clanTotalKills}</p>
+                <p className="text-2xl font-bold text-emerald-400">{clanTotalKills}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-4 h-4 text-green-400" />
+                  <Award className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Pts XT</span>
                 </div>
                 <p className="text-2xl font-bold text-[#f0f0f5]">{clanTotalPoints}</p>
@@ -856,7 +856,7 @@ export default function Clans() {
             {activeTeams.length > 0 && (
               <div>
                 <h3 className="text-lg font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-green-400" />
+                  <Star className="w-5 h-5 text-emerald-400" />
                   Lines Ativas ({activeTeams.length})
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -875,25 +875,25 @@ export default function Clans() {
                       <div
                         key={team.id}
                         onClick={() => setSelectedTeam(team.id)}
-                        className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5 cursor-pointer hover:border-red-500/30 hover:bg-[#1a1a24] transition-all group"
+                        className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5 cursor-pointer hover:border-emerald-500/30 hover:bg-[#1a1a24] transition-all group"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-900/30 to-red-600/10 flex items-center justify-center shrink-0 border border-[#2a2a3a]">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-900/30 to-emerald-600/10 flex items-center justify-center shrink-0 border border-[#2a2a3a]">
                               {team.logo ? (
                                 <img src={team.logo} alt={team.name} className="w-9 h-9 rounded-lg object-cover" />
                               ) : (
-                                <Shield className="w-6 h-6 text-red-400/50" />
+                                <Shield className="w-6 h-6 text-emerald-400/50" />
                               )}
                             </div>
                             <div>
-                              <h4 className="font-bold text-[#f0f0f5] group-hover:text-red-400 transition-colors">
+                              <h4 className="font-bold text-[#f0f0f5] group-hover:text-emerald-400 transition-colors">
                                 {team.name}
                               </h4>
                               <span className="text-xs text-[#5a5a6e]">[{team.tag}]</span>
                             </div>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-[#2a2a3a] group-hover:text-red-400 transition-colors" />
+                          <ChevronRight className="w-5 h-5 text-[#2a2a3a] group-hover:text-emerald-400 transition-colors" />
                         </div>
 
                         {team.description && (
@@ -922,11 +922,11 @@ export default function Clans() {
                           {/* Stats de XTreino na preview */}
                           <div className="pt-2 border-t border-[#2a2a3a] flex items-center gap-3 text-xs">
                             <div className="flex items-center gap-1">
-                              <Swords className="w-3 h-3 text-green-400" />
-                              <span className="text-green-400 font-medium">{teamKills} kills</span>
+                              <Swords className="w-3 h-3 text-emerald-400" />
+                              <span className="text-emerald-400 font-medium">{teamKills} kills</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Award className="w-3 h-3 text-green-400" />
+                              <Award className="w-3 h-3 text-emerald-400" />
                               <span className="text-[#8a8a9e]">{teamPoints} pts</span>
                             </div>
                           </div>
@@ -950,7 +950,7 @@ export default function Clans() {
                     <div
                       key={team.id}
                       onClick={() => setSelectedTeam(team.id)}
-                      className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5 cursor-pointer hover:border-red-500/30 transition-all"
+                      className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5 cursor-pointer hover:border-emerald-500/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <Shield className="w-6 h-6 text-[#5a5a6e]" />
@@ -978,7 +978,7 @@ export default function Clans() {
         <div className="bg-[#12121a] border-b border-[#2a2a3a]">
           <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
             <div className="flex items-center gap-3 mb-2">
-              <Shield className="w-8 h-8 text-red-400" />
+              <Shield className="w-8 h-8 text-emerald-400" />
               <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Clãs</h1>
             </div>
             <p className="text-[#8a8a9e]">
@@ -1004,7 +1004,7 @@ export default function Clans() {
                     placeholder="Buscar clã..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50 min-w-[250px]"
+                    className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-emerald-500/50 min-w-[250px]"
                   />
                 </div>
 
@@ -1013,7 +1013,7 @@ export default function Clans() {
                     type="checkbox"
                     checked={showDisbanded}
                     onChange={(e) => setShowDisbanded(e.target.checked)}
-                    className="w-4 h-4 rounded border-[#2a2a3a] bg-[#1a1a24] text-red-500 focus:ring-red-500/20"
+                    className="w-4 h-4 rounded border-[#2a2a3a] bg-[#1a1a24] text-emerald-500 focus:ring-emerald-500/20"
                   />
                   Mostrar clãs inativos
                 </label>
@@ -1022,7 +1022,7 @@ export default function Clans() {
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
                   Limpar filtros
                 </button>
@@ -1035,10 +1035,10 @@ export default function Clans() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-4 h-4 text-red-400" />
+                  <Shield className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Total Clãs</span>
                 </div>
-                <p className="text-2xl font-bold text-red-400">{stats.totalClans}</p>
+                <p className="text-2xl font-bold text-emerald-400">{stats.totalClans}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -1049,10 +1049,10 @@ export default function Clans() {
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4 text-green-400" />
+                  <Users className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs text-[#5a5a6e] uppercase">Jogadores</span>
                 </div>
-                <p className="text-2xl font-bold text-green-400">{stats.totalPlayers}</p>
+                <p className="text-2xl font-bold text-emerald-400">{stats.totalPlayers}</p>
               </div>
               <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -1067,7 +1067,7 @@ export default function Clans() {
           {/* ===== LOADING ===== */}
           {isLoading && (
             <div className="text-center py-12">
-              <div className="w-8 h-8 border-2 border-red-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-[#5a5a6e]">Carregando clãs...</p>
             </div>
           )}
@@ -1079,7 +1079,7 @@ export default function Clans() {
                 <div
                   key={clan.id}
                   onClick={() => setSelectedClan(clan.id)}
-                  className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5 cursor-pointer hover:border-red-500/30 hover:bg-[#1a1a24] transition-all group"
+                  className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5 cursor-pointer hover:border-emerald-500/30 hover:bg-[#1a1a24] transition-all group"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -1088,23 +1088,23 @@ export default function Clans() {
                         style={{
                           background: clan.color
                             ? `linear-gradient(135deg, ${clan.color}30, ${clan.color}10)`
-                            : "linear-gradient(135deg, rgba(255,59,59,0.2), rgba(255,59,59,0.05))",
+                            : "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05))",
                         }}
                       >
                         {clan.logo ? (
                           <img src={clan.logo} alt={clan.name} className="w-10 h-10 rounded-lg object-cover" />
                         ) : (
-                          <Shield className="w-7 h-7" style={{ color: clan.color ?? "#ff3b3b" }} />
+                          <Shield className="w-7 h-7" style={{ color: clan.color ?? "#10b981" }} />
                         )}
                       </div>
                       <div>
-                        <h3 className="font-bold text-[#f0f0f5] group-hover:text-red-400 transition-colors">
+                        <h3 className="font-bold text-[#f0f0f5] group-hover:text-emerald-400 transition-colors">
                           {clan.name}
                         </h3>
                         <span className="text-xs text-[#5a5a6e]">[{clan.tag}]</span>
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[#2a2a3a] group-hover:text-red-400 transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-[#2a2a3a] group-hover:text-emerald-400 transition-colors" />
                   </div>
 
                   {clan.description && (
@@ -1117,7 +1117,7 @@ export default function Clans() {
                       <span className="text-[#8a8a9e]">{clan.teams?.length ?? 0} lines</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-green-400" />
+                      <Users className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-[#8a8a9e]">{clan.totalPlayers} jogadores</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -1135,7 +1135,7 @@ export default function Clans() {
                             key={team.id}
                             className={`px-2 py-0.5 rounded text-xs font-medium border ${
                               team.status === "active"
-                                ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                                 : "bg-[#1a1a24] text-[#5a5a6e] border-[#2a2a3a]"
                             }`}
                           >

@@ -4,7 +4,7 @@ import { trpc } from "@/providers/trpc";
 import MainLayout from "@/layout/MainLayout";
 
 const statusLabels: Record<string, { text: string; class: string }> = {
-  ativo: { text: "Ativo", class: "bg-green-500/10 text-green-400" },
+  ativo: { text: "Ativo", class: "bg-emerald-500/10 text-emerald-400" },
   em_breve: { text: "Em Breve", class: "bg-blue-500/10 text-blue-400" },
   encerrado: { text: "Encerrado", class: "bg-red-500/10 text-red-400" },
 };
@@ -39,7 +39,7 @@ export default function Campeonatos() {
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
           <div className="flex items-center gap-3 mb-2">
-            <Trophy className="w-8 h-8 text-red-400" />
+            <Trophy className="w-8 h-8 text-emerald-400" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">Campeonatos</h1>
           </div>
           <p className="text-[#8a8a9e]">Gerencie e acompanhe todos os campeonatos</p>
@@ -56,7 +56,7 @@ export default function Campeonatos() {
                 onClick={() => { setStatusFilter(s); setSelectedChamp(null); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   statusFilter === s
-                    ? "bg-red-500 text-white"
+                    ? "bg-emerald-500 text-white"
                     : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
                 }`}
               >
@@ -71,7 +71,7 @@ export default function Campeonatos() {
               placeholder="Buscar campeonato..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-red-500/50"
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-emerald-500/50"
             />
           </div>
         </div>
@@ -85,8 +85,8 @@ export default function Campeonatos() {
                 onClick={() => setSelectedChamp(champ.id)}
                 className="text-left bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6 hover:border-[#3a3a4e] hover:-translate-y-0.5 transition-all duration-200"
               >
-                <div className="h-24 rounded-lg bg-gradient-to-br from-red-900/30 to-red-600/10 mb-4 flex items-center justify-center">
-                  <Trophy className="w-10 h-10 text-red-400/50" />
+                <div className="h-24 rounded-lg bg-gradient-to-br from-emerald-900/30 to-emerald-600/10 mb-4 flex items-center justify-center">
+                  <Trophy className="w-10 h-10 text-emerald-400/50" />
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusLabels[champ.status]?.class ?? "bg-gray-500/10 text-gray-400"}`}>
@@ -180,7 +180,7 @@ export default function Campeonatos() {
                             <tr key={t.id} className="hover:bg-[#1a1a24]">
                               <td className="px-6 py-3 text-sm font-bold text-[#f0f0f5]">{i + 1}</td>
                               <td className="px-6 py-3 text-sm text-[#f0f0f5]">{t.teamName}</td>
-                              <td className="px-6 py-3 text-sm text-center text-red-400 font-bold">{t.points}</td>
+                              <td className="px-6 py-3 text-sm text-center text-emerald-400 font-bold">{t.points}</td>
                               <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{t.kills}</td>
                               <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{t.wins}</td>
                               <td className="px-6 py-3 text-sm text-center text-[#8a8a9e]">{t.matchesPlayed}</td>
@@ -210,7 +210,7 @@ export default function Campeonatos() {
                             <span className="text-sm text-[#f0f0f5] font-medium flex-1">{m.team2Name ?? "TBD"}</span>
                           </div>
                           <span className={`ml-4 px-2 py-0.5 rounded-full text-xs ${
-                            m.status === "concluido" ? "bg-green-500/10 text-green-400" :
+                            m.status === "concluido" ? "bg-emerald-500/10 text-emerald-400" :
                             m.status === "em_andamento" ? "bg-yellow-500/10 text-yellow-400" :
                             "bg-gray-500/10 text-gray-400"
                           }`}>
