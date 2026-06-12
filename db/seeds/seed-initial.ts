@@ -114,6 +114,7 @@ const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string
   ["Misturado", "MIX", null, "active", "Time misto de jogadores de diferentes clãs."],
   ["Time I", "TI", null, "active", "Time independente I."],
   ["Time E", "TE", null, "active", "Time independente E."],
+  ["Randolinhas", "RND", null, "active", "Time avulso Randolinhas."],
 ];
 
 // --- PLAYERS ---
@@ -326,6 +327,19 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["K4F nine", "K4F", "off"],
   ["K4F gui", "K4F", "off"],
   ["Alek", "K4F", "off"],
+
+  ["sinner boy", "Randolinhas", "off"],
+  ["Miag", "Randolinhas", "off"],
+  ["VAL Yzzi⁷", "Randolinhas", "off"],
+  ["7xis ╲ Tilapia", "Randolinhas", "off"],
+  ["Xezn⁷", "UGD LIGHT", "off"],
+  ["Chrisxz", "UGD LIGHT", "off"],
+  ["CMF MOZKAXR", "CMF ATLANTIC", "off"],
+  ["CMF Smoke", "CMF ATLANTIC", "off"],
+  ["CMF SANT", "CMF ATLANTIC", "off"],
+  ["Artur", "CMF ASSALT", "off"],
+  ["CMF Txxz¹", "CMF ASSALT", "off"],
+  ["CMF xeW", "CMF ASSALT", "off"],
 ];
 
 // --- XTREINOS (lista base, sem dados de jogadores) ---
@@ -338,7 +352,7 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 08/06", "2026-06-08", "finalizado"],
   ["XTreino Underground - 09/06", "2026-06-09", "finalizado"],
   ["XTreino Underground - 10/06", "2026-06-10", "finalizado"],
-  ["XTreino Underground - 11/06", "2026-06-11", "aberto"],
+  ["XTreino Underground - 11/06", "2026-06-11", "finalizado"],
 ];
 
 // ============================================================
