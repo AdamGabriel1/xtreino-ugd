@@ -19,7 +19,6 @@ import {
   useXtreinoCalculations,
   POSITION_POINTS,
   KILL_POINTS,
-  playerPlayedForTeam,
 } from "@/hooks/useXtreinoCalculations";
 
 export default function RankingGeralTab() {
@@ -30,7 +29,7 @@ export default function RankingGeralTab() {
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
   const { data: playersList } = trpc.players.list.useQuery();
 
-  const { teamRanking, playerGlobalStats } = useXtreinoCalculations({
+  const { teamRanking, teamPlayersGrouped } = useXtreinoCalculations({
     results: allResults ?? [],
     playerStats: allPlayerStats ?? [],
   });
@@ -79,34 +78,10 @@ export default function RankingGeralTab() {
     }
   }, [teamRanking, sortBy]);
 
-  // Busca jogadores que jogaram para este time (ou variações do nome)
+  // Busca jogadores do time usando teamPlayersGrouped (sem duplicatas)
   const getTeamPlayers = (teamName: string) => {
-    const players: Array<{
-      playerName: string;
-      totalKills: number;
-      totalQ1Kills: number;
-      totalQ2Kills: number;
-      totalQ3Kills: number;
-      participations: number;
-      avgKills: number;
-    }> = [];
-
-    for (const player of playerGlobalStats.values()) {
-      if (playerPlayedForTeam(player, teamName)) {
-        players.push({
-          playerName: player.playerName,
-          totalKills: player.totalKills,
-          totalQ1Kills: player.totalQ1Kills,
-          totalQ2Kills: player.totalQ2Kills,
-          totalQ3Kills: player.totalQ3Kills,
-          participations: player.participations,
-          avgKills: player.avgKills,
-        });
-      }
-    }
-
-    // Ordena por total de kills (maior primeiro)
-    return players.sort((a, b) => b.totalKills - a.totalKills);
+    const teamKey = teamName.trim().toLowerCase();
+    return teamPlayersGrouped.get(teamKey) ?? [];
   };
 
   const findPlayerByName = (name: string) => {
