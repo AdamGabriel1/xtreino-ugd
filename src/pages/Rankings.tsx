@@ -5,16 +5,19 @@ import {
   BarChart3,
   Users,
   CalendarDays,
+  Calendar,
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";
 import JogadoresTab from "./Jogadores/JogadoresTab";
 import RankingGeralTab from "./components/RankingGeralTab";
+import RankingMensalTab from "./components/RankingMensalTab";
+import RankingSemanalTab from "./components/RankingSemanalTab";
 
 // ============================================================
 // TIPOS
 // ============================================================
-type TabKey = "xtreinos" | "geral" | "mensal" | "jogadores";
+type TabKey = "xtreinos" | "geral" | "mensal" | "semanal" | "jogadores";
 
 interface TabConfig {
   key: TabKey;
@@ -24,52 +27,40 @@ interface TabConfig {
 }
 
 // ============================================================
-// CONFIGURAÇÃO DAS ABAS
-// Adicione novas abas aqui facilmente
+// CONFIGURACAO DAS ABAS
 // ============================================================
 const TABS: TabConfig[] = [
   {
     key: "xtreinos",
     label: "X-Treinos",
     icon: <Dumbbell className="w-4 h-4" />,
-    description: "Classificação completa dos x-treinos",
+    description: "Classificacao completa dos x-treinos",
   },
   {
     key: "geral",
     label: "Ranking Geral",
     icon: <Trophy className="w-4 h-4" />,
-    description: "Ranking acumulado de todas as edições",
+    description: "Ranking acumulado de todas as edicoes",
   },
   {
     key: "mensal",
     label: "Ranking Mensal",
     icon: <CalendarDays className="w-4 h-4" />,
-    description: "Ranking por mês",
+    description: "Ranking consolidado por mes",
+  },
+  {
+    key: "semanal",
+    label: "Ranking Semanal",
+    icon: <Calendar className="w-4 h-4" />,
+    description: "Ranking consolidado por semana",
   },
   {
     key: "jogadores",
     label: "Jogadores",
     icon: <Users className="w-4 h-4" />,
-    description: "Estatísticas individuais",
+    description: "Estatisticas individuais",
   },
 ];
-
-// ============================================================
-// PLACEHOLDERS PARA ABAS FUTURAS
-// ============================================================
-
-function RankingMensalTab() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <CalendarDays className="w-16 h-16 text-[#3a3a4e] mb-4" />
-      <h3 className="text-xl font-bold text-[#f0f0f5] mb-2">Ranking Mensal</h3>
-      <p className="text-[#5a5a6e] max-w-md">
-        Em breve: Ranking consolidado por mês com destaque para o time do mês,
-        evolução de posições e comparativos entre meses.
-      </p>
-    </div>
-  );
-}
 
 // ============================================================
 // COMPONENTE PRINCIPAL
@@ -123,6 +114,7 @@ export default function Rankings() {
           {activeTab === "xtreinos" && <XTreinosTab />}
           {activeTab === "geral" && <RankingGeralTab />}
           {activeTab === "mensal" && <RankingMensalTab />}
+          {activeTab === "semanal" && <RankingSemanalTab />}
           {activeTab === "jogadores" && <JogadoresTab />}
         </div>
       </div>
