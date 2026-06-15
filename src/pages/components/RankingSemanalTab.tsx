@@ -13,6 +13,15 @@ import {
   History,
   ChevronDown,
   ChevronUp,
+  Flame,
+  Award,
+  BarChart2,
+  CheckSquare,
+  Square,
+  Medal,
+  ArrowUp,
+  ArrowDown,
+  Minus,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import {
@@ -29,6 +38,9 @@ import {
   SearchInput,
   EmptyState,
   LoadingSpinner,
+  Sparkline,
+  ComparisonBar,
+  PodiumCard,
 } from "./xtreino";
 
 // ============================================================
@@ -48,7 +60,40 @@ interface MergedPlayer {
   avgKills: number;
 }
 
-type SortField = "total" | "kills" | "pos" | "xtreinos";
+interface EnrichedTeam {
+  teamName: string;
+  totalPoints: number;
+  totalKills: number;
+  totalKillPoints: number;
+  totalPosPoints: number;
+  xtreinosPlayed: number;
+  top1Count: number;
+  top2Count: number;
+  top3Count: number;
+  bestPosition: number | null;
+  xtreinos: Array<{
+    date: string;
+    xtreinoId: number;
+    q1Pos: number | null;
+    q2Pos: number | null;
+    q3Pos: number | null;
+    totalPosPoints: number;
+    totalKills: number;
+    totalKillPoints: number;
+    totalPoints: number;
+  }>;
+  // Novos campos enriquecidos
+  sparkline: number[];
+  streak: number;
+  badges: string[];
+  bestPerformance: number;
+  worstPerformance: number;
+  avgPosition: number;
+  trend: "up" | "down" | "same";
+  consistency: number;
+}
+
+type SortField = "total" | "kills" | "pos" | "xtreinos" | "avgPos" | "consistency" | "streak";
 
 // ============================================================
 // FUNCOES PURAS
@@ -60,6 +105,14 @@ function getPosColor(pos: number | null): string {
   if (pos === 2) return "text-gray-300 font-bold";
   if (pos === 3) return "text-amber-500 font-bold";
   return "text-[#8a8a9e]";
+}
+
+function getPosBg(pos: number | null): string {
+  if (!pos) return "";
+  if (pos === 1) return "bg-yellow-500/10";
+  if (pos === 2) return "bg-gray-400/10";
+  if (pos === 3) return "bg-amber-500/10";
+  return "";
 }
 
 function getRankStyle(index: number): string {
@@ -115,6 +168,86 @@ function getWeekDates(weekKey: string): { start: string; end: string } {
   return { start: formatDate(weekStart), end: formatDate(weekEnd) };
 }
 
+function calcTeamSparkline(team: EnrichedTeam): number[] {
+  return team.xtreinos
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((x) => x.totalPoints);
+}
+
+function calcTeamStreak(team: EnrichedTeam): number {
+  return team.xtreinosPlayed;
+}
+
+function calcTeamBadges(team: EnrichedTeam): string[] {
+  const badges: string[] = [];
+  if (team.totalKills >= 20) badges.push("20 Kills");
+  if (team.totalKills >= 50) badges.push("50 Kills");
+  if (team.totalKills >= 100) badges.push("100 Kills");
+  if (team.top1Count >= 1) badges.push("Campeao");
+  if (team.top1Count >= 3) badges.push("3x Campeao");
+  if ((team.top1Count + team.top2Count + team.top3Count) >= 3) badges.push("Top 3 Regular");
+  if (team.xtreinosPlayed >= 3) badges.push("Veterano");
+  if (team.xtreinosPlayed >= 5) badges.push("Lenda");
+  if (team.avgPosition > 0 && team.avgPosition <= 3) badges.push("Elite");
+  if (team.consistency > 0 && team.consistency <= 2) badges.push("Consistente");
+  return badges;
+}
+
+function calcAvgPosition(team: EnrichedTeam): number {
+  const positions: number[] = [];
+  team.xtreinos.forEach((x) => {
+    if (x.q1Pos) positions.push(x.q1Pos);
+    if (x.q2Pos) positions.push(x.q2Pos);
+    if (x.q3Pos) positions.push(x.q3Pos);
+  });
+  if (!positions.length) return 0;
+  return Math.round((positions.reduce((a, b) => a + b, 0) / positions.length) * 10) / 10;
+}
+
+function calcConsistency(team: EnrichedTeam): number {
+  if (team.xtreinos.length < 2) return 0;
+  const totals = team.xtreinos.map((x) => x.totalPoints);
+  const avg = totals.reduce((a, b) => a + b, 0) / totals.length;
+  const variance = totals.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / totals.length;
+  return Math.round(Math.sqrt(variance) * 10) / 10;
+}
+
+function calcTrend(team: EnrichedTeam): "up" | "down" | "same" {
+  const sorted = team.xtreinos.sort((a, b) => a.date.localeCompare(b.date));
+  if (sorted.length < 2) return "same";
+  const last = sorted[sorted.length - 1].totalPoints;
+  const prev = sorted[sorted.length - 2].totalPoints;
+  if (last > prev) return "up";
+  if (last < prev) return "down";
+  return "same";
+}
+
+function calcBestPerformance(team: EnrichedTeam): number {
+  if (!team.xtreinos.length) return 0;
+  return Math.max(...team.xtreinos.map((x) => x.totalPoints));
+}
+
+function calcWorstPerformance(team: EnrichedTeam): number {
+  if (!team.xtreinos.length) return 0;
+  return Math.min(...team.xtreinos.map((x) => x.totalPoints));
+}
+
+function TrendIcon({ trend }: { trend: "up" | "down" | "same" }) {
+  if (trend === "up") return <ArrowUp className="w-3 h-3 text-green-400" />;
+  if (trend === "down") return <ArrowDown className="w-3 h-3 text-red-400" />;
+  return <Minus className="w-3 h-3 text-[#5a5a6e]" />;
+}
+
+function BadgeIcon({ badge }: { badge: string }) {
+  if (badge.includes("Kills")) return <Swords className="w-3 h-3 text-red-400" />;
+  if (badge.includes("Campeao")) return <Crown className="w-3 h-3 text-yellow-400" />;
+  if (badge.includes("Veterano") || badge.includes("Lenda")) return <Award className="w-3 h-3 text-purple-400" />;
+  if (badge.includes("Elite")) return <Target className="w-3 h-3 text-blue-400" />;
+  if (badge.includes("Consistente")) return <BarChart3 className="w-3 h-3 text-green-400" />;
+  if (badge.includes("Top 3")) return <Medal className="w-3 h-3 text-amber-400" />;
+  return <Zap className="w-3 h-3 text-orange-400" />;
+}
+
 // ============================================================
 // COMPONENTE PRINCIPAL
 // ============================================================
@@ -125,6 +258,8 @@ export default function RankingSemanalTab() {
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [selectedWeek, setSelectedWeek] = useState<string>("");
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
 
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
@@ -260,6 +395,25 @@ export default function RankingSemanalTab() {
 
     return Array.from(map.values());
   }, [filteredResults, filteredPlayerStats]);
+
+  // Enriquecer times com metricas avancadas
+  const enrichedRanking: EnrichedTeam[] = useMemo(() => {
+    return weekTeamRanking.map((team) => {
+      const enriched: EnrichedTeam = {
+        ...team,
+        sparkline: calcTeamSparkline(team as EnrichedTeam),
+        streak: calcTeamStreak(team as EnrichedTeam),
+        badges: [],
+        bestPerformance: calcBestPerformance(team as EnrichedTeam),
+        worstPerformance: calcWorstPerformance(team as EnrichedTeam),
+        avgPosition: calcAvgPosition(team as EnrichedTeam),
+        trend: calcTrend(team as EnrichedTeam),
+        consistency: calcConsistency(team as EnrichedTeam),
+      };
+      enriched.badges = calcTeamBadges(enriched);
+      return enriched;
+    });
+  }, [weekTeamRanking]);
 
   // Jogadores agrupados por time na semana
   const weekTeamPlayers = useMemo(() => {
@@ -436,7 +590,7 @@ export default function RankingSemanalTab() {
 
   // Ordenar ranking
   const sortedRanking = useMemo(() => {
-    return [...weekTeamRanking].sort((a, b) => {
+    return [...enrichedRanking].sort((a, b) => {
       let comparison = 0;
       switch (sortBy) {
         case "kills":
@@ -448,13 +602,22 @@ export default function RankingSemanalTab() {
         case "xtreinos":
           comparison = a.xtreinosPlayed - b.xtreinosPlayed;
           break;
+        case "avgPos":
+          comparison = a.avgPosition - b.avgPosition;
+          break;
+        case "consistency":
+          comparison = a.consistency - b.consistency;
+          break;
+        case "streak":
+          comparison = a.streak - b.streak;
+          break;
         default:
           comparison = a.totalPoints - b.totalPoints;
           break;
       }
       return sortDir === "desc" ? -comparison : comparison;
     });
-  }, [weekTeamRanking, sortBy, sortDir]);
+  }, [enrichedRanking, sortBy, sortDir]);
 
   // Filtro por busca
   const filteredRanking = useMemo(() => {
@@ -462,6 +625,17 @@ export default function RankingSemanalTab() {
     const q = search.toLowerCase();
     return sortedRanking.filter((t) => t.teamName.toLowerCase().includes(q));
   }, [sortedRanking, search]);
+
+  // Top 3 para podio
+  const top3 = useMemo(() => {
+    if (filteredRanking.length < 3) return [];
+    return filteredRanking.slice(0, 3);
+  }, [filteredRanking]);
+
+  // Times para comparacao
+  const comparisonTeams = useMemo(() => {
+    return sortedRanking.filter((t) => selectedForCompare.has(t.teamName));
+  }, [sortedRanking, selectedForCompare]);
 
   // Busca jogadores do time e merge por ID
   const getTeamPlayers = (teamName: string): MergedPlayer[] => {
@@ -479,13 +653,24 @@ export default function RankingSemanalTab() {
     }
   };
 
+  const toggleCompare = (teamName: string) => {
+    setSelectedForCompare((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamName)) next.delete(teamName);
+      else if (next.size < 4) next.add(teamName);
+      return next;
+    });
+  };
+
   const clearFilters = () => {
     setSearch("");
     setSortBy("total");
     setSortDir("desc");
+    setSelectedForCompare(new Set());
+    setCompareMode(false);
   };
 
-  const hasFilters = search.trim().length > 0 || sortBy !== "total";
+  const hasFilters = search.trim().length > 0 || sortBy !== "total" || compareMode;
 
   // Conta xtreinos unicos da semana
   const totalXtreinosUnicos = useMemo(() => {
@@ -530,7 +715,7 @@ export default function RankingSemanalTab() {
   const weekDates = selectedWeek ? getWeekDates(selectedWeek) : null;
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${comparisonTeams.length >= 2 ? "pb-48" : ""}`}>
       {/* Seletor de Semana */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
         <div className="flex items-center gap-3 flex-wrap">
@@ -575,8 +760,26 @@ export default function RankingSemanalTab() {
             <option value="kills">Ordenar: Kills Totais</option>
             <option value="pos">Ordenar: Pts Posicao</option>
             <option value="xtreinos">Ordenar: X-Treinos Jogados</option>
+            <option value="avgPos">Ordenar: Media Pos</option>
+            <option value="consistency">Ordenar: Consistencia</option>
+            <option value="streak">Ordenar: Streak</option>
           </select>
         </div>
+
+        <button
+          onClick={() => {
+            setCompareMode((m) => !m);
+            setSelectedForCompare(new Set());
+          }}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
+            compareMode
+              ? "bg-green-500/10 border-green-500/30 text-green-400"
+              : "bg-[#1a1a24] border-[#2a2a3a] text-[#5a5a6e] hover:text-[#f0f0f5]"
+          }`}
+        >
+          <BarChart2 className="w-4 h-4 inline mr-1.5" />
+          Comparar
+        </button>
       </FilterBar>
 
       {/* Loading */}
@@ -584,6 +787,30 @@ export default function RankingSemanalTab() {
 
       {/* Cards de Resumo */}
       {!isLoading && selectedWeek && <SummaryCards cards={summaryCards} columns={5} />}
+
+      {/* Podio - Top 3 */}
+      {!isLoading && selectedWeek && top3.length === 3 && (
+        <div>
+          <h3 className="text-sm font-medium text-[#8a8a9e] mb-3 flex items-center gap-2">
+            <Crown className="w-4 h-4 text-yellow-400" /> Podio
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {top3.map((t, i) => (
+              <PodiumCard
+                key={t.teamName}
+                name={t.teamName}
+                rank={i}
+                stats={[
+                  { label: "Kills", value: t.totalKills, color: "text-green-400" },
+                  { label: "XTs", value: t.xtreinosPlayed },
+                  { label: "Media", value: t.avgPosition },
+                ]}
+                streak={t.streak >= 2 ? t.streak : undefined}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tabela Principal */}
       {!isLoading && selectedWeek && (
@@ -598,15 +825,27 @@ export default function RankingSemanalTab() {
                 </span>
               )}
             </h3>
-            <span className="text-xs text-[#5a5a6e]">
-              {filteredRanking.length} equipes
-            </span>
+            <div className="flex items-center gap-3">
+              {compareMode && (
+                <span className="text-xs text-green-400">
+                  {selectedForCompare.size}/4 selecionados
+                </span>
+              )}
+              <span className="text-xs text-[#5a5a6e]">
+                {filteredRanking.length} equipes
+              </span>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#2a2a3a] bg-[#0a0a0f]">
+                  {compareMode && (
+                    <th className="px-3 py-3 text-center w-10">
+                      <span className="text-xs font-medium text-[#5a5a6e]">#</span>
+                    </th>
+                  )}
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase w-14">
                     #
                   </th>
@@ -627,6 +866,18 @@ export default function RankingSemanalTab() {
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
                     Melhor Pos
+                  </th>
+                  <th className="px-4 py-3 text-center">
+                    <SortHeader
+                      field="avgPos"
+                      label="Media Pos"
+                      currentField={sortBy}
+                      direction={sortDir}
+                      onSort={handleSort}
+                    />
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#5a5a6e] uppercase">
+                    Evol.
                   </th>
                   <th className="px-4 py-3 text-center bg-yellow-500/5">
                     <SortHeader
@@ -674,16 +925,58 @@ export default function RankingSemanalTab() {
                         className={`${getRankStyle(index)} hover:bg-[#1a1a24]/50 transition-colors cursor-pointer`}
                         onClick={() => setExpandedTeam(isExpanded ? null : rowKey)}
                       >
+                        {compareMode && (
+                          <td className="px-3 py-3 text-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCompare(team.teamName);
+                              }}
+                              className="text-[#5a5a6e] hover:text-green-400 transition-colors"
+                            >
+                              {selectedForCompare.has(team.teamName) ? (
+                                <CheckSquare className="w-4 h-4 text-green-400" />
+                              ) : (
+                                <Square className="w-4 h-4" />
+                              )}
+                            </button>
+                          </td>
+                        )}
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center">
                             <RankBadge index={index} />
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-sm font-bold text-[#f0f0f5]">{team.teamName}</p>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm font-bold text-[#f0f0f5]">
+                              {team.teamName}
+                            </span>
+                            {team.badges.length > 0 && (
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {team.badges.slice(0, 2).map((badge) => (
+                                  <span
+                                    key={badge}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1a1a24] border border-[#2a2a3a] text-[10px] text-[#8a8a9e]"
+                                  >
+                                    <BadgeIcon badge={badge} />
+                                    {badge}
+                                  </span>
+                                ))}
+                                {team.badges.length > 2 && (
+                                  <span className="text-[10px] text-[#5a5a6e]">
+                                    +{team.badges.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm font-medium text-purple-400">{team.xtreinosPlayed}</span>
+                          <span className="inline-flex items-center gap-1 text-sm font-medium text-purple-400">
+                            {team.xtreinosPlayed >= 3 && <Flame className="w-3.5 h-3.5 text-orange-400" />}
+                            {team.xtreinosPlayed}
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2 text-xs">
@@ -712,6 +1005,15 @@ export default function RankingSemanalTab() {
                             {team.bestPosition ? `${team.bestPosition}º` : "-"}
                           </span>
                         </td>
+                        <td className="px-4 py-3 text-center text-sm text-[#8a8a9e]">
+                          {team.avgPosition > 0 ? team.avgPosition : "-"}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <Sparkline data={team.sparkline} />
+                            <TrendIcon trend={team.trend} />
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-center bg-yellow-500/5">
                           <span className="text-sm font-bold text-yellow-400">{team.totalPosPoints}</span>
                         </td>
@@ -736,8 +1038,60 @@ export default function RankingSemanalTab() {
                       {/* Conteudo expandido */}
                       {isExpanded && (
                         <tr className="bg-[#0a0a0f]/50">
-                          <td colSpan={10} className="px-6 py-4">
+                          <td colSpan={compareMode ? 13 : 12} className="px-6 py-4">
                             <div className="ml-4 space-y-4">
+                              {/* Badges do time */}
+                              {team.badges.length > 0 && (
+                                <div>
+                                  <h4 className="text-xs font-medium text-[#5a5a6e] mb-2 flex items-center gap-2">
+                                    <Award className="w-3 h-3" /> Conquistas
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {team.badges.map((badge) => (
+                                      <span
+                                        key={badge}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1a1a24] border border-[#2a2a3a] text-xs text-[#8a8a9e]"
+                                      >
+                                        <BadgeIcon badge={badge} />
+                                        {badge}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Stats extras */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="bg-[#1a1a24] rounded-lg border border-[#2a2a3a] p-3 text-center">
+                                  <p className="text-xs text-[#5a5a6e] mb-1">Melhor</p>
+                                  <p className="text-lg font-bold text-green-400">{team.bestPerformance}</p>
+                                </div>
+                                <div className="bg-[#1a1a24] rounded-lg border border-[#2a2a3a] p-3 text-center">
+                                  <p className="text-xs text-[#5a5a6e] mb-1">Pior</p>
+                                  <p className="text-lg font-bold text-red-400">{team.worstPerformance}</p>
+                                </div>
+                                <div className="bg-[#1a1a24] rounded-lg border border-[#2a2a3a] p-3 text-center">
+                                  <p className="text-xs text-[#5a5a6e] mb-1">Consistencia</p>
+                                  <p className="text-lg font-bold text-[#f0f0f5]">{team.consistency}</p>
+                                </div>
+                                <div className="bg-[#1a1a24] rounded-lg border border-[#2a2a3a] p-3 text-center">
+                                  <p className="text-xs text-[#5a5a6e] mb-1">Top 1s</p>
+                                  <p className="text-lg font-bold text-yellow-400">{team.top1Count}</p>
+                                </div>
+                              </div>
+
+                              {/* Sparkline de evolucao */}
+                              {team.sparkline.length > 1 && (
+                                <div>
+                                  <h4 className="text-xs font-medium text-[#5a5a6e] mb-2 flex items-center gap-2">
+                                    <TrendingUp className="w-3 h-3" /> Evolucao
+                                  </h4>
+                                  <div className="bg-[#1a1a24] rounded-lg border border-[#2a2a3a] p-3">
+                                    <Sparkline data={team.sparkline} />
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Historico de X-Treinos */}
                               <div>
                                 <h4 className="text-xs font-medium text-[#5a5a6e] mb-3 flex items-center gap-2">
@@ -924,6 +1278,20 @@ export default function RankingSemanalTab() {
           </p>
         </div>
       </div>
+
+      {/* Barra de Comparacao */}
+      <ComparisonBar
+        players={comparisonTeams.map((t) => ({
+          name: t.teamName,
+          stats: [
+            { label: "Kills", value: t.totalKills, color: "text-green-400" },
+            { label: "Total", value: t.totalPoints, color: "text-green-400" },
+            { label: "Pos", value: t.totalPosPoints, color: "text-yellow-400" },
+          ],
+        }))}
+        onRemove={(name) => toggleCompare(name)}
+        onClear={() => setSelectedForCompare(new Set())}
+      />
     </div>
   );
 }
