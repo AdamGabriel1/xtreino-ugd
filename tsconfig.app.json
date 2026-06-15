@@ -25,7 +25,8 @@
       ],
       "@db/*": [
         "./db/*"
-      ]
+      ],
+      "@components/xtreino": ["./src/components/xtreino/index.ts"]
     },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

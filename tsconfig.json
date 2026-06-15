@@ -23,7 +23,8 @@
       ],
       "@db/*": [
         "./db/*"
-      ]
+      ],
+      "@components/xtreino": ["./src/components/xtreino/index.ts"]
     }
   }
 }

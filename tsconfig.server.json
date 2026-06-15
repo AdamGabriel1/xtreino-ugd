@@ -28,7 +28,8 @@
       "@apilib/*": ["./api/lib/*"],
       "@queries/*": ["./api/queries/*"],
       "@routers/*": ["./api/routers/*"],
-      "@hooks/*": ["./src/hooks/*"]
+      "@hooks/*": ["./src/hooks/*"],
+      "@/components/xtreino": ["./src/components/xtreino/index.ts"],
     }
   },
   "include": ["api", "contracts", "db"]
