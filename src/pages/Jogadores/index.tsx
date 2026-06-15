@@ -1,14 +1,11 @@
-import {
-  Target,
-} from "lucide-react";
+import { Target } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
-import JogadoresTab from "./components/JogadoresTab";
+import JogadoresTab from "./JogadoresTab";
 
 export default function Jogadores() {
   return (
     <MainLayout>
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-        {/* Header */}
         <div className="bg-[#0a0a0f] border-b border-[#2a2a3a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-12 mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Target className="w-8 h-8 text-green-400" />
@@ -21,9 +18,8 @@ export default function Jogadores() {
           </p>
         </div>
 
-        {/* Conteúdo */}
         <div className="pb-12">
-          <JogadoresTab />
+          <JogadoresTab />  {/* ✅ Sem props! */}
         </div>
       </div>
     </MainLayout>

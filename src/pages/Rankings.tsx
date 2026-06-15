@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import XTreinosTab from "./components/XTreinosTab";
-import JogadoresTab from "./components/JogadoresTab";
+import JogadoresTab from "./Jogadores/JogadoresTab";
 import RankingGeralTab from "./components/RankingGeralTab";
 
 // ============================================================
