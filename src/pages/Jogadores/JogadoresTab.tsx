@@ -15,12 +15,7 @@ import {
   Award,
 } from "lucide-react";
 import { useJogadoresTab } from "./useJogadoresTab";
-import {
-  usePlayerRankingCalculations,
-  type RankingSortField,
-  type PlayerRankingDisplay,
-  type PlayerRankingRawStat,
-} from "./jogadoresCalculations";
+import type { RankingSortField, PlayerRankingDisplay, PlayerRankingRawStat } from "./jogadoresCalculations";
 
 export function JogadoresTab() {
   const [search, setSearch] = useState("");
@@ -28,10 +23,7 @@ export function JogadoresTab() {
   const [sortField, setSortField] = useState<RankingSortField>("totalKills");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const { xtreinosList, rawStats, isLoading, isError, error } = useJogadoresTab();
-
-  const { displayStats, summary, isAccumulated } = usePlayerRankingCalculations({
-    rawStats,
+  const { xtreinosList, displayStats, summary, isAccumulated, isLoading, isError, error } = useJogadoresTab({
     selectedXtreinoId: selectedXt,
     searchQuery: search,
     sortField,
@@ -158,7 +150,7 @@ export function JogadoresTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2a3a]">
-                {displayStats.map((p: PlayerRankingDisplay | PlayerRankingRawStat, index: number) => {
+                {displayStats.map((p, index) => {
                   const isAcc = isAccumulated;
                   const acc = p as PlayerRankingDisplay;
                   const single = p as PlayerRankingRawStat;

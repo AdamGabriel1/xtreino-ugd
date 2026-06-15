@@ -1,9 +1,8 @@
-import { useMemo } from "react";
 import type { XtreinoPlayerStat } from "../../hooks/useXtreinoCalculations.js";
 import { calcPlayerAccumulatedStats } from "../../hooks/useXtreinoCalculations.js";
 
 // ============================================================
-// TIPOS ESPECÍFICOS DO RANKING DE JOGADORES
+// TIPOS
 // ============================================================
 
 export interface XTreinoOption {
@@ -12,7 +11,6 @@ export interface XTreinoOption {
   date: string;
 }
 
-/** Stats de um jogador em um xtreino específico (formato da API) */
 export interface PlayerRankingRawStat {
   id: number;
   xtreinoId: number;
@@ -25,7 +23,6 @@ export interface PlayerRankingRawStat {
   totalKills: number;
 }
 
-/** Stats acumuladas de um jogador para exibição no ranking */
 export interface PlayerRankingDisplay {
   playerName: string;
   teamName: string | null;
@@ -38,14 +35,30 @@ export interface PlayerRankingDisplay {
   xtreinoDates: string[];
 }
 
-/** Union type para stats que podem ser exibidos */
 export type PlayerRankingStat = PlayerRankingRawStat | PlayerRankingDisplay;
+
+export type RankingSortField =
+  | "totalKills"
+  | "q1Kills"
+  | "q2Kills"
+  | "q3Kills"
+  | "participations"
+  | "avgKills"
+  | "date";
+
+export interface RankingSummary {
+  totalPlayers: number;
+  totalKills: number;
+  totalQ1: number;
+  totalQ2: number;
+  totalQ3: number;
+  totalRecords: number;
+}
 
 // ============================================================
 // FUNÇÕES DE CÁLCULO PURAS
 // ============================================================
 
-/** Converte stats brutos da API para formato de exibição acumulado */
 export function calcPlayerRankingAccumulated(
   rawStats: PlayerRankingRawStat[]
 ): PlayerRankingDisplay[] {
@@ -64,7 +77,6 @@ export function calcPlayerRankingAccumulated(
   }));
 }
 
-/** Filtra stats por xtreino */
 export function filterStatsByXtreino(
   rawStats: PlayerRankingRawStat[],
   xtreinoId: number | null
@@ -73,7 +85,6 @@ export function filterStatsByXtreino(
   return rawStats.filter((s) => s.xtreinoId === xtreinoId);
 }
 
-/** Busca por nome ou time */
 export function searchPlayerStats<T extends { playerName: string; teamName?: string | null }>(
   stats: T[],
   query: string
@@ -87,17 +98,7 @@ export function searchPlayerStats<T extends { playerName: string; teamName?: str
   );
 }
 
-/** Ordena stats por campo */
-export type RankingSortField =
-  | "totalKills"
-  | "q1Kills"
-  | "q2Kills"
-  | "q3Kills"
-  | "participations"
-  | "avgKills"
-  | "date";
-
-function sortRankingStats(
+export function sortRankingStats(
   stats: PlayerRankingStat[],
   field: RankingSortField,
   direction: "asc" | "desc"
@@ -115,16 +116,6 @@ function sortRankingStats(
   });
 }
 
-/** Calcula resumo do ranking */
-export interface RankingSummary {
-  totalPlayers: number;
-  totalKills: number;
-  totalQ1: number;
-  totalQ2: number;
-  totalQ3: number;
-  totalRecords: number;
-}
-
 export function calcRankingSummary(
   stats: PlayerRankingStat[]
 ): RankingSummary | null {
@@ -137,101 +128,19 @@ export function calcRankingSummary(
     totalPlayers: new Set(stats.map((p) => p.playerName)).size,
     totalKills: stats.reduce((sum, p) => sum + (p.totalKills || 0), 0),
     totalQ1: stats.reduce((sum, p) => {
-      const val = "totalQ1Kills" in p
-        ? p.totalQ1Kills
-        : "q1Kills" in p
-        ? p.q1Kills
-        : 0;
+      const val = "totalQ1Kills" in p ? p.totalQ1Kills : "q1Kills" in p ? p.q1Kills : 0;
       return sum + (val || 0);
     }, 0),
     totalQ2: stats.reduce((sum, p) => {
-      const val = "totalQ2Kills" in p
-        ? p.totalQ2Kills
-        : "q2Kills" in p
-        ? p.q2Kills
-        : 0;
+      const val = "totalQ2Kills" in p ? p.totalQ2Kills : "q2Kills" in p ? p.q2Kills : 0;
       return sum + (val || 0);
     }, 0),
     totalQ3: stats.reduce((sum, p) => {
-      const val = "totalQ3Kills" in p
-        ? p.totalQ3Kills
-        : "q3Kills" in p
-        ? p.q3Kills
-        : 0;
+      const val = "totalQ3Kills" in p ? p.totalQ3Kills : "q3Kills" in p ? p.q3Kills : 0;
       return sum + (val || 0);
     }, 0),
     totalRecords: isAccumulated
-      ? (stats as PlayerRankingDisplay[]).reduce(
-          (sum, p) => sum + p.participations,
-          0
-        )
+      ? (stats as PlayerRankingDisplay[]).reduce((sum, p) => sum + p.participations, 0)
       : stats.length,
-  };
-}
-
-// ============================================================
-// HOOK PRINCIPAL
-// ============================================================
-
-export interface UsePlayerRankingCalculationsProps {
-  rawStats?: PlayerRankingRawStat[];
-  selectedXtreinoId?: number | null;
-  searchQuery?: string;
-  sortField?: RankingSortField;
-  sortDirection?: "asc" | "desc";
-}
-
-export interface UsePlayerRankingCalculationsReturn {
-  accumulatedStats: PlayerRankingDisplay[];
-  singleXtreinoStats: PlayerRankingRawStat[];
-  displayStats: PlayerRankingStat[];
-  summary: RankingSummary | null;
-  isAccumulated: boolean;
-}
-
-export function usePlayerRankingCalculations({
-  rawStats = [],
-  selectedXtreinoId = null,
-  searchQuery = "",
-  sortField = "totalKills",
-  sortDirection = "desc",
-}: UsePlayerRankingCalculationsProps): UsePlayerRankingCalculationsReturn {
-  const isAccumulated = !selectedXtreinoId;
-
-  const accumulatedStats = useMemo(
-    () => calcPlayerRankingAccumulated(rawStats),
-    [rawStats]
-  );
-
-  const singleXtreinoStats = useMemo(
-    () => filterStatsByXtreino(rawStats, selectedXtreinoId),
-    [rawStats, selectedXtreinoId]
-  );
-
-  const baseStats: PlayerRankingStat[] = isAccumulated
-    ? accumulatedStats
-    : singleXtreinoStats;
-
-  const searchedStats = useMemo(
-    () => searchPlayerStats(baseStats, searchQuery),
-    [baseStats, searchQuery]
-  );
-
-  const displayStats = useMemo(
-    () => sortRankingStats(searchedStats, sortField, sortDirection),
-    [searchedStats, sortField, sortDirection]
-  );
-
-  const summary = useMemo(
-    () => calcRankingSummary(displayStats),
-    [displayStats]
-  );
-
-  return {
-    accumulatedStats,
-    singleXtreinoStats,
-    displayStats,
-    summary,
-    isAccumulated,
   };
 }
