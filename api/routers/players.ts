@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
 import { players, teams, xtreinos, xtreinoPlayerStats, playerMerges } from "../../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 
 export const playersRouter = createRouter({
@@ -16,42 +16,115 @@ export const playersRouter = createRouter({
       .all();
   }),
 
-  // ===== PUBLICO: Stats de jogadores para ranking =====
+  // ===== PUBLICO: Stats de jogadores para ranking (UNIFICADO) =====
   rankingStats: publicQuery.query(() => {
     const db = getDb();
 
+    // 1. Busca todos os merges (master → merged)
+    const allMerges = db.select().from(playerMerges).all();
+
+    // 2. Cria map: mergedPlayerId → masterPlayerId
+    const mergeMap = new Map<number, number>();
+    for (const m of allMerges) {
+      mergeMap.set(m.mergedPlayerId, m.masterPlayerId);
+    }
+
+    // 3. Busca todos os jogadores para resolver nicks
+    const allPlayers = db.select().from(players).all();
+    const playerById = new Map(allPlayers.map((p) => [p.id, p]));
+
+    // 4. Cria map: merged nickname → master nickname
+    // E também: masterPlayerId → { nickname, teamId }
+    const nickMergeMap = new Map<string, string>(); // antigo → atual
+    const masterInfoMap = new Map<number, { nickname: string; teamId: number | null }>();
+
+    for (const m of allMerges) {
+      const master = playerById.get(m.masterPlayerId);
+      const merged = playerById.get(m.mergedPlayerId);
+      if (master && merged) {
+        nickMergeMap.set(merged.nickname, master.nickname);
+        masterInfoMap.set(m.masterPlayerId, { nickname: master.nickname, teamId: master.teamId });
+      }
+    }
+    // Também adiciona os próprios masters no map
+    for (const p of allPlayers) {
+      if (!masterInfoMap.has(p.id)) {
+        masterInfoMap.set(p.id, { nickname: p.nickname, teamId: p.teamId });
+      }
+    }
+
+    // 5. Busca todos os stats dos xtreinos
     const stats = db.select().from(xtreinoPlayerStats).all();
 
-    return stats.map((stat) => {
+    // 6. Resolve teamName para cada jogador (master)
+    const teamCache = new Map<number, string>();
+    function getTeamName(teamId: number | null): string {
+      if (!teamId) return "Sem time";
+      if (teamCache.has(teamId)) return teamCache.get(teamId)!;
+      const team = db.select().from(teams).where(eq(teams.id, teamId)).get();
+      const name = team?.name ?? "Sem time";
+      teamCache.set(teamId, name);
+      return name;
+    }
+
+    // 7. Unifica os stats: soma kills do mesmo jogador no mesmo xtreino
+    // Chave: "masterNickname|xtreinoId|date"
+    const unifiedMap = new Map<string, {
+      id: number;
+      xtreinoId: number;
+      date: string;
+      teamName: string;
+      playerName: string;
+      q1Kills: number;
+      q2Kills: number;
+      q3Kills: number;
+      totalKills: number;
+    }>();
+
+    for (const stat of stats) {
+      // Verifica se esse nick é um nick antigo (merged)
+      const masterNick = nickMergeMap.get(stat.playerName) ?? stat.playerName;
+
+      // Resolve team do master
       let teamName = "Sem time";
-
-      const player = db
-        .select()
-        .from(players)
-        .where(eq(players.nickname, stat.playerName))
-        .get();
-
-      if (player?.teamId) {
-        const team = db
-          .select()
-          .from(teams)
-          .where(eq(teams.id, player.teamId))
-          .get();
-        if (team) teamName = team.name;
+      const masterPlayer = allPlayers.find((p) => p.nickname === masterNick);
+      if (masterPlayer?.teamId) {
+        teamName = getTeamName(masterPlayer.teamId);
+      } else {
+        // Fallback: tenta achar pelo player original do stat
+        const originalPlayer = allPlayers.find((p) => p.nickname === stat.playerName);
+        if (originalPlayer?.teamId) {
+          teamName = getTeamName(originalPlayer.teamId);
+        } else {
+          // Último fallback: usa o teamName do próprio stat se existir
+          teamName = stat.teamName ?? "Sem time";
+        }
       }
 
-      return {
-        id: stat.id,
-        xtreinoId: stat.xtreinoId,
-        date: stat.date,
-        teamName,
-        playerName: stat.playerName,
-        q1Kills: stat.q1Kills ?? 0,
-        q2Kills: stat.q2Kills ?? 0,
-        q3Kills: stat.q3Kills ?? 0,
-        totalKills: stat.totalKills ?? 0,
-      };
-    });
+      const key = `${masterNick}|${stat.xtreinoId}|${stat.date}`;
+      const existing = unifiedMap.get(key);
+
+      if (existing) {
+        existing.q1Kills += stat.q1Kills ?? 0;
+        existing.q2Kills += stat.q2Kills ?? 0;
+        existing.q3Kills += stat.q3Kills ?? 0;
+        existing.totalKills += stat.totalKills ?? 0;
+      } else {
+        unifiedMap.set(key, {
+          id: stat.id,
+          xtreinoId: stat.xtreinoId,
+          date: stat.date,
+          teamName,
+          playerName: masterNick,
+          q1Kills: stat.q1Kills ?? 0,
+          q2Kills: stat.q2Kills ?? 0,
+          q3Kills: stat.q3Kills ?? 0,
+          totalKills: stat.totalKills ?? 0,
+        });
+      }
+    }
+
+    return Array.from(unifiedMap.values());
   }),
 
   list: publicQuery
