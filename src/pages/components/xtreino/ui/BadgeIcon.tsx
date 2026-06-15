@@ -10,8 +10,6 @@ import {
   Medal,
   Award,
   Shield,
-  TrendingUp,
-  TrendingDown,
   ArrowUp,
   ArrowDown,
   Minus,

@@ -9,8 +9,7 @@ import {
   Medal,
   BarChart3,
   Users,
-  ChevronDown,
-  ChevronUp,
+
   Flame,
   Crown,
   Award,

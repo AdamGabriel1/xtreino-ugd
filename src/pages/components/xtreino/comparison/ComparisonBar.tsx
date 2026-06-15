@@ -13,7 +13,7 @@ interface ComparisonBarProps {
   maxItems?: number;
 }
 
-export function ComparisonBar({ players, onRemove, onClear, maxItems = 4 }: ComparisonBarProps) {
+export function ComparisonBar({ players, onRemove, onClear }: ComparisonBarProps) {
   if (players.length < 2) return null;
 
   // Encontra o maior valor de kills para barra proporcional
