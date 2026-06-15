@@ -28,8 +28,9 @@ import {
   Crown,
   TrendingDown,
   Shield,
-  Sparkles,
   Crosshair,
+  Tag,
+  Info,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import {
@@ -104,6 +105,7 @@ interface EnrichedPlayer extends PlayerRankingDisplay {
   trend: "up" | "down" | "same";
   isNewbie: boolean;
   currentRank: number;
+  previousNicks: string[];
 }
 
 // ============================================================
@@ -144,7 +146,7 @@ function filterStatsByTeam<T extends { teamName?: string | null }>(
   return stats.filter((s) => (s.teamName ?? "").toLowerCase() === team.toLowerCase());
 }
 
-function searchPlayerStats<T extends { playerName: string; teamName?: string | null }>(
+function searchPlayerStats<T extends { playerName: string; teamName?: string | null; previousNicks?: string[] }>(
   stats: T[],
   query: string
 ): T[] {
@@ -153,7 +155,8 @@ function searchPlayerStats<T extends { playerName: string; teamName?: string | n
   return stats.filter(
     (p) =>
       p.playerName.toLowerCase().includes(q) ||
-      (p.teamName?.toLowerCase() ?? "").includes(q)
+      (p.teamName?.toLowerCase() ?? "").includes(q) ||
+      (p.previousNicks?.some((n) => n.toLowerCase().includes(q)) ?? false)
   );
 }
 
@@ -381,6 +384,27 @@ function TrendIcon({ trend }: { trend: "up" | "down" | "same" }) {
   return <Minus className="w-3.5 h-3.5 text-[#5a5a6e]" />;
 }
 
+function PreviousNicksTooltip({ nicks }: { nicks: string[] }) {
+  if (!nicks.length) return null;
+  return (
+    <div className="group relative inline-flex items-center">
+      <Tag className="w-3 h-3 text-[#5a5a6e] ml-1 cursor-help" />
+      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 hidden group-hover:block">
+        <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-lg px-3 py-2 shadow-xl whitespace-nowrap">
+          <p className="text-[10px] text-[#5a5a6e] uppercase mb-1">Nicks anteriores:</p>
+          <div className="flex flex-wrap gap-1">
+            {nicks.map((nick) => (
+              <span key={nick} className="text-xs text-[#8a8a9e] bg-[#2a2a3a] px-1.5 py-0.5 rounded">
+                {nick}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlayerDetailModal({
   player,
   rawStats,
@@ -429,6 +453,30 @@ function PlayerDetailModal({
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Nicks antigos */}
+          {player.previousNicks.length > 0 && (
+            <div className="bg-[#1a1a24] rounded-xl border border-[#2a2a3a] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Tag className="w-4 h-4 text-[#5a5a6e]" />
+                <h3 className="text-sm font-medium text-[#8a8a9e]">Nicks anteriores</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {player.previousNicks.map((nick) => (
+                  <span
+                    key={nick}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0a0a0f] border border-[#2a2a3a] text-xs text-[#8a8a9e]"
+                  >
+                    <History className="w-3 h-3 text-[#5a5a6e]" />
+                    {nick}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-[#3a3a4e] mt-2">
+                Os stats de todos esses nicks foram unificados sob "{player.playerName}".
+              </p>
+            </div>
+          )}
+
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-[#1a1a24] rounded-xl p-3 border border-[#2a2a3a]">
@@ -690,13 +738,26 @@ export default function JogadoresTab() {
   const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
   const [modalPlayer, setModalPlayer] = useState<EnrichedPlayer | null>(null);
 
-  // tRPC direto
+  // tRPC
   const { data: xtreinosList } = trpc.players.listXtreinos.useQuery();
   const { data: rawStatsData } = trpc.players.rankingStats.useQuery();
+  const { data: playersList } = trpc.players.list.useQuery();
 
   const rawStats = (rawStatsData ?? []) as PlayerRankingRawStat[];
   const isAccumulated = !selectedXt;
   const isLoading = !xtreinosList || !rawStatsData;
+
+  // Map de playerName → previousNicks
+  const previousNicksMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    if (!playersList) return map;
+    for (const player of playersList) {
+      if (player.previousNicks && player.previousNicks.length > 0) {
+        map.set(player.nickname.trim().toLowerCase(), player.previousNicks);
+      }
+    }
+    return map;
+  }, [playersList]);
 
   // Cálculos com useMemo
   const accumulatedStats = useMemo(
@@ -740,6 +801,7 @@ export default function JogadoresTab() {
       const bestPerformance = calcBestPerformance(rawStats, p.playerName);
       const teamContribution = calcTeamContribution(rawStats, p.playerName, p.teamName);
       const trend = calcTrend(rawStats, p.playerName, idx);
+      const previousNicks = previousNicksMap.get(p.playerName.trim().toLowerCase()) ?? [];
 
       return {
         ...p,
@@ -752,9 +814,10 @@ export default function JogadoresTab() {
         trend,
         isNewbie: p.participations < 3,
         currentRank: idx,
+        previousNicks,
       };
     });
-  }, [sortedStats, isAccumulated, rawStats]);
+  }, [sortedStats, isAccumulated, rawStats, previousNicksMap]);
 
   const displayStats = isAccumulated ? enrichedStats : (sortedStats as PlayerRankingStat[]);
 
@@ -842,10 +905,10 @@ export default function JogadoresTab() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" />
               <input
                 type="text"
-                placeholder="Buscar jogador ou time..."
+                placeholder="Buscar jogador, time ou nick antigo..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-green-500/50 min-w-[220px]"
+                className="pl-10 pr-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm placeholder-[#5a5a6e] focus:outline-none focus:border-green-500/50 min-w-[260px]"
               />
             </div>
 
@@ -1119,6 +1182,9 @@ export default function JogadoresTab() {
                               <span className="text-sm font-bold text-[#f0f0f5] group-hover/player:text-green-400 transition-colors">
                                 {p.playerName}
                               </span>
+                              {isAcc && acc.previousNicks.length > 0 && (
+                                <PreviousNicksTooltip nicks={acc.previousNicks} />
+                              )}
                               {isAcc && acc.isNewbie && (
                                 <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] font-medium text-blue-400">
                                   NOVATO
@@ -1164,7 +1230,7 @@ export default function JogadoresTab() {
                                 {acc.streak}
                               </span>
                             ) : (
-                              <span className="text-sm text-[#8a8a9e]">{acc.streak}</span>
+                              <span className="text-sm text-[#8a8a6e]">{acc.streak}</span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-center text-sm text-red-400/80">
