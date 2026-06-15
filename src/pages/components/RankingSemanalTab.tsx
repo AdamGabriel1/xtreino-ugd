@@ -69,26 +69,62 @@ function getRankStyle(index: number): string {
   return "border-l-2 border-transparent";
 }
 
-function getMonthName(monthStr: string): string {
-  const [year, month] = monthStr.split("-");
-  const monthNames = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-  ];
-  const monthIndex = parseInt(month) - 1;
-  return `${monthNames[monthIndex]} de ${year}`;
+/** Retorna o numero da semana do ano (ISO 8601) */
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+/** Retorna a chave da semana no formato YYYY-W## */
+function getWeekKey(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  const year = date.getFullYear();
+  const week = getWeekNumber(date);
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+/** Retorna o label legivel da semana */
+function getWeekLabel(weekKey: string): string {
+  const [year, weekStr] = weekKey.split("-W");
+  const week = parseInt(weekStr);
+  return `Semana ${week} de ${year}`;
+}
+
+/** Retorna as datas de inicio e fim da semana */
+function getWeekDates(weekKey: string): { start: string; end: string } {
+  const [yearStr, weekStr] = weekKey.split("-W");
+  const year = parseInt(yearStr);
+  const week = parseInt(weekStr);
+
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = jan4.getDay() || 7;
+  const firstMonday = new Date(year, 0, 4 - jan4Day + 1);
+
+  const weekStart = new Date(firstMonday);
+  weekStart.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const formatDate = (d: Date) =>
+    `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+  return { start: formatDate(weekStart), end: formatDate(weekEnd) };
 }
 
 // ============================================================
 // COMPONENTE PRINCIPAL
 // ============================================================
 
-export default function RankingMensalTab() {
+export default function RankingSemanalTab() {
   const [sortBy, setSortBy] = useState<SortField>("total");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedWeek, setSelectedWeek] = useState<string>("");
 
   const { data: allResults } = trpc.xtreinos.listResults.useQuery();
   const { data: allPlayerStats } = trpc.xtreinos.listPlayerStats.useQuery();
@@ -96,36 +132,36 @@ export default function RankingMensalTab() {
 
   const isLoading = !allResults || !allPlayerStats;
 
-  // Meses disponiveis
-  const availableMonths = useMemo(() => {
+  // Semanas disponiveis
+  const availableWeeks = useMemo(() => {
     if (!allResults) return [];
-    const months = new Set<string>();
+    const weeks = new Set<string>();
     allResults.forEach((r) => {
-      if (r.date) months.add(r.date.substring(0, 7));
+      if (r.date) weeks.add(getWeekKey(r.date));
     });
-    return Array.from(months).sort().reverse();
+    return Array.from(weeks).sort().reverse();
   }, [allResults]);
 
-  // Seleciona o mes mais recente por padrao
+  // Seleciona a semana mais recente por padrao
   useMemo(() => {
-    if (availableMonths.length > 0 && !selectedMonth) {
-      setSelectedMonth(availableMonths[0]);
+    if (availableWeeks.length > 0 && !selectedWeek) {
+      setSelectedWeek(availableWeeks[0]);
     }
-  }, [availableMonths, selectedMonth]);
+  }, [availableWeeks, selectedWeek]);
 
-  // Filtra dados pelo mes selecionado
+  // Filtra dados pela semana selecionada
   const filteredResults = useMemo(() => {
-    if (!selectedMonth || !allResults) return [];
-    return allResults.filter((r) => r.date?.startsWith(selectedMonth));
-  }, [allResults, selectedMonth]);
+    if (!selectedWeek || !allResults) return [];
+    return allResults.filter((r) => getWeekKey(r.date) === selectedWeek);
+  }, [allResults, selectedWeek]);
 
   const filteredPlayerStats = useMemo(() => {
-    if (!selectedMonth || !allPlayerStats) return [];
-    return allPlayerStats.filter((s) => s.date?.startsWith(selectedMonth));
-  }, [allPlayerStats, selectedMonth]);
+    if (!selectedWeek || !allPlayerStats) return [];
+    return allPlayerStats.filter((s) => getWeekKey(s.date) === selectedWeek);
+  }, [allPlayerStats, selectedWeek]);
 
-  // Calcula stats do mes
-  const monthTeamRanking = useMemo(() => {
+  // Calcula stats da semana
+  const weekTeamRanking = useMemo(() => {
     const map = new Map<string, {
       teamName: string;
       totalPoints: number;
@@ -151,13 +187,11 @@ export default function RankingMensalTab() {
     }>();
 
     for (const result of filteredResults) {
-      // Calcula kills do time neste xtreino
       const teamPlayerStats = filteredPlayerStats.filter(
         (p) => p.teamName === result.teamName && p.date === result.date
       );
       const totalKills = teamPlayerStats.reduce((sum, p) => sum + (p.totalKills || 0), 0);
 
-      // Calcula pontos de posicao
       const q1PosPoints = POSITION_POINTS[result.q1Pos ?? 0] ?? 0;
       const q2PosPoints = POSITION_POINTS[result.q2Pos ?? 0] ?? 0;
       const q3PosPoints = POSITION_POINTS[result.q3Pos ?? 0] ?? 0;
@@ -227,8 +261,8 @@ export default function RankingMensalTab() {
     return Array.from(map.values());
   }, [filteredResults, filteredPlayerStats]);
 
-  // Jogadores agrupados por time no mes
-  const monthTeamPlayers = useMemo(() => {
+  // Jogadores agrupados por time na semana
+  const weekTeamPlayers = useMemo(() => {
     const teamMap = new Map<string, Map<string, {
       playerName: string;
       totalKills: number;
@@ -402,7 +436,7 @@ export default function RankingMensalTab() {
 
   // Ordenar ranking
   const sortedRanking = useMemo(() => {
-    return [...monthTeamRanking].sort((a, b) => {
+    return [...weekTeamRanking].sort((a, b) => {
       let comparison = 0;
       switch (sortBy) {
         case "kills":
@@ -420,7 +454,7 @@ export default function RankingMensalTab() {
       }
       return sortDir === "desc" ? -comparison : comparison;
     });
-  }, [monthTeamRanking, sortBy, sortDir]);
+  }, [weekTeamRanking, sortBy, sortDir]);
 
   // Filtro por busca
   const filteredRanking = useMemo(() => {
@@ -432,7 +466,7 @@ export default function RankingMensalTab() {
   // Busca jogadores do time e merge por ID
   const getTeamPlayers = (teamName: string): MergedPlayer[] => {
     const teamKey = teamName.trim().toLowerCase();
-    const players = monthTeamPlayers.get(teamKey) ?? [];
+    const players = weekTeamPlayers.get(teamKey) ?? [];
     return mergePlayersById(players);
   };
 
@@ -453,7 +487,7 @@ export default function RankingMensalTab() {
 
   const hasFilters = search.trim().length > 0 || sortBy !== "total";
 
-  // Conta xtreinos unicos do mes
+  // Conta xtreinos unicos da semana
   const totalXtreinosUnicos = useMemo(() => {
     const uniqueXtreinoIds = new Set<number>();
     filteredResults.forEach((r) => uniqueXtreinoIds.add(r.xtreinoId));
@@ -465,24 +499,24 @@ export default function RankingMensalTab() {
     {
       icon: <Users className="w-4 h-4 text-blue-400" />,
       label: "Equipes",
-      value: monthTeamRanking.length,
+      value: weekTeamRanking.length,
     },
     {
       icon: <Swords className="w-4 h-4 text-red-400" />,
       label: "Total Kills",
-      value: monthTeamRanking.reduce((acc, t) => acc + t.totalKills, 0),
+      value: weekTeamRanking.reduce((acc, t) => acc + t.totalKills, 0),
       valueColor: "text-red-400",
     },
     {
       icon: <Trophy className="w-4 h-4 text-yellow-400" />,
       label: "Pts Posicao",
-      value: monthTeamRanking.reduce((acc, t) => acc + t.totalPosPoints, 0),
+      value: weekTeamRanking.reduce((acc, t) => acc + t.totalPosPoints, 0),
       valueColor: "text-yellow-400",
     },
     {
       icon: <BarChart3 className="w-4 h-4 text-green-400" />,
       label: "Total Geral",
-      value: monthTeamRanking.reduce((acc, t) => acc + t.totalPoints, 0),
+      value: weekTeamRanking.reduce((acc, t) => acc + t.totalPoints, 0),
       valueColor: "text-green-400",
     },
     {
@@ -493,27 +527,29 @@ export default function RankingMensalTab() {
     },
   ];
 
+  const weekDates = selectedWeek ? getWeekDates(selectedWeek) : null;
+
   return (
     <div className="space-y-6">
-      {/* Seletor de Mes */}
+      {/* Seletor de Semana */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Calendar className="w-5 h-5 text-emerald-400" />
-          <label className="text-sm font-medium text-[#f0f0f5]">Selecionar Mês:</label>
+          <label className="text-sm font-medium text-[#f0f0f5]">Selecionar Semana:</label>
           <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-emerald-500/50 min-w-[200px]"
+            value={selectedWeek}
+            onChange={(e) => setSelectedWeek(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-emerald-500/50 min-w-[220px]"
           >
-            {availableMonths.map((month) => (
-              <option key={month} value={month}>
-                {getMonthName(month)}
+            {availableWeeks.map((week) => (
+              <option key={week} value={week}>
+                {getWeekLabel(week)}
               </option>
             ))}
           </select>
-          {selectedMonth && (
+          {selectedWeek && weekDates && (
             <span className="text-xs text-[#5a5a6e]">
-              {filteredResults.length} resultados
+              {weekDates.start} — {weekDates.end} · {filteredResults.length} resultados
             </span>
           )}
         </div>
@@ -544,18 +580,23 @@ export default function RankingMensalTab() {
       </FilterBar>
 
       {/* Loading */}
-      {isLoading && <LoadingSpinner text="Carregando ranking mensal..." />}
+      {isLoading && <LoadingSpinner text="Carregando ranking semanal..." />}
 
       {/* Cards de Resumo */}
-      {!isLoading && selectedMonth && <SummaryCards cards={summaryCards} columns={5} />}
+      {!isLoading && selectedWeek && <SummaryCards cards={summaryCards} columns={5} />}
 
       {/* Tabela Principal */}
-      {!isLoading && selectedMonth && (
+      {!isLoading && selectedWeek && (
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
           <div className="px-6 py-4 border-b border-[#2a2a3a] flex items-center justify-between">
             <h3 className="font-bold text-[#f0f0f5] flex items-center gap-2">
               <Crown className="w-5 h-5 text-yellow-400" />
-              Ranking Mensal — {getMonthName(selectedMonth)}
+              Ranking Semanal — {getWeekLabel(selectedWeek)}
+              {weekDates && (
+                <span className="text-xs font-normal text-[#5a5a6e] ml-2">
+                  ({weekDates.start} — {weekDates.end})
+                </span>
+              )}
             </h3>
             <span className="text-xs text-[#5a5a6e]">
               {filteredRanking.length} equipes
@@ -838,7 +879,7 @@ export default function RankingMensalTab() {
           {filteredRanking.length === 0 && (
             <EmptyState
               icon={<BarChart3 className="w-12 h-12" />}
-              title="Nenhum dado disponivel para este mes"
+              title="Nenhum dado disponivel para esta semana"
             />
           )}
         </div>
