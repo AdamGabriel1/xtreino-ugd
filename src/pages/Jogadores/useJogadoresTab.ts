@@ -1,16 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { calcPlayerAccumulatedStats } from "../../hooks/useXtreinoCalculations.js";
-import type { XtreinoPlayerStat, PlayerAccumulatedStats } from "../../hooks/useXtreinoCalculations.js";
-import type { XTreinoOption } from "./types";
+import type { PlayerRankingRawStat, XTreinoOption } from "./jogadoresCalculations";
 
 async function fetchXtreinos(): Promise<XTreinoOption[]> {
-  const res = await fetch("/api/players-public/list-xtreinos");
+  const res = await fetch("/api/players/listXtreinos");
   if (!res.ok) throw new Error("Falha ao carregar xtreinos");
   return res.json();
 }
 
-async function fetchPlayerStats(): Promise<XtreinoPlayerStat[]> {
-  const res = await fetch("/api/players-public/ranking-stats");
+async function fetchPlayerStats(): Promise<PlayerRankingRawStat[]> {
+  const res = await fetch("/api/players/rankingStats");
   if (!res.ok) throw new Error("Falha ao carregar estatísticas");
   return res.json();
 }
@@ -26,15 +24,9 @@ export function useJogadoresTab() {
     queryFn: fetchPlayerStats,
   });
 
-  // Usa SUA função existente para acumular stats
-  const accumulated = statsQuery.data
-    ? calcPlayerAccumulatedStats(statsQuery.data)
-    : [];
-
   return {
     xtreinosList: xtreinosQuery.data,
-    allPlayerStats: statsQuery.data,
-    accumulatedStats: accumulated,
+    rawStats: statsQuery.data,
     isLoading: xtreinosQuery.isLoading || statsQuery.isLoading,
     isError: xtreinosQuery.isError || statsQuery.isError,
     error: xtreinosQuery.error ?? statsQuery.error,

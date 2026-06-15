@@ -1,11 +1,59 @@
 import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
-import { players, teams, xtreinoPlayerStats, playerMerges } from "../../db/schema.js";
+import { players, teams, xtreinos, xtreinoPlayerStats, playerMerges } from "../../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 
 export const playersRouter = createRouter({
+  // ===== PUBLICO: Lista de xtreinos para filtros =====
+  listXtreinos: publicQuery.query(() => {
+    const db = getDb();
+    return db
+      .select({ id: xtreinos.id, name: xtreinos.name, date: xtreinos.date })
+      .from(xtreinos)
+      .orderBy(desc(xtreinos.date))
+      .all();
+  }),
+
+  // ===== PUBLICO: Stats de jogadores para ranking =====
+  rankingStats: publicQuery.query(() => {
+    const db = getDb();
+
+    const stats = db.select().from(xtreinoPlayerStats).all();
+
+    return stats.map((stat) => {
+      let teamName = "Sem time";
+
+      const player = db
+        .select()
+        .from(players)
+        .where(eq(players.nickname, stat.playerName))
+        .get();
+
+      if (player?.teamId) {
+        const team = db
+          .select()
+          .from(teams)
+          .where(eq(teams.id, player.teamId))
+          .get();
+        if (team) teamName = team.name;
+      }
+
+      return {
+        id: stat.id,
+        xtreinoId: stat.xtreinoId,
+        date: stat.date,
+        teamName,
+        playerName: stat.playerName,
+        q1Kills: stat.q1Kills ?? 0,
+        q2Kills: stat.q2Kills ?? 0,
+        q3Kills: stat.q3Kills ?? 0,
+        totalKills: stat.totalKills ?? 0,
+      };
+    });
+  }),
+
   list: publicQuery
     .input(
       z.object({
@@ -16,30 +64,21 @@ export const playersRouter = createRouter({
     .query(({ input }) => {
       const db = getDb();
 
-      // Busca todos os merges
       const allMerges = db.select().from(playerMerges).all();
       const mergedIds = new Set(allMerges.map(m => m.mergedPlayerId));
 
-      // Busca jogadores que NÃO foram merged (só os masters aparecem)
       const allPlayers = db
         .select()
         .from(players)
         .all()
         .filter(p => !mergedIds.has(p.id));
 
-      // Enriquece com stats (master + merged + nicks antigos dos xtreinos)
       const enriched = allPlayers.map(p => {
-        // Encontra merges deste master
         const merges = allMerges.filter(m => m.masterPlayerId === p.id);
         const mergedPlayerIds = merges.map(m => m.mergedPlayerId);
-
-        // Todos os IDs deste jogador
         const allPlayerIds = [p.id, ...mergedPlayerIds];
-
-        // Todos os nicks (master + merged)
         const allNicks = [p.nickname];
 
-        // Nicks dos jogadores merged
         for (const mergedId of mergedPlayerIds) {
           const mergedPlayer = db
             .select()
@@ -49,7 +88,6 @@ export const playersRouter = createRouter({
           if (mergedPlayer) allNicks.push(mergedPlayer.nickname);
         }
 
-        // Busca stats por qualquer um dos nicks
         const stats = db
           .select()
           .from(xtreinoPlayerStats)
@@ -58,8 +96,6 @@ export const playersRouter = createRouter({
 
         const totalKills = stats.reduce((sum, s) => sum + (s.totalKills ?? 0), 0);
         const participations = stats.length;
-
-        // Nicks antigos (todos exceto o atual)
         const previousNicks = [...new Set(allNicks.filter(n => n !== p.nickname))];
 
         return {
@@ -111,14 +147,11 @@ export const playersRouter = createRouter({
         teamName = team?.name ?? null;
       }
 
-      // Verifica merges deste jogador
       const allMerges = db.select().from(playerMerges).all();
       const merges = allMerges.filter(m => m.masterPlayerId === input.id);
       const mergedPlayerIds = merges.map(m => m.mergedPlayerId);
 
-      // Todos os nicks (master + merged)
       const allNicks = [player.nickname];
-
       for (const mergedId of mergedPlayerIds) {
         const mp = db.select().from(players).where(eq(players.id, mergedId)).get();
         if (mp) allNicks.push(mp.nickname);
@@ -126,7 +159,6 @@ export const playersRouter = createRouter({
 
       const previousNicks = [...new Set(allNicks.filter(n => n !== player.nickname))];
 
-      // Stats de xtreinos por qualquer nick
       const xtreinoStats = db
         .select()
         .from(xtreinoPlayerStats)
@@ -137,7 +169,6 @@ export const playersRouter = createRouter({
       const totalXtreinoKills = xtreinoStats.reduce((sum, s) => sum + (s.totalKills ?? 0), 0);
       const xtreinoParticipations = xtreinoStats.length;
 
-      // Melhor performance
       const bestXtreino = xtreinoStats.length > 0 
         ? xtreinoStats.reduce((best, curr) => (curr.totalKills ?? 0) > (best.totalKills ?? 0) ? curr : best)
         : null;
@@ -154,7 +185,6 @@ export const playersRouter = createRouter({
       };
     }),
 
-  // ===== ADMIN: Gerenciar Merges =====
   addMerge: adminQuery
     .input(
       z.object({
@@ -167,7 +197,6 @@ export const playersRouter = createRouter({
       if (!payload) throw new Error("Invalid token");
 
       const db = getDb();
-
       const existing = db
         .select()
         .from(playerMerges)
@@ -175,7 +204,6 @@ export const playersRouter = createRouter({
         .get();
 
       if (existing) throw new Error("Jogador já foi mergeado");
-
       if (input.masterPlayerId === input.mergedPlayerId) {
         throw new Error("Não pode mergear em si mesmo");
       }
@@ -243,11 +271,7 @@ export const playersRouter = createRouter({
 
       const { id, ...data } = input;
       const db = getDb();
-      db
-        .update(players)
-        .set(data)
-        .where(eq(players.id, id))
-        .run();
+      db.update(players).set(data).where(eq(players.id, id)).run();
       return { success: true };
     }),
 

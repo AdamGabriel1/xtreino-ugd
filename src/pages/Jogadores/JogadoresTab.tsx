@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Target,
   Filter,
@@ -15,61 +15,35 @@ import {
   Award,
 } from "lucide-react";
 import { useJogadoresTab } from "./useJogadoresTab";
-import type { PlayerAccumulatedStats } from "../../hooks/useXtreinoCalculations.js";
+import {
+  usePlayerRankingCalculations,
+  type RankingSortField,
+  type PlayerRankingDisplay,
+  type PlayerRankingRawStat,
+} from "./jogadoresCalculations";
 
 export function JogadoresTab() {
   const [search, setSearch] = useState("");
   const [selectedXt, setSelectedXt] = useState<number | null>(null);
-  const [sortField, setSortField] = useState<"totalKills" | "q1Kills" | "q2Kills" | "q3Kills" | "participations" | "avgKills">("totalKills");
+  const [sortField, setSortField] = useState<RankingSortField>("totalKills");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const { xtreinosList, allPlayerStats, accumulatedStats, isLoading, isError, error } = useJogadoresTab();
+  const { xtreinosList, rawStats, isLoading, isError, error } = useJogadoresTab();
 
-  // Filtra por xtreino se selecionado (usa allPlayerStats que tem xtreinoId)
-  const statsForDisplay = selectedXt
-    ? (allPlayerStats?.filter((p) => p.xtreinoId === selectedXt) ?? [])
-    : accumulatedStats;
+  const { displayStats, summary, isAccumulated } = usePlayerRankingCalculations({
+    rawStats,
+    selectedXtreinoId: selectedXt,
+    searchQuery: search,
+    sortField,
+    sortDirection: sortDir,
+  });
 
-  // Busca por nome/time
-  const filteredStats = useMemo(() => {
-    if (!search.trim()) return statsForDisplay;
-    const q = search.toLowerCase();
-    return statsForDisplay.filter((p) =>
-      p.playerName.toLowerCase().includes(q) ||
-      (p.teamName?.toLowerCase() ?? "").includes(q)
-    );
-  }, [statsForDisplay, search]);
-
-  // Sort
-  const sortedStats = useMemo(() => {
-    return [...filteredStats].sort((a, b) => {
-      const aVal = (a as any)[sortField] ?? 0;
-      const bVal = (b as any)[sortField] ?? 0;
-      return sortDir === "desc" ? bVal - aVal : aVal - bVal;
-    });
-  }, [filteredStats, sortField, sortDir]);
-
-  const summary = useMemo(() => {
-    if (!statsForDisplay.length) return null;
-    const isAccumulated = !selectedXt;
-    return {
-      totalPlayers: new Set(statsForDisplay.map((p) => p.playerName)).size,
-      totalKills: statsForDisplay.reduce((sum, p) => sum + (p.totalKills || 0), 0),
-      totalQ1: statsForDisplay.reduce((sum, p) => sum + ((p as any).totalQ1Kills || (p as any).q1Kills || 0), 0),
-      totalQ2: statsForDisplay.reduce((sum, p) => sum + ((p as any).totalQ2Kills || (p as any).q2Kills || 0), 0),
-      totalQ3: statsForDisplay.reduce((sum, p) => sum + ((p as any).totalQ3Kills || (p as any).q3Kills || 0), 0),
-      participations: isAccumulated
-        ? statsForDisplay.reduce((sum, p) => sum + ((p as PlayerAccumulatedStats).participations || 0), 0)
-        : statsForDisplay.length,
-    };
-  }, [statsForDisplay, selectedXt]);
-
-  const handleSort = (field: typeof sortField) => {
+  const handleSort = (field: RankingSortField) => {
     if (sortField === field) setSortDir(sortDir === "desc" ? "asc" : "desc");
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  const SortHeader = ({ field, label, align = "center" }: { field: typeof sortField; label: string; align?: "left" | "center" }) => (
+  const SortHeader = ({ field, label, align = "center" }: { field: RankingSortField; label: string; align?: "left" | "center" }) => (
     <button onClick={() => handleSort(field)} className={`flex items-center gap-1 text-xs font-medium text-[#5a5a6e] uppercase hover:text-[#f0f0f5] transition-colors ${align === "left" ? "justify-start" : "justify-center"}`}>
       {label}
       {sortField === field && (sortDir === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
@@ -144,8 +118,8 @@ export function JogadoresTab() {
             <p className="text-2xl font-bold text-[#f0f0f5]">{summary.totalQ1}/{summary.totalQ2}/{summary.totalQ3}</p>
           </div>
           <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-4">
-            <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-green-400" /><span className="text-xs text-[#5a5a6e] uppercase">{selectedXt ? "Registros" : "Participações"}</span></div>
-            <p className="text-2xl font-bold text-[#f0f0f5]">{summary.participations}</p>
+            <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-green-400" /><span className="text-xs text-[#5a5a6e] uppercase">{isAccumulated ? "Participações" : "Registros"}</span></div>
+            <p className="text-2xl font-bold text-[#f0f0f5]">{summary.totalRecords}</p>
           </div>
         </div>
       )}
@@ -161,7 +135,7 @@ export function JogadoresTab() {
                 <span className="text-sm font-normal text-[#5a5a6e]">— {xtreinosList.find((x) => x.id === selectedXt)?.date}</span>
               )}
             </h3>
-            <span className="text-xs text-[#5a5a6e]">{sortedStats.length} registros</span>
+            <span className="text-xs text-[#5a5a6e]">{displayStats.length} registros</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -171,7 +145,7 @@ export function JogadoresTab() {
                   <th className="px-4 py-3 text-center w-12"><span className="text-xs font-medium text-[#5a5a6e] uppercase">#</span></th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Jogador</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#5a5a6e] uppercase">Time</th>
-                  {!selectedXt && (
+                  {isAccumulated && (
                     <>
                       <th className="px-6 py-3 text-center"><SortHeader field="participations" label="XTs" /></th>
                       <th className="px-6 py-3 text-center"><SortHeader field="avgKills" label="Média" /></th>
@@ -184,37 +158,42 @@ export function JogadoresTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2a3a]">
-                {sortedStats.map((p, index) => (
-                  <tr key={`${p.playerName}-${index}`} className={`hover:bg-[#1a1a24] transition-colors ${
-                    index === 0 ? "bg-gradient-to-r from-yellow-500/5 to-transparent border-l-2 border-yellow-400" :
-                    index === 1 ? "bg-gradient-to-r from-gray-400/5 to-transparent border-l-2 border-gray-300" :
-                    index === 2 ? "bg-gradient-to-r from-amber-700/5 to-transparent border-l-2 border-amber-600" : ""
-                  }`}>
-                    <td className="px-4 py-3 text-center">{getRankIcon(index)}</td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center"><Target className="w-4 h-4 text-green-400" /></div>
-                        <span className="text-sm font-bold text-[#f0f0f5]">{p.playerName}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-3 text-sm text-[#8a8a9e]">{p.teamName ?? "—"}</td>
-                    {!selectedXt && (
-                      <>
-                        <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{(p as PlayerAccumulatedStats).participations}</td>
-                        <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{(p as PlayerAccumulatedStats).avgKills}</td>
-                      </>
-                    )}
-                    <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{(p as any).totalQ1Kills ?? (p as any).q1Kills ?? 0}</td>
-                    <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{(p as any).totalQ2Kills ?? (p as any).q2Kills ?? 0}</td>
-                    <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{(p as any).totalQ3Kills ?? (p as any).q3Kills ?? 0}</td>
-                    <td className="px-6 py-3 text-center bg-green-500/5"><span className="text-sm font-bold text-green-400">{p.totalKills}</span></td>
-                  </tr>
-                ))}
+                {displayStats.map((p: PlayerRankingDisplay | PlayerRankingRawStat, index: number) => {
+                  const isAcc = isAccumulated;
+                  const acc = p as PlayerRankingDisplay;
+                  const single = p as PlayerRankingRawStat;
+                  return (
+                    <tr key={`${p.playerName}-${index}`} className={`hover:bg-[#1a1a24] transition-colors ${
+                      index === 0 ? "bg-gradient-to-r from-yellow-500/5 to-transparent border-l-2 border-yellow-400" :
+                      index === 1 ? "bg-gradient-to-r from-gray-400/5 to-transparent border-l-2 border-gray-300" :
+                      index === 2 ? "bg-gradient-to-r from-amber-700/5 to-transparent border-l-2 border-amber-600" : ""
+                    }`}>
+                      <td className="px-4 py-3 text-center">{getRankIcon(index)}</td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center"><Target className="w-4 h-4 text-green-400" /></div>
+                          <span className="text-sm font-bold text-[#f0f0f5]">{p.playerName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-[#8a8a9e]">{p.teamName ?? "—"}</td>
+                      {isAcc && (
+                        <>
+                          <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{acc.participations}</td>
+                          <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{acc.avgKills}</td>
+                        </>
+                      )}
+                      <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{isAcc ? acc.totalQ1Kills : single.q1Kills}</td>
+                      <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{isAcc ? acc.totalQ2Kills : single.q2Kills}</td>
+                      <td className="px-6 py-3 text-center text-sm text-[#8a8a9e]">{isAcc ? acc.totalQ3Kills : single.q3Kills}</td>
+                      <td className="px-6 py-3 text-center bg-green-500/5"><span className="text-sm font-bold text-green-400">{p.totalKills}</span></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
-          {sortedStats.length === 0 && (
+          {displayStats.length === 0 && (
             <div className="px-6 py-16 text-center">
               <Target className="w-12 h-12 mx-auto mb-4 text-[#2a2a3a]" />
               <p className="text-[#5a5a6e] text-lg font-medium">Nenhuma estatística encontrada</p>
