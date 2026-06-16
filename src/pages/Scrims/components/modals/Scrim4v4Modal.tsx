@@ -110,58 +110,60 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
 
   async function handleSubmit() {
     try {
-      // 1. Criar o scrim
+      // 1. Criar o scrim — MME = Mata-Mata em Equipe
       const scrim = await createScrim.mutateAsync({
-        name: `Scrim 4v4 - ${team1Name} vs ${team2Name}`,
+        name: `Scrim 4v4 MME — ${team1Name} vs ${team2Name}`,
         date,
         time,
         modality: "4v4",
+        mode: "mme", // 🔥 ESSENCIAL: define o modo como MME
         status: "concluido",
-        result: `${team1Name} ${matches.length}-0 ${team2Name}`,
+        result: `${team1Name} ${matches.filter(m => m.team1Score > m.team2Score).length}-${matches.filter(m => m.team2Score > m.team1Score).length} ${team2Name}`,
       });
 
-      // 2. Inserir resultados dos times (posicoes e scores por partida)
-      // Calcular posicoes baseado no score de cada partida
-      const team1TotalScore = matches.reduce((sum, m) => sum + m.team1Score, 0);
-      const team2TotalScore = matches.reduce((sum, m) => sum + m.team2Score, 0);
-
+      // 2. Inserir resultados dos times — MME NÃO USA POSIÇÕES (qXPos = null)
       const team1Results: any = {
         scrimId: scrim.id,
         date,
         teamName: team1Name,
+        // MME: posições são sempre null
+        q1Pos: null,
+        q2Pos: null,
+        q3Pos: null,
       };
       const team2Results: any = {
         scrimId: scrim.id,
         date,
         teamName: team2Name,
+        // MME: posições são sempre null
+        q1Pos: null,
+        q2Pos: null,
+        q3Pos: null,
       };
 
       for (let i = 0; i < 3; i++) {
-        const posField = i === 0 ? "q1Pos" : i === 1 ? "q2Pos" : "q3Pos";
         const scoreField = i === 0 ? "q1Score" : i === 1 ? "q2Score" : "q3Score";
 
         if (i < matches.length) {
           const match = matches[i];
-          // Posicao 1 = venceu a queda (maior score), Posicao 2 = perdeu
-          const t1WinsQ = match.team1Score > match.team2Score ? 1 : 2;
-          const t2WinsQ = match.team2Score > match.team1Score ? 1 : 2;
-
-          team1Results[posField] = t1WinsQ;
           team1Results[scoreField] = match.team1Score;
-          team2Results[posField] = t2WinsQ;
           team2Results[scoreField] = match.team2Score;
         } else {
-          team1Results[posField] = null;
           team1Results[scoreField] = null;
-          team2Results[posField] = null;
           team2Results[scoreField] = null;
         }
+      }
+
+      // Preencher q4-q7 como null para MME padrão (melhor de 3)
+      for (let i = 4; i <= 7; i++) {
+        team1Results[`q${i}Score`] = null;
+        team2Results[`q${i}Score`] = null;
       }
 
       await createResults.mutateAsync(team1Results);
       await createResults.mutateAsync(team2Results);
 
-      // 3. Inserir stats dos jogadores — com TODOS os campos do schema
+      // 3. Inserir stats dos jogadores — MME
       for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         const killField = i === 0 ? "q1Kills" : i === 1 ? "q2Kills" : "q3Kills";
@@ -172,12 +174,6 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
         const scoreField = i === 0 ? "q1Score" : i === 1 ? "q2Score" : "q3Score";
 
         for (const p of match.team1Players) {
-          const totalKills = match.team1Players.reduce((sum, tp) => sum + tp.kills, 0);
-          const totalAssists = match.team1Players.reduce((sum, tp) => sum + tp.assists, 0);
-          const totalDeaths = match.team1Players.reduce((sum, tp) => sum + tp.deaths, 0);
-          const totalDamage = match.team1Players.reduce((sum, tp) => sum + tp.damage, 0);
-          const totalMvp = match.team1Players.reduce((sum, tp) => sum + (tp.mvp ? 1 : 0), 0);
-
           await createPlayerStats.mutateAsync({
             scrimId: scrim.id,
             date,
@@ -231,7 +227,10 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
       <div className="bg-[#12121a] border border-[#2a2a3a] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a3a]">
-          <h2 className="text-xl font-bold text-[#f0f0f5]">Nova Scrim 4v4</h2>
+          <div>
+            <h2 className="text-xl font-bold text-[#f0f0f5]">Nova Scrim 4v4</h2>
+            <p className="text-xs text-orange-400 mt-1">Modo: Mata-Mata em Equipe (MME)</p>
+          </div>
           <button onClick={onClose} className="text-[#5a5a6e] hover:text-[#f0f0f5]">
             <X className="w-5 h-5" />
           </button>
@@ -284,7 +283,7 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
           {/* Partidas */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#f0f0f5]">Partidas</h3>
+              <h3 className="text-sm font-bold text-[#f0f0f5]">Partidas (Melhor de 3)</h3>
               <button
                 onClick={addMatch}
                 className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300"
@@ -297,6 +296,7 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
               <div key={matchIndex} className="bg-[#1a1a24] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
+                    <span className="text-xs text-orange-400 font-bold">Q{matchIndex + 1}</span>
                     <input
                       type="text"
                       value={match.map}
@@ -365,9 +365,9 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
             </button>
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 rounded-lg text-sm bg-emerald-500 text-white hover:bg-emerald-600"
+              className="px-4 py-2 rounded-lg text-sm bg-orange-500 text-white hover:bg-orange-600"
             >
-              Salvar Scrim
+              Salvar Scrim MME
             </button>
           </div>
         </div>
