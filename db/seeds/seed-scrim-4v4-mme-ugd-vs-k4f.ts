@@ -27,9 +27,9 @@ const SCRIM_RESULT = "UGD Threat 3-0 K4F (Vale Deserto, Ilha do Medo, Ilha do Me
 const TEAM_RESULTS = [
   {
     teamName: "UGD Threat",
-    q1Pos: 1,
-    q2Pos: 1,
-    q3Pos: 1,
+    q1Pos: null,
+    q2Pos: null,
+    q3Pos: null,
     q1Score: 7,
     q2Score: 7,
     q3Score: 7,
@@ -40,9 +40,9 @@ const TEAM_RESULTS = [
   },
   {
     teamName: "K4F",
-    q1Pos: 2,
-    q2Pos: 2,
-    q3Pos: 2,
+    q1Pos: null,  // ← MME não usa posições!
+    q2Pos: null,
+    q3Pos: null,
     q1Score: 1,
     q2Score: 1,
     q3Score: 0,
