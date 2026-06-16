@@ -117,6 +117,11 @@ const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string
   ["Time I", "TI", null, "active", "Time independente I."],
   ["Time E", "TE", null, "active", "Time independente E."],
   ["Randolinhas", "RND", null, "active", "Time avulso Randolinhas."],
+
+  ["vengeance", "VNG", null, "active", "Time vengeance."],
+  ["RED INSS", "RED", "RED", "active", "Line INSS da RED."],
+  ["FURY CASUAL", "FURY", "FURY", "active", "Line casual da FURY."],
+  ["FURY MIX (ELITE / ROYAL)", "FURY", "FURY", "active", "Line mista Elite/Royal da FURY."],
 ];
 
 // --- PLAYERS ---
@@ -354,6 +359,55 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["Artur", "CMF ASSALT", "off"],
   ["CMF Txxz¹", "CMF ASSALT", "off"],
   ["CMF xeW", "CMF ASSALT", "off"],
+
+  // CMF ATLANTIC
+  ["CMF Fallet", "CMF ATLANTIC", "off"],
+  ["CMF Syx⁷", "CMF ATLANTIC", "off"],
+  ["CMF M0IZO", "CMF ATLANTIC", "off"],
+  ["CMF MOZKA", "CMF ATLANTIC", "off"],
+
+  // FURY MIX
+  ["Dexz⁷ᴿʸᴸ", "FURY MIX (ELITE / ROYAL)", "off"],
+  ["B4RBOSA⁷", "FURY MIX (ELITE / ROYAL)", "off"],
+  ["NOKI FURY", "FURY MIX (ELITE / ROYAL)", "off"],
+  ["Diana FURY", "FURY MIX (ELITE / ROYAL)", "off"],
+
+  // K4F
+  ["K4F DUDU", "K4F", "off"],
+  ["K4F ExuKramo", "K4F", "off"],
+
+  // RED INSS
+  ["RED Thaedus⁷", "RED INSS", "off"],
+  ["RED LORD", "RED INSS", "off"],
+  ["VERON", "RED INSS", "off"],
+  ["ATREUS", "RED INSS", "off"],
+
+  // vengeance
+  ["VNG NEAR★", "vengeance", "cap"],
+  ["RED moraesbc", "vengeance", "off"],
+  ["Ti Pela", "vengeance", "off"],
+  ["Caveira", "vengeance", "off"],
+  ["ackerman", "vengeance", "off"],
+  ["VNG ¿¿¿", "vengeance", "off"],
+  ["VNG SCAVEIRA", "vengeance", "off"],
+
+  // CMF ASSALT
+  ["CMF BAELTTK", "CMF ASSALT", "off"],
+  ["CMF Thxxxz", "CMF ASSALT", "off"],
+
+  // UGD LEGENDS
+  ["qgc.", "UGD LEGENDS", "off"],
+  ["CF BLAZE", "UGD LEGENDS", "off"],
+  ["UGD Santz⁷", "UGD LEGENDS", "off"],
+  ["UGD Weenot", "UGD LEGENDS", "off"],
+
+  // FURY CASUAL
+  ["AM Akyra🥷", "FURY CASUAL", "off"],
+  ["FURY zLAZY⁰¹", "FURY CASUAL", "off"],
+  ["LK NPC", "FURY CASUAL", "off"],
+  ["FURY zLORHAN", "FURY CASUAL", "off"],
+  ["KILLUA", "FURY CASUAL", "off"],
+  ["VELOZZO", "FURY CASUAL", "off"],
 ];
 
 // --- XTREINOS (lista base, sem dados de jogadores) ---
@@ -367,7 +421,7 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 09/06", "2026-06-09", "finalizado"],
   ["XTreino Underground - 10/06", "2026-06-10", "finalizado"],
   ["XTreino Underground - 11/06", "2026-06-11", "finalizado"],
-  ["XTreino Underground - 12/06", "2026-06-12", "aberto"],
+  ["XTreino Underground - 15/06", "2026-06-15", "finalizado"],
 ];
 
 // ============================================================
