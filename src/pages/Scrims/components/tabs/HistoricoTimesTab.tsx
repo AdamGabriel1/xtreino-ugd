@@ -378,6 +378,11 @@ export function HistoricoTimesTab({
     />
   );
 
+  // Só mostra a seção BR se: modo é BR ou (modo é "all" E há dados BR)
+  const showBR = isBR || (isAllModes && dataBR.length > 0);
+  // Só mostra a seção MME se: modo é MME ou (modo é "all" E há dados MME)
+  const showMME = isMME || (isAllModes && dataMME.length > 0);
+
   return (
     <div className="space-y-6">
       <DateFilter
@@ -394,23 +399,21 @@ export function HistoricoTimesTab({
       />
 
       {/* BR Section */}
-      {!isMME && (
+      {showBR && (
         <div className="space-y-3">
-          {(isAllModes || dataBR.length > 0) && (
-            <div className="flex items-center gap-3 pb-2 border-b border-[#2a2a3a]">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Target className="w-4 h-4 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[#f0f0f5]">Battle Royale</h3>
-                <p className="text-xs text-[#5a5a6e]">
-                  {dataBR.length > 0 
-                    ? `${dataBR.length} equipe(s)` 
-                    : "Nenhuma equipe nesta data"}
-                </p>
-              </div>
+          <div className="flex items-center gap-3 pb-2 border-b border-[#2a2a3a]">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Target className="w-4 h-4 text-blue-400" />
             </div>
-          )}
+            <div>
+              <h3 className="text-sm font-bold text-[#f0f0f5]">Battle Royale</h3>
+              <p className="text-xs text-[#5a5a6e]">
+                {dataBR.length > 0 
+                  ? `${dataBR.length} equipe(s)` 
+                  : "Nenhuma equipe nesta data"}
+              </p>
+            </div>
+          </div>
           <ScrimTable
             data={dataBR}
             keyExtractor={(row) => row.id}
@@ -421,23 +424,21 @@ export function HistoricoTimesTab({
       )}
 
       {/* MME Section */}
-      {!isBR && (
+      {showMME && (
         <div className="space-y-3">
-          {(isAllModes || dataMME.length > 0) && (
-            <div className="flex items-center gap-3 pb-2 border-b border-[#2a2a3a]">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Users className="w-4 h-4 text-orange-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[#f0f0f5]">Mata-Mata em Equipe</h3>
-                <p className="text-xs text-[#5a5a6e]">
-                  {dataMME.length > 0 
-                    ? `${dataMME.length} equipe(s)` 
-                    : "Nenhuma equipe nesta data"}
-                </p>
-              </div>
+          <div className="flex items-center gap-3 pb-2 border-b border-[#2a2a3a]">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+              <Users className="w-4 h-4 text-orange-400" />
             </div>
-          )}
+            <div>
+              <h3 className="text-sm font-bold text-[#f0f0f5]">Mata-Mata em Equipe</h3>
+              <p className="text-xs text-[#5a5a6e]">
+                {dataMME.length > 0 
+                  ? `${dataMME.length} equipe(s)` 
+                  : "Nenhuma equipe nesta data"}
+              </p>
+            </div>
+          </div>
           <ScrimTable
             data={dataMME}
             keyExtractor={(row) => row.id}
