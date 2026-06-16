@@ -45,17 +45,6 @@ export function HistoricoTimesTab({
   const isAllModes = selectedMode === "all";
 
   // ============================================================
-  // FILTRO POR MODO — Backend já deve filtrar, mas garantimos aqui
-  // ============================================================
-  // NOTE: A solução correta é o backend fazer INNER JOIN com scrims
-  // e filtrar por scrims.mode. O frontend recebe apenas os dados
-  // do modo correto.
-  //
-  // Se o backend ainda não foi corrigido, descomente os .filter()
-  // abaixo como fallback temporário.
-  // ============================================================
-
-  // ============================================================
   // DADOS BR (Battle Royale)
   // ============================================================
   const dataBR = useMemo<EnrichedTeamRowBR[]>(() => {
@@ -63,8 +52,9 @@ export function HistoricoTimesTab({
 
     if (!isAllTime) {
       const teamsWithPoints = (scrimTeamResults || [])
-        // Fallback: filtrar no frontend se backend ainda não filtra por mode
-        // .filter((t) => t.q1Pos !== null || t.q2Pos !== null || t.q3Pos !== null)
+        // 🔒 FILTRO DE SEGURANÇA: só incluir se tiver pelo menos uma posição (BR)
+        // Isso previne que dados MME vazem para a seção BR
+        .filter((t) => t.q1Pos !== null || t.q2Pos !== null || t.q3Pos !== null)
         .map((t) => {
           const q1Points = getPointsByPosition(t.q1Pos);
           const q2Points = getPointsByPosition(t.q2Pos);
@@ -124,8 +114,9 @@ export function HistoricoTimesTab({
 
     if (!isAllTime) {
       const teamsWithRounds = (scrimTeamResults || [])
-        // Fallback: filtrar no frontend se backend ainda não filtra por mode
-        // .filter((t) => t.q1Score !== null || t.q2Score !== null || t.q3Score !== null)
+        // 🔒 FILTRO DE SEGURANÇA: só incluir se tiver pelo menos um score (MME)
+        // Isso previne que dados BR vazem para a seção MME
+        .filter((t) => t.q1Score !== null || t.q2Score !== null || t.q3Score !== null)
         .map((t) => {
           const roundWins = (t.q1Score || 0) + (t.q2Score || 0) + (t.q3Score || 0)
             + (t.q4Score || 0) + (t.q5Score || 0) + (t.q6Score || 0) + (t.q7Score || 0);
