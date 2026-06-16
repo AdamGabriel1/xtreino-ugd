@@ -45,44 +45,58 @@ export function HistoricoTimesTab({
   const isAllModes = selectedMode === "all";
 
   // ============================================================
+  // FILTRO POR MODO — Backend já deve filtrar, mas garantimos aqui
+  // ============================================================
+  // NOTE: A solução correta é o backend fazer INNER JOIN com scrims
+  // e filtrar por scrims.mode. O frontend recebe apenas os dados
+  // do modo correto.
+  //
+  // Se o backend ainda não foi corrigido, descomente os .filter()
+  // abaixo como fallback temporário.
+  // ============================================================
+
+  // ============================================================
   // DADOS BR (Battle Royale)
   // ============================================================
   const dataBR = useMemo<EnrichedTeamRowBR[]>(() => {
     if (isMME) return [];
 
     if (!isAllTime) {
-      const teamsWithPoints = (scrimTeamResults || []).map((t) => {
-        const q1Points = getPointsByPosition(t.q1Pos);
-        const q2Points = getPointsByPosition(t.q2Pos);
-        const q3Points = getPointsByPosition(t.q3Pos);
-        const positionPoints = q1Points + q2Points + q3Points;
+      const teamsWithPoints = (scrimTeamResults || [])
+        // Fallback: filtrar no frontend se backend ainda não filtra por mode
+        // .filter((t) => t.q1Pos !== null || t.q2Pos !== null || t.q3Pos !== null)
+        .map((t) => {
+          const q1Points = getPointsByPosition(t.q1Pos);
+          const q2Points = getPointsByPosition(t.q2Pos);
+          const q3Points = getPointsByPosition(t.q3Pos);
+          const positionPoints = q1Points + q2Points + q3Points;
 
-        const playerData = (scrimPlayerStats || []).filter(
-          (p) => p.teamName === t.teamName && p.date === selectedDate
-        );
-        const teamKills = playerData.reduce(
-          (sum, p) => sum + (p.totalKills || 0),
-          0
-        );
+          const playerData = (scrimPlayerStats || []).filter(
+            (p) => p.teamName === t.teamName && p.date === selectedDate
+          );
+          const teamKills = playerData.reduce(
+            (sum, p) => sum + (p.totalKills || 0),
+            0
+          );
 
-        const positions = [t.q1Pos, t.q2Pos, t.q3Pos].filter((p): p is number => p !== null);
-        const wins = positions.filter(p => p === 1).length;
-        const top3 = positions.filter(p => p && p <= 3).length;
+          const positions = [t.q1Pos, t.q2Pos, t.q3Pos].filter((p): p is number => p !== null);
+          const wins = positions.filter(p => p === 1).length;
+          const top3 = positions.filter(p => p && p <= 3).length;
 
-        return {
-          id: t.id,
-          entityName: t.teamName,
-          points: positionPoints + teamKills,
-          positionPoints,
-          kills: teamKills,
-          wins,
-          top3,
-          participations: 1,
-          q1Pos: t.q1Pos,
-          q2Pos: t.q2Pos,
-          q3Pos: t.q3Pos,
-        };
-      });
+          return {
+            id: t.id,
+            entityName: t.teamName,
+            points: positionPoints + teamKills,
+            positionPoints,
+            kills: teamKills,
+            wins,
+            top3,
+            participations: 1,
+            q1Pos: t.q1Pos,
+            q2Pos: t.q2Pos,
+            q3Pos: t.q3Pos,
+          };
+        });
 
       return teamsWithPoints.sort((a, b) => b.points - a.points);
     }
@@ -109,34 +123,37 @@ export function HistoricoTimesTab({
     if (isBR) return [];
 
     if (!isAllTime) {
-      const teamsWithRounds = (scrimTeamResults || []).map((t) => {
-        const roundWins = (t.q1Score || 0) + (t.q2Score || 0) + (t.q3Score || 0)
-          + (t.q4Score || 0) + (t.q5Score || 0) + (t.q6Score || 0) + (t.q7Score || 0);
+      const teamsWithRounds = (scrimTeamResults || [])
+        // Fallback: filtrar no frontend se backend ainda não filtra por mode
+        // .filter((t) => t.q1Score !== null || t.q2Score !== null || t.q3Score !== null)
+        .map((t) => {
+          const roundWins = (t.q1Score || 0) + (t.q2Score || 0) + (t.q3Score || 0)
+            + (t.q4Score || 0) + (t.q5Score || 0) + (t.q6Score || 0) + (t.q7Score || 0);
 
-        const playerData = (scrimPlayerStats || []).filter(
-          (p) => p.teamName === t.teamName && p.date === selectedDate
-        );
-        const teamKills = playerData.reduce(
-          (sum, p) => sum + (p.totalKills || 0),
-          0
-        );
+          const playerData = (scrimPlayerStats || []).filter(
+            (p) => p.teamName === t.teamName && p.date === selectedDate
+          );
+          const teamKills = playerData.reduce(
+            (sum, p) => sum + (p.totalKills || 0),
+            0
+          );
 
-        return {
-          id: t.id,
-          entityName: t.teamName,
-          roundWins,
-          kills: teamKills,
-          seriesWins: roundWins > 0 ? 1 : 0,
-          participations: 1,
-          q1Score: t.q1Score,
-          q2Score: t.q2Score,
-          q3Score: t.q3Score,
-          q4Score: t.q4Score,
-          q5Score: t.q5Score,
-          q6Score: t.q6Score,
-          q7Score: t.q7Score,
-        };
-      });
+          return {
+            id: t.id,
+            entityName: t.teamName,
+            roundWins,
+            kills: teamKills,
+            seriesWins: roundWins > 0 ? 1 : 0,
+            participations: 1,
+            q1Score: t.q1Score,
+            q2Score: t.q2Score,
+            q3Score: t.q3Score,
+            q4Score: t.q4Score,
+            q5Score: t.q5Score,
+            q6Score: t.q6Score,
+            q7Score: t.q7Score,
+          };
+        });
 
       return teamsWithRounds.sort((a, b) => b.roundWins - a.roundWins);
     }

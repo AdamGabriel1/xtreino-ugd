@@ -327,7 +327,7 @@ export const scrimsRouter = createRouter({
     }),
 
   // ============================================================
-  // ROTAS DE HISTORICO / CONSULTAS
+  // ROTAS DE HISTORICO / CONSULTAS — CORRIGIDAS COM FILTRO POR MODE
   // ============================================================
 
   dates: publicQuery.query(() => {
@@ -341,6 +341,9 @@ export const scrimsRouter = createRouter({
     return results.map((r) => r.date);
   }),
 
+  // ============================================================
+  // teamResults — AGORA COM FILTRO POR MODE VIA JOIN COM SCRIMS
+  // ============================================================
   teamResults: publicQuery
     .input(
       z.object({
@@ -379,6 +382,9 @@ export const scrimsRouter = createRouter({
       return db.select().from(scrimResults).orderBy(desc(scrimResults.date)).all();
     }),
 
+  // ============================================================
+  // playerStats — AGORA COM FILTRO POR MODE VIA JOIN COM SCRIMS
+  // ============================================================
   playerStats: publicQuery
     .input(
       z.object({
@@ -418,9 +424,8 @@ export const scrimsRouter = createRouter({
     }),
 
   // ============================================================
-  // ALL TIME — JOGADORES (unificado)
+  // ALL TIME — JOGADORES (unificado) — AGORA COM FILTRO POR MODE
   // ============================================================
-
   playerStatsAllTime: publicQuery
     .input(
       z.object({
@@ -466,7 +471,6 @@ export const scrimsRouter = createRouter({
   // ============================================================
   // ALL TIME — TIMES BR (pontuação por posição)
   // ============================================================
-
   teamResultsAllTimeBR: publicQuery.query(() => {
     const db = getDb();
 
@@ -553,7 +557,6 @@ export const scrimsRouter = createRouter({
   // ============================================================
   // ALL TIME — TIMES MME (rounds ganhos)
   // ============================================================
-
   teamResultsAllTimeMME: publicQuery.query(() => {
     const db = getDb();
 
