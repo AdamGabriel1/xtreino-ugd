@@ -16,6 +16,9 @@ interface TeamRow {
   q1Pos: number;
   q2Pos: number;
   q3Pos: number;
+  q1Score: number;
+  q2Score: number;
+  q3Score: number;
 }
 
 interface PlayerRow {
@@ -49,6 +52,9 @@ export function ScrimBRModal({ isOpen, onClose, onSuccess }: ScrimBRModalProps) 
         q1Pos: 0,
         q2Pos: 0,
         q3Pos: 0,
+        q1Score: 0,
+        q2Score: 0,
+        q3Score: 0,
       },
     ]);
   }
@@ -109,6 +115,9 @@ export function ScrimBRModal({ isOpen, onClose, onSuccess }: ScrimBRModalProps) 
           q1Pos: team.q1Pos || null,
           q2Pos: team.q2Pos || null,
           q3Pos: team.q3Pos || null,
+          q1Score: team.q1Score || null,
+          q2Score: team.q2Score || null,
+          q3Score: team.q3Score || null,
         });
       }
 
@@ -198,8 +207,11 @@ export function ScrimBRModal({ isOpen, onClose, onSuccess }: ScrimBRModalProps) 
                   <tr className="text-[#5a5a6e] border-b border-[#2a2a3a]">
                     <th className="text-left py-2">Time</th>
                     <th className="text-center py-2 w-20">Q1 Pos</th>
+                    <th className="text-center py-2 w-20">Q1 Score</th>
                     <th className="text-center py-2 w-20">Q2 Pos</th>
+                    <th className="text-center py-2 w-20">Q2 Score</th>
                     <th className="text-center py-2 w-20">Q3 Pos</th>
+                    <th className="text-center py-2 w-20">Q3 Score</th>
                     <th className="text-center py-2 w-10"></th>
                   </tr>
                 </thead>
@@ -226,6 +238,14 @@ export function ScrimBRModal({ isOpen, onClose, onSuccess }: ScrimBRModalProps) 
                       <td className="py-2">
                         <input
                           type="number"
+                          value={team.q1Score}
+                          onChange={(e) => updateTeam(team.id, "q1Score", parseInt(e.target.value) || 0)}
+                          className="w-full bg-[#1a1a24] border border-[#2a2a3a] rounded px-2 py-1 text-[#f0f0f5] text-center"
+                        />
+                      </td>
+                      <td className="py-2">
+                        <input
+                          type="number"
                           value={team.q2Pos}
                           onChange={(e) => updateTeam(team.id, "q2Pos", parseInt(e.target.value) || 0)}
                           className="w-full bg-[#1a1a24] border border-[#2a2a3a] rounded px-2 py-1 text-[#f0f0f5] text-center"
@@ -234,8 +254,24 @@ export function ScrimBRModal({ isOpen, onClose, onSuccess }: ScrimBRModalProps) 
                       <td className="py-2">
                         <input
                           type="number"
+                          value={team.q2Score}
+                          onChange={(e) => updateTeam(team.id, "q2Score", parseInt(e.target.value) || 0)}
+                          className="w-full bg-[#1a1a24] border border-[#2a2a3a] rounded px-2 py-1 text-[#f0f0f5] text-center"
+                        />
+                      </td>
+                      <td className="py-2">
+                        <input
+                          type="number"
                           value={team.q3Pos}
                           onChange={(e) => updateTeam(team.id, "q3Pos", parseInt(e.target.value) || 0)}
+                          className="w-full bg-[#1a1a24] border border-[#2a2a3a] rounded px-2 py-1 text-[#f0f0f5] text-center"
+                        />
+                      </td>
+                      <td className="py-2">
+                        <input
+                          type="number"
+                          value={team.q3Score}
+                          onChange={(e) => updateTeam(team.id, "q3Score", parseInt(e.target.value) || 0)}
                           className="w-full bg-[#1a1a24] border border-[#2a2a3a] rounded px-2 py-1 text-[#f0f0f5] text-center"
                         />
                       </td>

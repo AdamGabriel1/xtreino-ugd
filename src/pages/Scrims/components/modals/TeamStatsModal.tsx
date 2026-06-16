@@ -25,7 +25,7 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       return {
         totalScrims: 0,
         totalKills: 0,
-        totalPoints: 0,
+        totalRoundWins: 0,
         wins: 0,
         top3Count: 0,
         bestPosition: 0,
@@ -43,6 +43,11 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       return sum + [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length;
     }, 0);
 
+    // Rounds ganhos (score)
+    const totalRoundWins = teamResults.reduce((sum, r) => {
+      return sum + (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0);
+    }, 0);
+
     const positions: number[] = [];
     for (const r of teamResults) {
       if (r.q1Pos) positions.push(r.q1Pos);
@@ -58,9 +63,6 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
 
     // Top 3 (posições 1, 2, 3)
     const top3Count = positions.filter(p => p && p <= 3).length;
-
-    // Calcular pontos baseado nas posições
-    const totalPoints = positions.reduce((sum, pos) => sum + getPointsByPosition(pos), 0);
 
     // Jogadores do time (filtrar por teamName nas player stats)
     const teamPlayers = (allPlayerStats || []).filter(p => p.teamName === teamName);
@@ -90,7 +92,7 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       .map((r) => ({
         date: r.date || "—",
         position: r.q1Pos || 0,
-        kills: 0, // Não temos kills por time diretamente, só por jogador
+        roundWins: (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0),
         map: "—",
       }));
 
@@ -106,7 +108,7 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
     return {
       totalScrims,
       totalKills: teamPlayers.reduce((sum, p) => sum + (p.totalKills || 0), 0),
-      totalPoints,
+      totalRoundWins,
       wins,
       top3Count,
       bestPosition,
@@ -116,7 +118,7 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       recentResults,
       topPlayers,
     };
-  }, [teamResults, allPlayerStats]);
+  }, [teamResults, allPlayerStats, teamName]);
 
   const winRate = useMemo(() =>
     stats.totalScrims > 0 ? Math.round((stats.wins / (stats.totalScrims * 3)) * 100) : 0,
@@ -159,8 +161,8 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
             />
             <StatCard
               icon={<BarChart3 className="w-4 h-4 text-emerald-400" />}
-              label="Pontos"
-              value={stats.totalPoints}
+              label="Rounds Gan"
+              value={stats.totalRoundWins}
               sublabel="Total acumulado"
             />
             <StatCard
@@ -248,7 +250,7 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
                         <p className="text-xs text-[#5a5a6e]">{result.date}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-emerald-400 font-medium">{result.kills} kills</span>
+                    <span className="text-sm text-emerald-400 font-medium">{result.roundWins} rounds</span>
                   </div>
                 ))}
               </div>
@@ -258,16 +260,6 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       </div>
     </div>
   );
-}
-
-function getPointsByPosition(pos: number | null): number {
-  if (!pos) return 0;
-  const points: Record<number, number> = {
-    1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7,
-    7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1,
-    13: 1, 14: 0, 15: 0,
-  };
-  return points[pos] ?? 0;
 }
 
 function StatCard({ icon, label, value, sublabel }: {

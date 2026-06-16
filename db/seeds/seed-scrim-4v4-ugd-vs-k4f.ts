@@ -1,7 +1,7 @@
 // db/seeds/seed-scrim-4v4-ugd-vs-k4f.ts
 // Seed da scrim 4v4: UGD Threat vs K4F — 13/06/2026
 // 3 partidas: Vale Deserto, Ilha do Medo, Ilha do Medo
-// Dados atualizados com kills, assists, mortes, dano e MVP por queda
+// Dados atualizados com kills, assists, mortes, dano, placar e MVP por queda
 
 import { getDb } from "../../api/queries/connection.js";
 import { scrims, scrimResults, scrimPlayerStats, seedRuns } from "../schema.js";
@@ -18,76 +18,84 @@ const SCRIM_MODALITY = "4v4";
 const SCRIM_STATUS = "concluido";
 const SCRIM_RESULT = "UGD Threat 3-0 K4F (Vale Deserto, Ilha do Medo, Ilha do Medo)";
 
-// --- RESULTADOS DOS TIMES (posicoes por partida) ---
+// --- RESULTADOS DOS TIMES (posicoes e placares por partida) ---
 // Para 4v4, cada partida = uma "queda" (Q1, Q2, Q3)
 // UGD Threat venceu todas (pos 1), K4F perdeu todas (pos 2)
+// Placares: Q1 = 7-1, Q2 = 7-1, Q3 = 7-0
 const TEAM_RESULTS = [
   {
     teamName: "UGD Threat",
     q1Pos: 1,
     q2Pos: 1,
     q3Pos: 1,
+    q1Score: 7,
+    q2Score: 7,
+    q3Score: 7,
   },
   {
     teamName: "K4F",
     q1Pos: 2,
     q2Pos: 2,
     q3Pos: 2,
+    q1Score: 1,
+    q2Score: 1,
+    q3Score: 0,
   },
 ];
 
 // --- ESTATISTICAS DOS JOGADORES ---
-// Cada entrada: [playerName, teamName, q1Kills, q1Assists, q1Deaths, q1Damage, q1Mvp,
-//                                      q2Kills, q2Assists, q2Deaths, q2Damage, q2Mvp,
-//                                      q3Kills, q3Assists, q3Deaths, q3Damage, q3Mvp,
-//                                      totalKills, totalAssists, totalDeaths, totalDamage, totalMvp]
+// Cada entrada: [playerName, teamName,
+//   q1Kills, q1Assists, q1Deaths, q1Damage, q1Mvp, q1Score,
+//   q2Kills, q2Assists, q2Deaths, q2Damage, q2Mvp, q2Score,
+//   q3Kills, q3Assists, q3Deaths, q3Damage, q3Mvp, q3Score,
+//   totalKills, totalAssists, totalDeaths, totalDamage, totalMvp]
 const PLAYER_STATS: [string, string,
-  number, number, number, number, boolean,
-  number, number, number, number, boolean,
-  number, number, number, number, boolean,
+  number, number, number, number, boolean, number,
+  number, number, number, number, boolean, number,
+  number, number, number, number, boolean, number,
   number, number, number, number, number][] = [
   // UGD Threat
-  ["IGD_ Ares",    "UGD Threat",
-    11, 5,  1, 3100, true,   // Q1: Vale Deserto
-     9, 14, 2, 3308, false,   // Q2: Ilha do Medo
-    11, 4,  0, 4442, true,   // Q3: Ilha do Medo
-    31, 23, 3, 10850, 2], // Totais
-  ["UGD_ Ohara",   "UGD Threat",
-     8, 10, 1, 3604, false,   // Q1: Vale Deserto
-    12, 7,  1, 2732, true,   // Q2: Ilha do Medo
-     7, 6,  1, 2900, false,   // Q3: Ilha do Medo
-    27, 23, 3, 9236, 1],  // Totais
-  ["Dexz7RYL",     "UGD Threat",
-     7, 7,  1, 2866, false,   // Q1: Vale Deserto
-     4, 9,  1, 1595, false,   // Q2: Ilha do Medo
-     7, 4,  1, 2522, false,   // Q3: Ilha do Medo
-    18, 20, 3, 6983, 0],  // Totais
-  ["GD_ A R",      "UGD Threat",
-     3, 5,  2, 2277, false,   // Q1: Vale Deserto
-     4, 3,  1, 1042, false,   // Q2: Ilha do Medo
-     3, 8,  2, 1678, false,   // Q3: Ilha do Medo
-    10, 16, 5, 4997, 0],  // Totais
+  ["IGD⚡ Ares",    "UGD Threat",
+    11, 5,  1, 3100, true,  7,   // Q1: Vale Deserto (7-1)
+     9, 14, 2, 3308, false, 7,   // Q2: Ilha do Medo (7-1)
+    11, 4,  0, 4442, true,  7,   // Q3: Ilha do Medo (7-0)
+    31, 23, 3, 10850, 2],       // Totais
+  ["UGD⚡ Ohara",   "UGD Threat",
+     8, 10, 1, 3604, false, 7,   // Q1: Vale Deserto (7-1)
+    12, 7,  1, 2732, true,  7,   // Q2: Ilha do Medo (7-1)
+     7, 6,  1, 2900, false, 7,   // Q3: Ilha do Medo (7-0)
+    27, 23, 3, 9236, 1],        // Totais
+  ["Dexz⁷RYL",     "UGD Threat",
+     7, 7,  1, 2866, false, 7,   // Q1: Vale Deserto (7-1)
+     4, 9,  1, 1595, false, 7,   // Q2: Ilha do Medo (7-1)
+     7, 4,  1, 2522, false, 7,   // Q3: Ilha do Medo (7-0)
+    18, 20, 3, 6983, 0],        // Totais
+  ["GD⚡ A R",      "UGD Threat",
+     3, 5,  2, 2277, false, 7,   // Q1: Vale Deserto (7-1)
+     4, 3,  1, 1042, false, 7,   // Q2: Ilha do Medo (7-1)
+     3, 8,  2, 1678, false, 7,   // Q3: Ilha do Medo (7-0)
+    10, 16, 5, 4997, 0],        // Totais
   // K4F
   ["K4F Zaza",     "K4F",
-     2, 2,  7, 1687, true,   // Q1: Vale Deserto
-     2, 1,  7, 895,  false,   // Q2: Ilha do Medo
-     1, 1,  7, 1451, false,   // Q3: Ilha do Medo
-     5, 4,  21, 4033, 1], // Totais
+     2, 2,  7, 1687, true,  1,   // Q1: Vale Deserto (1-7)
+     2, 1,  7, 895,  false, 1,   // Q2: Ilha do Medo (1-7)
+     1, 1,  7, 1451, false, 0,   // Q3: Ilha do Medo (0-7)
+     5, 4,  21, 4033, 1],       // Totais
   ["K4F NINE",     "K4F",
-     2, 1,  7, 1822, false,   // Q1: Vale Deserto
-     1, 0,  8, 528,  false,   // Q2: Ilha do Medo
-     1, 0,  7, 1416, false,   // Q3: Ilha do Medo
-     4, 1,  22, 3766, 0], // Totais
+     2, 1,  7, 1822, false, 1,   // Q1: Vale Deserto (1-7)
+     1, 0,  8, 528,  false, 1,   // Q2: Ilha do Medo (1-7)
+     1, 0,  7, 1416, false, 0,   // Q3: Ilha do Medo (0-7)
+     4, 1,  22, 3766, 0],       // Totais
   ["K4F Guilok07", "K4F",
-     1, 1,  7, 957,  false,   // Q1: Vale Deserto
-     2, 2,  7, 1938, true,   // Q2: Ilha do Medo
-     2, 2,  7, 2156, true,   // Q3: Ilha do Medo
-     5, 5,  21, 5051, 2], // Totais
-  ["ÉoUrSo",       "K4F",
-     0, 0,  8, 525,  false,   // Q1: Vale Deserto
-     0, 1,  7, 1245, false,   // Q2: Ilha do Medo
-     0, 0,  7, 880,  false,   // Q3: Ilha do Medo
-     0, 1,  22, 2650, 0], // Totais
+     1, 1,  7, 957,  false, 1,   // Q1: Vale Deserto (1-7)
+     2, 2,  7, 1938, true,  1,   // Q2: Ilha do Medo (1-7)
+     2, 2,  7, 2156, true,  0,   // Q3: Ilha do Medo (0-7)
+     5, 5,  21, 5051, 2],       // Totais
+  ["ÉouUrSo",       "K4F",
+     0, 0,  8, 525,  false, 1,   // Q1: Vale Deserto (1-7)
+     0, 1,  7, 1245, false, 1,   // Q2: Ilha do Medo (1-7)
+     0, 0,  7, 880,  false, 0,   // Q3: Ilha do Medo (0-7)
+     0, 1,  22, 2650, 0],       // Totais
 ];
 
 // ============================================================
@@ -170,6 +178,9 @@ export function seed() {
       q1Pos: tr.q1Pos,
       q2Pos: tr.q2Pos,
       q3Pos: tr.q3Pos,
+      q1Score: tr.q1Score,
+      q2Score: tr.q2Score,
+      q3Score: tr.q3Score,
     })) {
       teamResultsCount++;
     }
@@ -180,9 +191,9 @@ export function seed() {
   let playerStatsCount = 0;
   for (const [
     playerName, teamName,
-    q1Kills, q1Assists, q1Deaths, q1Damage, q1Mvp,
-    q2Kills, q2Assists, q2Deaths, q2Damage, q2Mvp,
-    q3Kills, q3Assists, q3Deaths, q3Damage, q3Mvp,
+    q1Kills, q1Assists, q1Deaths, q1Damage, q1Mvp, q1Score,
+    q2Kills, q2Assists, q2Deaths, q2Damage, q2Mvp, q2Score,
+    q3Kills, q3Assists, q3Deaths, q3Damage, q3Mvp, q3Score,
     totalKills, totalAssists, totalDeaths, totalDamage, totalMvp
   ] of PLAYER_STATS) {
     if (upsertScrimPlayerStat(db, scrimId, {
@@ -195,16 +206,19 @@ export function seed() {
       q1Deaths,
       q1Damage,
       q1Mvp,
+      q1Score,
       q2Kills,
       q2Assists,
       q2Deaths,
       q2Damage,
       q2Mvp,
+      q2Score,
       q3Kills,
       q3Assists,
       q3Deaths,
       q3Damage,
       q3Mvp,
+      q3Score,
       totalKills,
       totalAssists,
       totalDeaths,

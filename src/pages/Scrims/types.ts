@@ -1,4 +1,4 @@
-// types.ts — atualizado com campos de assists, deaths, damage, mvp
+// types.ts — atualizado com campos de score (rounds ganhos) e sistema de ranking por rounds
 
 export type TabType = "agendados" | "historico-times" | "historico-jogadores";
 
@@ -21,18 +21,21 @@ export interface ScrimItem {
 
 export interface TeamResult {
   id: number;
-  scrimId: number;
+  scrimId: number | null;
   date: string;
   teamName: string;
   q1Pos: number | null;
   q2Pos: number | null;
   q3Pos: number | null;
+  q1Score: number | null;
+  q2Score: number | null;
+  q3Score: number | null;
   createdAt: Date;
 }
 
 export interface PlayerStat {
   id: number;
-  scrimId: number;
+  scrimId: number | null;
   date: string;
   teamName: string;
   playerName: string;
@@ -41,16 +44,19 @@ export interface PlayerStat {
   q1Deaths: number;
   q1Damage: number;
   q1Mvp: boolean;
+  q1Score: number;
   q2Kills: number;
   q2Assists: number;
   q2Deaths: number;
   q2Damage: number;
   q2Mvp: boolean;
+  q2Score: number;
   q3Kills: number;
   q3Assists: number;
   q3Deaths: number;
   q3Damage: number;
   q3Mvp: boolean;
+  q3Score: number;
   totalKills: number;
   totalAssists: number;
   totalDeaths: number;
@@ -75,13 +81,14 @@ export interface PlayerAllTime {
 
 export interface TeamAllTime {
   teamName: string;
-  totalPoints: number;
+  totalRoundWins: number;
   totalKills: number;
   wins: number;
   matches: number;
-  avgQ1: number;
-  avgQ2: number;
-  avgQ3: number;
+  q1Wins: number;
+  q2Wins: number;
+  q3Wins: number;
+  winRate: number;
 }
 
 export interface EnrichedPlayerRow {
@@ -105,16 +112,16 @@ export interface EnrichedTeamRow {
   id: number;
   entityName: string;
   points: number;
-  positionPoints: number;
+  roundWins: number;
   kills: number;
   wins: number;
   participations: number;
   q1Pos: number | null;
   q2Pos: number | null;
   q3Pos: number | null;
-  q1Points: number;
-  q2Points: number;
-  q3Points: number;
+  q1Score: number | null;
+  q2Score: number | null;
+  q3Score: number | null;
 }
 
 export const STATUS_COLORS: Record<string, string> = {
@@ -130,13 +137,3 @@ export const STATUS_LABELS: Record<string, string> = {
   concluido: "Concluído",
   cancelado: "Cancelado",
 };
-
-export function getPointsByPosition(pos: number | null): number {
-  if (!pos) return 0;
-  const points: Record<number, number> = {
-    1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7,
-    7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1,
-    13: 1, 14: 0, 15: 0,
-  };
-  return points[pos] ?? 0;
-}

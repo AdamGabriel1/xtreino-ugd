@@ -22,6 +22,8 @@ interface PlayerRow {
 
 interface MatchData {
   map: string;
+  team1Score: number;
+  team2Score: number;
   team1Players: PlayerRow[];
   team2Players: PlayerRow[];
 }
@@ -34,6 +36,8 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
   const [matches, setMatches] = useState<MatchData[]>([
     {
       map: "",
+      team1Score: 7,
+      team2Score: 1,
       team1Players: createEmptyPlayers(),
       team2Players: createEmptyPlayers(),
     },
@@ -62,6 +66,8 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
       ...prev,
       {
         map: "",
+        team1Score: 7,
+        team2Score: 1,
         team1Players: createEmptyPlayers(),
         team2Players: createEmptyPlayers(),
       },
@@ -70,6 +76,14 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
 
   function removeMatch(index: number) {
     setMatches((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateMatch(index: number, field: keyof MatchData, value: string | number) {
+    setMatches((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
   }
 
   function updatePlayer(
@@ -106,30 +120,46 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
         result: `${team1Name} ${matches.length}-0 ${team2Name}`,
       });
 
-      // 2. Inserir resultados dos times (posicoes por partida)
-      for (let i = 0; i < matches.length; i++) {
-        const match = matches[i];
-        const t1Kills = match.team1Players.reduce((s, p) => s + p.kills, 0);
-        const t2Kills = match.team2Players.reduce((s, p) => s + p.kills, 0);
-        const t1Wins = t1Kills > t2Kills ? 1 : 0;
-        const t2Wins = t2Kills > t1Kills ? 1 : 0;
+      // 2. Inserir resultados dos times (posicoes e scores por partida)
+      // Calcular posicoes baseado no score de cada partida
+      const team1TotalScore = matches.reduce((sum, m) => sum + m.team1Score, 0);
+      const team2TotalScore = matches.reduce((sum, m) => sum + m.team2Score, 0);
 
+      const team1Results: any = {
+        scrimId: scrim.id,
+        date,
+        teamName: team1Name,
+      };
+      const team2Results: any = {
+        scrimId: scrim.id,
+        date,
+        teamName: team2Name,
+      };
+
+      for (let i = 0; i < 3; i++) {
         const posField = i === 0 ? "q1Pos" : i === 1 ? "q2Pos" : "q3Pos";
+        const scoreField = i === 0 ? "q1Score" : i === 1 ? "q2Score" : "q3Score";
 
-        await createResults.mutateAsync({
-          scrimId: scrim.id,
-          date,
-          teamName: team1Name,
-          [posField]: t1Wins ? 1 : 2,
-        });
+        if (i < matches.length) {
+          const match = matches[i];
+          // Posicao 1 = venceu a queda (maior score), Posicao 2 = perdeu
+          const t1WinsQ = match.team1Score > match.team2Score ? 1 : 2;
+          const t2WinsQ = match.team2Score > match.team1Score ? 1 : 2;
 
-        await createResults.mutateAsync({
-          scrimId: scrim.id,
-          date,
-          teamName: team2Name,
-          [posField]: t2Wins ? 1 : 2,
-        });
+          team1Results[posField] = t1WinsQ;
+          team1Results[scoreField] = match.team1Score;
+          team2Results[posField] = t2WinsQ;
+          team2Results[scoreField] = match.team2Score;
+        } else {
+          team1Results[posField] = null;
+          team1Results[scoreField] = null;
+          team2Results[posField] = null;
+          team2Results[scoreField] = null;
+        }
       }
+
+      await createResults.mutateAsync(team1Results);
+      await createResults.mutateAsync(team2Results);
 
       // 3. Inserir stats dos jogadores — com TODOS os campos do schema
       for (let i = 0; i < matches.length; i++) {
@@ -139,29 +169,14 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
         const deathField = i === 0 ? "q1Deaths" : i === 1 ? "q2Deaths" : "q3Deaths";
         const damageField = i === 0 ? "q1Damage" : i === 1 ? "q2Damage" : "q3Damage";
         const mvpField = i === 0 ? "q1Mvp" : i === 1 ? "q2Mvp" : "q3Mvp";
+        const scoreField = i === 0 ? "q1Score" : i === 1 ? "q2Score" : "q3Score";
 
         for (const p of match.team1Players) {
-          // Calcular totais acumulados do jogador em todas as partidas
-          const totalKills = matches.reduce((sum, m, idx) => {
-            const player = m.team1Players.find(tp => tp.name === p.name);
-            return sum + (player?.kills || 0);
-          }, 0);
-          const totalAssists = matches.reduce((sum, m) => {
-            const player = m.team1Players.find(tp => tp.name === p.name);
-            return sum + (player?.assists || 0);
-          }, 0);
-          const totalDeaths = matches.reduce((sum, m) => {
-            const player = m.team1Players.find(tp => tp.name === p.name);
-            return sum + (player?.deaths || 0);
-          }, 0);
-          const totalDamage = matches.reduce((sum, m) => {
-            const player = m.team1Players.find(tp => tp.name === p.name);
-            return sum + (player?.damage || 0);
-          }, 0);
-          const totalMvp = matches.reduce((sum, m) => {
-            const player = m.team1Players.find(tp => tp.name === p.name);
-            return sum + (player?.mvp ? 1 : 0);
-          }, 0);
+          const totalKills = match.team1Players.reduce((sum, tp) => sum + tp.kills, 0);
+          const totalAssists = match.team1Players.reduce((sum, tp) => sum + tp.assists, 0);
+          const totalDeaths = match.team1Players.reduce((sum, tp) => sum + tp.deaths, 0);
+          const totalDamage = match.team1Players.reduce((sum, tp) => sum + tp.damage, 0);
+          const totalMvp = match.team1Players.reduce((sum, tp) => sum + (tp.mvp ? 1 : 0), 0);
 
           await createPlayerStats.mutateAsync({
             scrimId: scrim.id,
@@ -173,36 +188,16 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
             [deathField]: p.deaths,
             [damageField]: p.damage,
             [mvpField]: p.mvp,
-            totalKills,
-            totalAssists,
-            totalDeaths,
-            totalDamage,
-            totalMvp,
+            [scoreField]: match.team1Score,
+            totalKills: p.kills,
+            totalAssists: p.assists,
+            totalDeaths: p.deaths,
+            totalDamage: p.damage,
+            totalMvp: p.mvp ? 1 : 0,
           });
         }
 
         for (const p of match.team2Players) {
-          const totalKills = matches.reduce((sum, m) => {
-            const player = m.team2Players.find(tp => tp.name === p.name);
-            return sum + (player?.kills || 0);
-          }, 0);
-          const totalAssists = matches.reduce((sum, m) => {
-            const player = m.team2Players.find(tp => tp.name === p.name);
-            return sum + (player?.assists || 0);
-          }, 0);
-          const totalDeaths = matches.reduce((sum, m) => {
-            const player = m.team2Players.find(tp => tp.name === p.name);
-            return sum + (player?.deaths || 0);
-          }, 0);
-          const totalDamage = matches.reduce((sum, m) => {
-            const player = m.team2Players.find(tp => tp.name === p.name);
-            return sum + (player?.damage || 0);
-          }, 0);
-          const totalMvp = matches.reduce((sum, m) => {
-            const player = m.team2Players.find(tp => tp.name === p.name);
-            return sum + (player?.mvp ? 1 : 0);
-          }, 0);
-
           await createPlayerStats.mutateAsync({
             scrimId: scrim.id,
             date,
@@ -213,11 +208,12 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
             [deathField]: p.deaths,
             [damageField]: p.damage,
             [mvpField]: p.mvp,
-            totalKills,
-            totalAssists,
-            totalDeaths,
-            totalDamage,
-            totalMvp,
+            [scoreField]: match.team2Score,
+            totalKills: p.kills,
+            totalAssists: p.assists,
+            totalDeaths: p.deaths,
+            totalDamage: p.damage,
+            totalMvp: p.mvp ? 1 : 0,
           });
         }
       }
@@ -300,17 +296,30 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
             {matches.map((match, matchIndex) => (
               <div key={matchIndex} className="bg-[#1a1a24] rounded-xl border border-[#2a2a3a] p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <input
-                    type="text"
-                    value={match.map}
-                    onChange={(e) => {
-                      const next = [...matches];
-                      next[matchIndex].map = e.target.value;
-                      setMatches(next);
-                    }}
-                    placeholder="Mapa (ex: Vale Deserto)"
-                    className="bg-[#12121a] border border-[#2a2a3a] rounded-lg px-3 py-1.5 text-sm text-[#f0f0f5]"
-                  />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={match.map}
+                      onChange={(e) => updateMatch(matchIndex, "map", e.target.value)}
+                      placeholder="Mapa (ex: Vale Deserto)"
+                      className="bg-[#12121a] border border-[#2a2a3a] rounded-lg px-3 py-1.5 text-sm text-[#f0f0f5]"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={match.team1Score}
+                        onChange={(e) => updateMatch(matchIndex, "team1Score", parseInt(e.target.value) || 0)}
+                        className="w-14 bg-[#12121a] border border-[#2a2a3a] rounded-lg px-2 py-1.5 text-sm text-emerald-400 text-center font-bold"
+                      />
+                      <span className="text-sm text-[#5a5a6e]">x</span>
+                      <input
+                        type="number"
+                        value={match.team2Score}
+                        onChange={(e) => updateMatch(matchIndex, "team2Score", parseInt(e.target.value) || 0)}
+                        className="w-14 bg-[#12121a] border border-[#2a2a3a] rounded-lg px-2 py-1.5 text-sm text-red-400 text-center font-bold"
+                      />
+                    </div>
+                  </div>
                   {matches.length > 1 && (
                     <button
                       onClick={() => removeMatch(matchIndex)}

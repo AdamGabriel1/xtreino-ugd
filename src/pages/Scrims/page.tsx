@@ -31,6 +31,10 @@ export default function ScrimsPage() {
   } = useScrimData(selectedDate);
 
   const normalizedScrimsList = scrimsList as ScrimItem[] | undefined;
+  const normalizedScrimTeamAllTime = scrimTeamAllTime?.map((team) => ({
+    ...team,
+    wins: team.totalWins,
+  }));
 
   const getTitle = () => {
     if (tab === "agendados") return "Scrims Agendados";
@@ -111,11 +115,9 @@ export default function ScrimsPage() {
             selectedDate={selectedDate}
             availableDates={availableDates}
             onDateChange={setSelectedDate}
-            // scrimTeamResults may contain scrimId as null; cast to satisfy expected prop type
             scrimTeamResults={scrimTeamResults as any}
-            // scrimPlayerStats may contain scrimId as null; cast to satisfy expected prop type
             scrimPlayerStats={scrimPlayerStats as any}
-            scrimTeamAllTime={scrimTeamAllTime}
+            scrimTeamAllTime={normalizedScrimTeamAllTime}
             onTeamClick={setSelectedTeam}
           />
         )}
@@ -155,7 +157,6 @@ export default function ScrimsPage() {
         isOpen={isScrim4v4ModalOpen}
         onClose={() => setIsScrim4v4ModalOpen(false)}
         onSuccess={() => {
-          // Recarregar dados após criar scrim
           window.location.reload();
         }}
       />

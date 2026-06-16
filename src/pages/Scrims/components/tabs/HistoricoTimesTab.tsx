@@ -6,12 +6,11 @@ import { ScrimTable } from "../tables/ScrimTable";
 import { DateFilter } from "../DateFilter";
 import { EmptyState } from "../EmptyState";
 import { HistorySummary } from "../HistorySummary";
-import {
-  type TeamResult,
-  type TeamAllTime,
-  type PlayerStat,
-  type EnrichedTeamRow,
-  getPointsByPosition,
+import type {
+  TeamResult,
+  TeamAllTime,
+  PlayerStat,
+  EnrichedTeamRow,
 } from "../../types";
 
 interface HistoricoTimesTabProps {
@@ -37,11 +36,11 @@ export function HistoricoTimesTab({
 
   const data = useMemo<EnrichedTeamRow[]>(() => {
     if (!isAllTime) {
-      const teamsWithPoints = (scrimTeamResults || []).map((t) => {
-        const q1Points = getPointsByPosition(t.q1Pos);
-        const q2Points = getPointsByPosition(t.q2Pos);
-        const q3Points = getPointsByPosition(t.q3Pos);
-        const positionPoints = q1Points + q2Points + q3Points;
+      const teamsWithRounds = (scrimTeamResults || []).map((t) => {
+        // Rounds ganhos = soma dos scores
+        const roundWins = (t.q1Score || 0) + (t.q2Score || 0) + (t.q3Score || 0);
+        // Quedas vencidas = posicao 1
+        const quedaWins = [t.q1Pos, t.q2Pos, t.q3Pos].filter((p) => p === 1).length;
 
         const playerData = (scrimPlayerStats || []).filter(
           (p) => p.teamName === t.teamName && p.date === selectedDate
@@ -54,37 +53,37 @@ export function HistoricoTimesTab({
         return {
           id: t.id,
           entityName: t.teamName,
-          points: positionPoints + teamKills,
-          positionPoints,
+          points: roundWins + teamKills,
+          roundWins: roundWins,
           kills: teamKills,
-          wins: [t.q1Pos, t.q2Pos, t.q3Pos].filter((p) => p === 1).length,
+          wins: quedaWins,
           participations: 1,
           q1Pos: t.q1Pos,
           q2Pos: t.q2Pos,
           q3Pos: t.q3Pos,
-          q1Points,
-          q2Points,
-          q3Points,
+          q1Score: t.q1Score,
+          q2Score: t.q2Score,
+          q3Score: t.q3Score,
         };
       });
 
-      return teamsWithPoints.sort((a, b) => b.points - a.points);
+      return teamsWithRounds.sort((a, b) => b.points - a.points);
     }
 
     return (scrimTeamAllTime || []).map((t, i) => ({
       id: i,
       entityName: t.teamName,
-      points: t.totalPoints || 0,
-      positionPoints: t.totalPoints || 0,
+      points: t.totalRoundWins || 0,
+      roundWins: t.totalRoundWins || 0,
       kills: t.totalKills || 0,
       wins: t.wins || 0,
       participations: t.matches || 0,
-      q1Pos: t.avgQ1,
-      q2Pos: t.avgQ2,
-      q3Pos: t.avgQ3,
-      q1Points: 0,
-      q2Points: 0,
-      q3Points: 0,
+      q1Pos: null,
+      q2Pos: null,
+      q3Pos: null,
+      q1Score: t.q1Wins || 0,
+      q2Score: t.q2Wins || 0,
+      q3Score: t.q3Wins || 0,
     }));
   }, [isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime, selectedDate]);
 
@@ -92,7 +91,7 @@ export function HistoricoTimesTab({
     return {
       totalTeams: data.length,
       totalKills: data.reduce((sum, t) => sum + (t.kills || 0), 0),
-      totalPoints: data.reduce((sum, t) => sum + (t.positionPoints || 0), 0),
+      totalPoints: data.reduce((sum, t) => sum + (t.roundWins || 0), 0),
       totalScrims: data.reduce((sum, t) => sum + (t.participations || 0), 0),
     };
   }, [data]);
@@ -141,15 +140,15 @@ export function HistoricoTimesTab({
             ),
           },
           {
-            key: "points",
+            key: "roundWins",
             header: (
               <span className="flex items-center justify-center gap-1">
-                <BarChart3 className="w-3 h-3" /> Pontos
+                <BarChart3 className="w-3 h-3" /> Rounds
               </span>
             ),
             cell: (row) => (
               <span className="text-sm font-bold text-emerald-400 text-center block">
-                {row.points ?? 0}
+                {row.roundWins ?? 0}
               </span>
             ),
             className: "text-center",
@@ -194,12 +193,12 @@ export function HistoricoTimesTab({
           },
           {
             key: "q",
-            header: isAllTime ? "Média Q1 / Q2 / Q3" : "Q1 / Q2 / Q3 (pts)",
+            header: isAllTime ? "Q1 / Q2 / Q3 (wins)" : "Q1 / Q2 / Q3 (score)",
             cell: (row) => (
               <span className="text-sm text-[#8a8a9e] font-mono text-center block">
                 {!isAllTime
-                  ? `${row.q1Pos}(${row.q1Points}) / ${row.q2Pos}(${row.q2Points}) / ${row.q3Pos}(${row.q3Points})`
-                  : `${row.q1Pos?.toFixed(1) || "-"} / ${row.q2Pos?.toFixed(1) || "-"} / ${row.q3Pos?.toFixed(1) || "-"}`}
+                  ? `${row.q1Score || 0} / ${row.q2Score || 0} / ${row.q3Score || 0}`
+                  : `${row.q1Score || 0} / ${row.q2Score || 0} / ${row.q3Score || 0}`}
               </span>
             ),
             className: "text-center",

@@ -106,6 +106,9 @@ export const scrimsRouter = createRouter({
         q1Pos: z.number().nullable().optional(),
         q2Pos: z.number().nullable().optional(),
         q3Pos: z.number().nullable().optional(),
+        q1Score: z.number().nullable().optional(),
+        q2Score: z.number().nullable().optional(),
+        q3Score: z.number().nullable().optional(),
       })
     )
     .mutation(({ input, ctx }) => {
@@ -128,6 +131,9 @@ export const scrimsRouter = createRouter({
         q1Pos: z.number().nullable().optional(),
         q2Pos: z.number().nullable().optional(),
         q3Pos: z.number().nullable().optional(),
+        q1Score: z.number().nullable().optional(),
+        q2Score: z.number().nullable().optional(),
+        q3Score: z.number().nullable().optional(),
       })
     )
     .mutation(({ input, ctx }) => {
@@ -175,16 +181,19 @@ export const scrimsRouter = createRouter({
         q1Deaths: z.number().default(0),
         q1Damage: z.number().default(0),
         q1Mvp: z.boolean().default(false),
+        q1Score: z.number().default(0),
         q2Kills: z.number().default(0),
         q2Assists: z.number().default(0),
         q2Deaths: z.number().default(0),
         q2Damage: z.number().default(0),
         q2Mvp: z.boolean().default(false),
+        q2Score: z.number().default(0),
         q3Kills: z.number().default(0),
         q3Assists: z.number().default(0),
         q3Deaths: z.number().default(0),
         q3Damage: z.number().default(0),
         q3Mvp: z.boolean().default(false),
+        q3Score: z.number().default(0),
         totalKills: z.number().default(0),
         totalAssists: z.number().default(0),
         totalDeaths: z.number().default(0),
@@ -215,16 +224,19 @@ export const scrimsRouter = createRouter({
         q1Deaths: z.number().optional(),
         q1Damage: z.number().optional(),
         q1Mvp: z.boolean().optional(),
+        q1Score: z.number().optional(),
         q2Kills: z.number().optional(),
         q2Assists: z.number().optional(),
         q2Deaths: z.number().optional(),
         q2Damage: z.number().optional(),
         q2Mvp: z.boolean().optional(),
+        q2Score: z.number().optional(),
         q3Kills: z.number().optional(),
         q3Assists: z.number().optional(),
         q3Deaths: z.number().optional(),
         q3Damage: z.number().optional(),
         q3Mvp: z.boolean().optional(),
+        q3Score: z.number().optional(),
         totalKills: z.number().optional(),
         totalAssists: z.number().optional(),
         totalDeaths: z.number().optional(),
@@ -337,55 +349,50 @@ export const scrimsRouter = createRouter({
       .all();
   }),
 
-  /** Top times de todos os tempos (com totais reais) */
+  /** Top times de todos os tempos (com totais de rounds ganhos) */
   teamResultsAllTime: publicQuery.query(() => {
     const db = getDb();
 
-    // Buscar todos os resultados para calcular totais
+    // Buscar todos os resultados para calcular totais de rounds ganhos
     const allResults = db.select().from(scrimResults).all();
 
     // Agrupar por time
     const teamMap = new Map<string, {
       teamName: string;
-      totalQ1Points: number;
-      totalQ2Points: number;
-      totalQ3Points: number;
+      totalRoundWins: number;
       totalKills: number;
-      wins: number;
+      totalWins: number;
       matches: number;
-      q1Sum: number;
-      q2Sum: number;
-      q3Sum: number;
+      q1Wins: number;
+      q2Wins: number;
+      q3Wins: number;
     }>();
 
     for (const r of allResults) {
       const existing = teamMap.get(r.teamName);
 
-      const q1Points = getPointsByPosition(r.q1Pos);
-      const q2Points = getPointsByPosition(r.q2Pos);
-      const q3Points = getPointsByPosition(r.q3Pos);
+      // Contar rounds ganhos (score) por queda
+      const roundWins = (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0);
+      // Contar quedas vencidas (posicao 1)
+      const quedaWins = [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length;
 
       if (existing) {
-        existing.totalQ1Points += q1Points;
-        existing.totalQ2Points += q2Points;
-        existing.totalQ3Points += q3Points;
-        existing.wins += [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length;
+        existing.totalRoundWins += roundWins;
+        existing.totalWins += quedaWins;
         existing.matches += 1;
-        existing.q1Sum += r.q1Pos || 0;
-        existing.q2Sum += r.q2Pos || 0;
-        existing.q3Sum += r.q3Pos || 0;
+        existing.q1Wins += r.q1Pos === 1 ? 1 : 0;
+        existing.q2Wins += r.q2Pos === 1 ? 1 : 0;
+        existing.q3Wins += r.q3Pos === 1 ? 1 : 0;
       } else {
         teamMap.set(r.teamName, {
           teamName: r.teamName,
-          totalQ1Points: q1Points,
-          totalQ2Points: q2Points,
-          totalQ3Points: q3Points,
+          totalRoundWins: roundWins,
           totalKills: 0,
-          wins: [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length,
+          totalWins: quedaWins,
           matches: 1,
-          q1Sum: r.q1Pos || 0,
-          q2Sum: r.q2Pos || 0,
-          q3Sum: r.q3Pos || 0,
+          q1Wins: r.q1Pos === 1 ? 1 : 0,
+          q2Wins: r.q2Pos === 1 ? 1 : 0,
+          q3Wins: r.q3Pos === 1 ? 1 : 0,
         });
       }
     }
@@ -399,20 +406,21 @@ export const scrimsRouter = createRouter({
       }
     }
 
-    // Converter para array e calcular medias
+    // Converter para array
     const result = Array.from(teamMap.values()).map(t => ({
       teamName: t.teamName,
-      totalPoints: t.totalQ1Points + t.totalQ2Points + t.totalQ3Points + t.totalKills,
+      totalRoundWins: t.totalRoundWins,
       totalKills: t.totalKills,
-      wins: t.wins,
+      totalWins: t.totalWins,
       matches: t.matches,
-      avgQ1: t.matches > 0 ? t.q1Sum / t.matches : 0,
-      avgQ2: t.matches > 0 ? t.q2Sum / t.matches : 0,
-      avgQ3: t.matches > 0 ? t.q3Sum / t.matches : 0,
+      q1Wins: t.q1Wins,
+      q2Wins: t.q2Wins,
+      q3Wins: t.q3Wins,
+      winRate: t.matches > 0 ? (t.totalWins / (t.matches * 3)) * 100 : 0,
     }));
 
-    // Ordenar por pontos totais
-    return result.sort((a, b) => b.totalPoints - a.totalPoints);
+    // Ordenar por rounds ganhos totais (descendente)
+    return result.sort((a, b) => b.totalRoundWins - a.totalRoundWins);
   }),
 
   /** Buscar estatisticas detalhadas de um jogador especifico */
@@ -441,13 +449,3 @@ export const scrimsRouter = createRouter({
         .all();
     }),
 });
-
-function getPointsByPosition(pos: number | null): number {
-  if (!pos) return 0;
-  const points: Record<number, number> = {
-    1: 15, 2: 12, 3: 10, 4: 9, 5: 8, 6: 7,
-    7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1,
-    13: 1, 14: 0, 15: 0,
-  };
-  return points[pos] ?? 0;
-}
