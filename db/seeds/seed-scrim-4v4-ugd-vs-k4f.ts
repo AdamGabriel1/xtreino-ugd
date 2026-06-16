@@ -1,6 +1,7 @@
 // db/seeds/seed-scrim-4v4-ugd-vs-k4f.ts
 // Seed da scrim 4v4: UGD Threat vs K4F — 13/06/2026
 // 3 partidas: Vale Deserto, Ilha do Medo, Ilha do Medo
+// Dados atualizados com kills, assists, mortes, dano e MVP por queda
 
 import { getDb } from "../../api/queries/connection.js";
 import { scrims, scrimResults, scrimPlayerStats, seedRuns } from "../schema.js";
@@ -36,18 +37,57 @@ const TEAM_RESULTS = [
 ];
 
 // --- ESTATISTICAS DOS JOGADORES ---
-// Cada entrada: [playerName, teamName, q1Kills, q2Kills, q3Kills, totalKills]
-const PLAYER_STATS: [string, string, number, number, number, number][] = [
+// Cada entrada: [playerName, teamName, q1Kills, q1Assists, q1Deaths, q1Damage, q1Mvp,
+//                                      q2Kills, q2Assists, q2Deaths, q2Damage, q2Mvp,
+//                                      q3Kills, q3Assists, q3Deaths, q3Damage, q3Mvp,
+//                                      totalKills, totalAssists, totalDeaths, totalDamage, totalMvp]
+const PLAYER_STATS: [string, string,
+  number, number, number, number, boolean,
+  number, number, number, number, boolean,
+  number, number, number, number, boolean,
+  number, number, number, number, number][] = [
   // UGD Threat
-  ["UGD_ Ares",    "UGD Threat", 11, 9,  11, 31],
-  ["UGD_ Ohara",   "UGD Threat", 8,  12, 7,  27],
-  ["Dexz7RYL",     "UGD Threat", 7,  4,  7,  18],
-  ["UGD_ A R",     "UGD Threat", 3,  4,  3,  10],
+  ["IGD_ Ares",    "UGD Threat",
+    11, 5,  1, 3100, true,   // Q1: Vale Deserto
+     9, 14, 2, 3308, false,   // Q2: Ilha do Medo
+    11, 4,  0, 4442, true,   // Q3: Ilha do Medo
+    31, 23, 3, 10850, 2], // Totais
+  ["UGD_ Ohara",   "UGD Threat",
+     8, 10, 1, 3604, false,   // Q1: Vale Deserto
+    12, 7,  1, 2732, true,   // Q2: Ilha do Medo
+     7, 6,  1, 2900, false,   // Q3: Ilha do Medo
+    27, 23, 3, 9236, 1],  // Totais
+  ["Dexz7RYL",     "UGD Threat",
+     7, 7,  1, 2866, false,   // Q1: Vale Deserto
+     4, 9,  1, 1595, false,   // Q2: Ilha do Medo
+     7, 4,  1, 2522, false,   // Q3: Ilha do Medo
+    18, 20, 3, 6983, 0],  // Totais
+  ["GD_ A R",      "UGD Threat",
+     3, 5,  2, 2277, false,   // Q1: Vale Deserto
+     4, 3,  1, 1042, false,   // Q2: Ilha do Medo
+     3, 8,  2, 1678, false,   // Q3: Ilha do Medo
+    10, 16, 5, 4997, 0],  // Totais
   // K4F
-  ["K4F Zaza",     "K4F",        2,  2,  1,  5],
-  ["K4F NINE",     "K4F",        2,  1,  1,  4],
-  ["K4F Guilok07", "K4F",        1,  2,  2,  5],
-  ["ÉoUrSo",       "K4F",        0,  0,  0,  0],
+  ["K4F Zaza",     "K4F",
+     2, 2,  7, 1687, true,   // Q1: Vale Deserto
+     2, 1,  7, 895,  false,   // Q2: Ilha do Medo
+     1, 1,  7, 1451, false,   // Q3: Ilha do Medo
+     5, 4,  21, 4033, 1], // Totais
+  ["K4F NINE",     "K4F",
+     2, 1,  7, 1822, false,   // Q1: Vale Deserto
+     1, 0,  8, 528,  false,   // Q2: Ilha do Medo
+     1, 0,  7, 1416, false,   // Q3: Ilha do Medo
+     4, 1,  22, 3766, 0], // Totais
+  ["K4F Guilok07", "K4F",
+     1, 1,  7, 957,  false,   // Q1: Vale Deserto
+     2, 2,  7, 1938, true,   // Q2: Ilha do Medo
+     2, 2,  7, 2156, true,   // Q3: Ilha do Medo
+     5, 5,  21, 5051, 2], // Totais
+  ["ÉoUrSo",       "K4F",
+     0, 0,  8, 525,  false,   // Q1: Vale Deserto
+     0, 1,  7, 1245, false,   // Q2: Ilha do Medo
+     0, 0,  7, 880,  false,   // Q3: Ilha do Medo
+     0, 1,  22, 2650, 0], // Totais
 ];
 
 // ============================================================
@@ -138,16 +178,38 @@ export function seed() {
 
   // 3. Inserir estatísticas dos jogadores
   let playerStatsCount = 0;
-  for (const [playerName, teamName, q1Kills, q2Kills, q3Kills, totalKills] of PLAYER_STATS) {
+  for (const [
+    playerName, teamName,
+    q1Kills, q1Assists, q1Deaths, q1Damage, q1Mvp,
+    q2Kills, q2Assists, q2Deaths, q2Damage, q2Mvp,
+    q3Kills, q3Assists, q3Deaths, q3Damage, q3Mvp,
+    totalKills, totalAssists, totalDeaths, totalDamage, totalMvp
+  ] of PLAYER_STATS) {
     if (upsertScrimPlayerStat(db, scrimId, {
       scrimId,
       date: SCRIM_DATE,
       teamName,
       playerName,
       q1Kills,
+      q1Assists,
+      q1Deaths,
+      q1Damage,
+      q1Mvp,
       q2Kills,
+      q2Assists,
+      q2Deaths,
+      q2Damage,
+      q2Mvp,
       q3Kills,
+      q3Assists,
+      q3Deaths,
+      q3Damage,
+      q3Mvp,
       totalKills,
+      totalAssists,
+      totalDeaths,
+      totalDamage,
+      totalMvp,
     })) {
       playerStatsCount++;
     }

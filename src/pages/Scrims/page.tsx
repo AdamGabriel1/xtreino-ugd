@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Swords, Calendar, Trophy, Target } from "lucide-react";
+import { Swords, Calendar, Trophy, Target, Plus } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
 import type { TabType, ScrimItem } from "./types";
 import { useScrimData } from "./hooks/useScrimData";
@@ -11,6 +11,7 @@ import { HistoricoJogadoresTab } from "./components/tabs/HistoricoJogadoresTab";
 import { ScrimDetailModal } from "./components/modals/ScrimDetailModal";
 import { TeamStatsModal } from "./components/modals/TeamStatsModal";
 import { PlayerStatsModal } from "./components/modals/PlayerStatsModal";
+import { Scrim4v4Modal } from "./components/modals/Scrim4v4Modal";
 
 export default function ScrimsPage() {
   const [tab, setTab] = useState<TabType>("agendados");
@@ -18,6 +19,7 @@ export default function ScrimsPage() {
   const [selectedScrim, setSelectedScrim] = useState<ScrimItem | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [selectedPlayer, setSelectedPlayer] = useState<{ name: string; team: string } | null>(null);
+  const [isScrim4v4ModalOpen, setIsScrim4v4ModalOpen] = useState(false);
 
   const {
     scrimsList,
@@ -42,13 +44,24 @@ export default function ScrimsPage() {
       {/* Header */}
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
-          <div className="flex items-center gap-3 mb-2">
-            <Swords className="w-8 h-8 text-emerald-400" />
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
-              Scrims
-            </h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Swords className="w-8 h-8 text-emerald-400" />
+                <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
+                  Scrims
+                </h1>
+              </div>
+              <p className="text-[#8a8a9e]">{getTitle()}</p>
+            </div>
+            <button
+              onClick={() => setIsScrim4v4ModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Scrim 4v4
+            </button>
           </div>
-          <p className="text-[#8a8a9e]">{getTitle()}</p>
         </div>
       </div>
 
@@ -98,8 +111,10 @@ export default function ScrimsPage() {
             selectedDate={selectedDate}
             availableDates={availableDates}
             onDateChange={setSelectedDate}
-            scrimTeamResults={scrimTeamResults}
-            scrimPlayerStats={scrimPlayerStats}
+            // scrimTeamResults may contain scrimId as null; cast to satisfy expected prop type
+            scrimTeamResults={scrimTeamResults as any}
+            // scrimPlayerStats may contain scrimId as null; cast to satisfy expected prop type
+            scrimPlayerStats={scrimPlayerStats as any}
             scrimTeamAllTime={scrimTeamAllTime}
             onTeamClick={setSelectedTeam}
           />
@@ -110,7 +125,7 @@ export default function ScrimsPage() {
             selectedDate={selectedDate}
             availableDates={availableDates}
             onDateChange={setSelectedDate}
-            scrimPlayerStats={scrimPlayerStats}
+            scrimPlayerStats={scrimPlayerStats as any}
             scrimPlayerAllTime={scrimPlayerAllTime}
             onPlayerClick={(name, team) => setSelectedPlayer({ name, team })}
           />
@@ -136,6 +151,14 @@ export default function ScrimsPage() {
           onClose={() => setSelectedPlayer(null)}
         />
       )}
+      <Scrim4v4Modal
+        isOpen={isScrim4v4ModalOpen}
+        onClose={() => setIsScrim4v4ModalOpen(false)}
+        onSuccess={() => {
+          // Recarregar dados após criar scrim
+          window.location.reload();
+        }}
+      />
     </MainLayout>
   );
 }

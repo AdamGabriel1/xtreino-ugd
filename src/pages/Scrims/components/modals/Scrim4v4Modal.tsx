@@ -106,7 +106,7 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
         result: `${team1Name} ${matches.length}-0 ${team2Name}`,
       });
 
-      // 2. Calcular posições e inserir resultados
+      // 2. Inserir resultados dos times (posicoes por partida)
       for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         const t1Kills = match.team1Players.reduce((s, p) => s + p.kills, 0);
@@ -114,8 +114,6 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
         const t1Wins = t1Kills > t2Kills ? 1 : 0;
         const t2Wins = t2Kills > t1Kills ? 1 : 0;
 
-        // Inserir resultados dos times (q1Pos, q2Pos, q3Pos baseado no índice da partida)
-        // Para 4v4, cada partida é uma "queda"
         const posField = i === 0 ? "q1Pos" : i === 1 ? "q2Pos" : "q3Pos";
 
         await createResults.mutateAsync({
@@ -131,27 +129,95 @@ export function Scrim4v4Modal({ isOpen, onClose, onSuccess }: Scrim4v4ModalProps
           teamName: team2Name,
           [posField]: t2Wins ? 1 : 2,
         });
+      }
 
-        // Inserir stats dos jogadores
+      // 3. Inserir stats dos jogadores — com TODOS os campos do schema
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const killField = i === 0 ? "q1Kills" : i === 1 ? "q2Kills" : "q3Kills";
+        const assistField = i === 0 ? "q1Assists" : i === 1 ? "q2Assists" : "q3Assists";
+        const deathField = i === 0 ? "q1Deaths" : i === 1 ? "q2Deaths" : "q3Deaths";
+        const damageField = i === 0 ? "q1Damage" : i === 1 ? "q2Damage" : "q3Damage";
+        const mvpField = i === 0 ? "q1Mvp" : i === 1 ? "q2Mvp" : "q3Mvp";
+
         for (const p of match.team1Players) {
+          // Calcular totais acumulados do jogador em todas as partidas
+          const totalKills = matches.reduce((sum, m, idx) => {
+            const player = m.team1Players.find(tp => tp.name === p.name);
+            return sum + (player?.kills || 0);
+          }, 0);
+          const totalAssists = matches.reduce((sum, m) => {
+            const player = m.team1Players.find(tp => tp.name === p.name);
+            return sum + (player?.assists || 0);
+          }, 0);
+          const totalDeaths = matches.reduce((sum, m) => {
+            const player = m.team1Players.find(tp => tp.name === p.name);
+            return sum + (player?.deaths || 0);
+          }, 0);
+          const totalDamage = matches.reduce((sum, m) => {
+            const player = m.team1Players.find(tp => tp.name === p.name);
+            return sum + (player?.damage || 0);
+          }, 0);
+          const totalMvp = matches.reduce((sum, m) => {
+            const player = m.team1Players.find(tp => tp.name === p.name);
+            return sum + (player?.mvp ? 1 : 0);
+          }, 0);
+
           await createPlayerStats.mutateAsync({
             scrimId: scrim.id,
             date,
             teamName: team1Name,
             playerName: p.name,
-            [i === 0 ? "q1Kills" : i === 1 ? "q2Kills" : "q3Kills"]: p.kills,
-            totalKills: p.kills,
+            [killField]: p.kills,
+            [assistField]: p.assists,
+            [deathField]: p.deaths,
+            [damageField]: p.damage,
+            [mvpField]: p.mvp,
+            totalKills,
+            totalAssists,
+            totalDeaths,
+            totalDamage,
+            totalMvp,
           });
         }
 
         for (const p of match.team2Players) {
+          const totalKills = matches.reduce((sum, m) => {
+            const player = m.team2Players.find(tp => tp.name === p.name);
+            return sum + (player?.kills || 0);
+          }, 0);
+          const totalAssists = matches.reduce((sum, m) => {
+            const player = m.team2Players.find(tp => tp.name === p.name);
+            return sum + (player?.assists || 0);
+          }, 0);
+          const totalDeaths = matches.reduce((sum, m) => {
+            const player = m.team2Players.find(tp => tp.name === p.name);
+            return sum + (player?.deaths || 0);
+          }, 0);
+          const totalDamage = matches.reduce((sum, m) => {
+            const player = m.team2Players.find(tp => tp.name === p.name);
+            return sum + (player?.damage || 0);
+          }, 0);
+          const totalMvp = matches.reduce((sum, m) => {
+            const player = m.team2Players.find(tp => tp.name === p.name);
+            return sum + (player?.mvp ? 1 : 0);
+          }, 0);
+
           await createPlayerStats.mutateAsync({
             scrimId: scrim.id,
             date,
             teamName: team2Name,
             playerName: p.name,
-            [i === 0 ? "q1Kills" : i === 1 ? "q2Kills" : "q3Kills"]: p.kills,
-            totalKills: p.kills,
+            [killField]: p.kills,
+            [assistField]: p.assists,
+            [deathField]: p.deaths,
+            [damageField]: p.damage,
+            [mvpField]: p.mvp,
+            totalKills,
+            totalAssists,
+            totalDeaths,
+            totalDamage,
+            totalMvp,
           });
         }
       }

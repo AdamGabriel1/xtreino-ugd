@@ -162,7 +162,7 @@ export const scrimsRouter = createRouter({
     return db.select().from(scrimPlayerStats).orderBy(desc(scrimPlayerStats.totalKills)).all();
   }),
 
-  /** Criar estatistica de jogador */
+  /** Criar estatistica de jogador — com todos os campos do schema */
   createPlayerStats: adminQuery
     .input(
       z.object({
@@ -171,9 +171,25 @@ export const scrimsRouter = createRouter({
         teamName: z.string(),
         playerName: z.string(),
         q1Kills: z.number().default(0),
+        q1Assists: z.number().default(0),
+        q1Deaths: z.number().default(0),
+        q1Damage: z.number().default(0),
+        q1Mvp: z.boolean().default(false),
         q2Kills: z.number().default(0),
+        q2Assists: z.number().default(0),
+        q2Deaths: z.number().default(0),
+        q2Damage: z.number().default(0),
+        q2Mvp: z.boolean().default(false),
         q3Kills: z.number().default(0),
+        q3Assists: z.number().default(0),
+        q3Deaths: z.number().default(0),
+        q3Damage: z.number().default(0),
+        q3Mvp: z.boolean().default(false),
         totalKills: z.number().default(0),
+        totalAssists: z.number().default(0),
+        totalDeaths: z.number().default(0),
+        totalDamage: z.number().default(0),
+        totalMvp: z.number().default(0),
       })
     )
     .mutation(({ input, ctx }) => {
@@ -185,7 +201,7 @@ export const scrimsRouter = createRouter({
       return { success: true };
     }),
 
-  /** Atualizar estatistica de jogador */
+  /** Atualizar estatistica de jogador — com todos os campos do schema */
   updatePlayerStats: adminQuery
     .input(
       z.object({
@@ -195,9 +211,25 @@ export const scrimsRouter = createRouter({
         teamName: z.string().optional(),
         playerName: z.string().optional(),
         q1Kills: z.number().optional(),
+        q1Assists: z.number().optional(),
+        q1Deaths: z.number().optional(),
+        q1Damage: z.number().optional(),
+        q1Mvp: z.boolean().optional(),
         q2Kills: z.number().optional(),
+        q2Assists: z.number().optional(),
+        q2Deaths: z.number().optional(),
+        q2Damage: z.number().optional(),
+        q2Mvp: z.boolean().optional(),
         q3Kills: z.number().optional(),
+        q3Assists: z.number().optional(),
+        q3Deaths: z.number().optional(),
+        q3Damage: z.number().optional(),
+        q3Mvp: z.boolean().optional(),
         totalKills: z.number().optional(),
+        totalAssists: z.number().optional(),
+        totalDeaths: z.number().optional(),
+        totalDamage: z.number().optional(),
+        totalMvp: z.number().optional(),
       })
     )
     .mutation(({ input, ctx }) => {
@@ -282,7 +314,7 @@ export const scrimsRouter = createRouter({
       return db.select().from(scrimPlayerStats).orderBy(desc(scrimPlayerStats.totalKills)).all();
     }),
 
-  /** Top jogadores de todos os tempos (soma total) */
+  /** Top jogadores de todos os tempos (soma total) — com todos os campos */
   playerStatsAllTime: publicQuery.query(() => {
     const db = getDb();
     return db
@@ -290,6 +322,10 @@ export const scrimsRouter = createRouter({
         playerName: scrimPlayerStats.playerName,
         teamName: sql<string>`MAX(${scrimPlayerStats.teamName})`,
         totalKills: sql<number>`SUM(${scrimPlayerStats.totalKills})`,
+        totalAssists: sql<number>`SUM(${scrimPlayerStats.totalAssists})`,
+        totalDeaths: sql<number>`SUM(${scrimPlayerStats.totalDeaths})`,
+        totalDamage: sql<number>`SUM(${scrimPlayerStats.totalDamage})`,
+        totalMvp: sql<number>`SUM(${scrimPlayerStats.totalMvp})`,
         totalQ1: sql<number>`SUM(${scrimPlayerStats.q1Kills})`,
         totalQ2: sql<number>`SUM(${scrimPlayerStats.q2Kills})`,
         totalQ3: sql<number>`SUM(${scrimPlayerStats.q3Kills})`,
@@ -378,6 +414,32 @@ export const scrimsRouter = createRouter({
     // Ordenar por pontos totais
     return result.sort((a, b) => b.totalPoints - a.totalPoints);
   }),
+
+  /** Buscar estatisticas detalhadas de um jogador especifico */
+  playerStatsByName: publicQuery
+    .input(z.object({ playerName: z.string() }))
+    .query(({ input }) => {
+      const db = getDb();
+      return db
+        .select()
+        .from(scrimPlayerStats)
+        .where(eq(scrimPlayerStats.playerName, input.playerName))
+        .orderBy(desc(scrimPlayerStats.date))
+        .all();
+    }),
+
+  /** Buscar estatisticas detalhadas de um time especifico */
+  teamStatsByName: publicQuery
+    .input(z.object({ teamName: z.string() }))
+    .query(({ input }) => {
+      const db = getDb();
+      return db
+        .select()
+        .from(scrimResults)
+        .where(eq(scrimResults.teamName, input.teamName))
+        .orderBy(desc(scrimResults.date))
+        .all();
+    }),
 });
 
 function getPointsByPosition(pos: number | null): number {

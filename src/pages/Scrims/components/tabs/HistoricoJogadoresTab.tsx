@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart3, Target, ChevronRight, Users, Zap } from "lucide-react";
+import { BarChart3, Target, ChevronRight, Users, Zap, Crosshair, Shield, Award } from "lucide-react";
 import { ScrimTable } from "../tables/ScrimTable";
 import { DateFilter } from "../DateFilter";
 import { EmptyState } from "../EmptyState";
@@ -39,6 +39,10 @@ export function HistoricoJogadoresTab({
           entityName: p.playerName,
           points: p.totalKills || 0,
           kills: p.totalKills || 0,
+          assists: p.totalAssists || 0,
+          deaths: p.totalDeaths || 0,
+          damage: p.totalDamage || 0,
+          mvps: p.totalMvp || 0,
           wins: 0,
           participations: 1,
           q1Kills: p.q1Kills || 0,
@@ -55,6 +59,10 @@ export function HistoricoJogadoresTab({
         entityName: p.playerName,
         points: p.totalKills || 0,
         kills: p.totalKills || 0,
+        assists: p.totalAssists || 0,
+        deaths: p.totalDeaths || 0,
+        damage: p.totalDamage || 0,
+        mvps: p.totalMvp || 0,
         wins: 0,
         participations: p.matches || 0,
         q1Kills: p.totalQ1 || 0,
@@ -69,6 +77,9 @@ export function HistoricoJogadoresTab({
     return {
       totalTeams: new Set(data.map((d) => d.teamName)).size,
       totalKills: data.reduce((sum, p) => sum + (p.kills || 0), 0),
+      totalAssists: data.reduce((sum, p) => sum + (p.assists || 0), 0),
+      totalDeaths: data.reduce((sum, p) => sum + (p.deaths || 0), 0),
+      totalDamage: data.reduce((sum, p) => sum + (p.damage || 0), 0),
       totalPoints: data.reduce((sum, p) => sum + (p.points || 0), 0),
       totalScrims: data.reduce((sum, p) => sum + (p.participations || 0), 0),
     };
@@ -148,6 +159,62 @@ export function HistoricoJogadoresTab({
             cell: (row) => (
               <span className="text-sm text-[#8a8a9e] text-center block">
                 {row.kills ?? 0}
+              </span>
+            ),
+            className: "text-center",
+          },
+          {
+            key: "assists",
+            header: (
+              <span className="flex items-center justify-center gap-1">
+                <Crosshair className="w-3 h-3" /> Assists
+              </span>
+            ),
+            cell: (row) => (
+              <span className="text-sm text-[#8a8a9e] text-center block">
+                {row.assists ?? 0}
+              </span>
+            ),
+            className: "text-center",
+          },
+          {
+            key: "deaths",
+            header: (
+              <span className="flex items-center justify-center gap-1">
+                <Shield className="w-3 h-3" /> Deaths
+              </span>
+            ),
+            cell: (row) => (
+              <span className="text-sm text-[#8a8a9e] text-center block">
+                {row.deaths ?? 0}
+              </span>
+            ),
+            className: "text-center",
+          },
+          {
+            key: "damage",
+            header: (
+              <span className="flex items-center justify-center gap-1">
+                <Zap className="w-3 h-3" /> Dano
+              </span>
+            ),
+            cell: (row) => (
+              <span className="text-sm text-[#8a8a9e] text-center block">
+                {(row.damage ?? 0).toLocaleString()}
+              </span>
+            ),
+            className: "text-center",
+          },
+          {
+            key: "mvps",
+            header: (
+              <span className="flex items-center justify-center gap-1">
+                <Award className="w-3 h-3" /> MVPs
+              </span>
+            ),
+            cell: (row) => (
+              <span className="text-sm text-yellow-400 text-center block font-medium">
+                {row.mvps ?? 0}
               </span>
             ),
             className: "text-center",
