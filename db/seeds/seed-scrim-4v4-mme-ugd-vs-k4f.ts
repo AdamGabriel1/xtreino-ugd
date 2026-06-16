@@ -1,6 +1,7 @@
 // db/seeds/seed-scrim-4v4-ugd-vs-k4f.ts
-// Seed da scrim 4v4: UGD Threat vs K4F — 13/06/2026
+// Seed da scrim 4v4 MME: UGD Threat vs K4F — 13/06/2026
 // 3 partidas: Vale Deserto, Ilha do Medo, Ilha do Medo
+// Modo: MME (Mata-Mata em Equipe) — Melhor de 3
 // Dados atualizados com kills, assists, mortes, dano, placar e MVP por queda
 
 import { getDb } from "../../api/queries/connection.js";
@@ -12,14 +13,15 @@ import { eq, and } from "drizzle-orm";
 // ============================================================
 
 const SCRIM_DATE = "2026-06-13";
-const SCRIM_NAME = "Scrim 4v4 — UGD Threat vs K4F";
+const SCRIM_NAME = "Scrim 4v4 MME — UGD Threat vs K4F";
 const SCRIM_TIME = "21:00";
 const SCRIM_MODALITY = "4v4";
+const SCRIM_MODE = "mme"; // MME = Mata-Mata em Equipe
 const SCRIM_STATUS = "concluido";
 const SCRIM_RESULT = "UGD Threat 3-0 K4F (Vale Deserto, Ilha do Medo, Ilha do Medo)";
 
 // --- RESULTADOS DOS TIMES (posicoes e placares por partida) ---
-// Para 4v4, cada partida = uma "queda" (Q1, Q2, Q3)
+// Para MME 4v4, cada partida = uma "queda" com placar de rounds
 // UGD Threat venceu todas (pos 1), K4F perdeu todas (pos 2)
 // Placares: Q1 = 7-1, Q2 = 7-1, Q3 = 7-0
 const TEAM_RESULTS = [
@@ -31,6 +33,10 @@ const TEAM_RESULTS = [
     q1Score: 7,
     q2Score: 7,
     q3Score: 7,
+    q4Score: null,
+    q5Score: null,
+    q6Score: null,
+    q7Score: null,
   },
   {
     teamName: "K4F",
@@ -40,6 +46,10 @@ const TEAM_RESULTS = [
     q1Score: 1,
     q2Score: 1,
     q3Score: 0,
+    q4Score: null,
+    q5Score: null,
+    q6Score: null,
+    q7Score: null,
   },
 ];
 
@@ -153,7 +163,7 @@ function upsertScrimPlayerStat(db: ReturnType<typeof getDb>, scrimId: number, da
 
 export function seed() {
   const db = getDb();
-  console.log("[SEED] Starting scrim 4v4 seed: UGD Threat vs K4F...");
+  console.log("[SEED] Starting scrim 4v4 MME seed: UGD Threat vs K4F...");
 
   // 1. Inserir o scrim na tabela scrims
   const scrimResult = upsertScrim(db, {
@@ -161,6 +171,7 @@ export function seed() {
     date: SCRIM_DATE,
     time: SCRIM_TIME,
     modality: SCRIM_MODALITY,
+    mode: SCRIM_MODE,
     status: SCRIM_STATUS,
     result: SCRIM_RESULT,
   });
@@ -181,6 +192,10 @@ export function seed() {
       q1Score: tr.q1Score,
       q2Score: tr.q2Score,
       q3Score: tr.q3Score,
+      q4Score: tr.q4Score,
+      q5Score: tr.q5Score,
+      q6Score: tr.q6Score,
+      q7Score: tr.q7Score,
     })) {
       teamResultsCount++;
     }
@@ -231,12 +246,12 @@ export function seed() {
   console.log(`[SEED] ${playerStatsCount} player stats created`);
 
   // 4. Registrar seed run
-  const seedName = "scrim-4v4-ugd-vs-k4f";
+  const seedName = "scrim-4v4-mme-ugd-vs-k4f";
   const existingSeed = db.select().from(seedRuns).where(eq(seedRuns.seedName, seedName)).get();
   if (!existingSeed) {
     db.insert(seedRuns).values({ seedName }).run();
     console.log(`[SEED] Seed run '${seedName}' recorded`);
   }
 
-  console.log("[SEED] Scrim 4v4 seed completed successfully!");
+  console.log("[SEED] Scrim 4v4 MME seed completed successfully!");
 }

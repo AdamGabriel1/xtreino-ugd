@@ -17,7 +17,8 @@ export function useScrimData(selectedDate: string) {
     { enabled: !isAllTime }
   );
   const { data: scrimPlayerAllTime, isLoading: loadingPlayerAllTime } = trpc.scrims.playerStatsAllTime.useQuery();
-  const { data: scrimTeamAllTime, isLoading: loadingTeamAllTime } = trpc.scrims.teamResultsAllTime.useQuery();
+  const { data: scrimTeamAllTimeBR, isLoading: loadingTeamAllTimeBR } = trpc.scrims.teamResultsAllTimeBR.useQuery();
+  const { data: scrimTeamAllTimeMME, isLoading: loadingTeamAllTimeMME } = trpc.scrims.teamResultsAllTimeMME?.useQuery();
 
   return {
     scrimsList,
@@ -25,15 +26,17 @@ export function useScrimData(selectedDate: string) {
     scrimTeamResults,
     scrimPlayerStats,
     scrimPlayerAllTime,
-    scrimTeamAllTime,
-    isLoading: loadingScrims || loadingDates || loadingTeamResults || loadingPlayerStats || loadingPlayerAllTime || loadingTeamAllTime,
+    scrimTeamAllTimeBR,
+    scrimTeamAllTimeMME,
+    isLoading: loadingScrims || loadingDates || loadingTeamResults || loadingPlayerStats || loadingPlayerAllTime || loadingTeamAllTimeBR || loadingTeamAllTimeMME,
     loadingStates: {
       scrims: loadingScrims,
       dates: loadingDates,
       teamResults: loadingTeamResults,
       playerStats: loadingPlayerStats,
       playerAllTime: loadingPlayerAllTime,
-      teamAllTime: loadingTeamAllTime,
+      teamAllTimeBR: loadingTeamAllTimeBR,
+      teamAllTimeMME: loadingTeamAllTimeMME,
     },
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Calendar, Clock, Swords, Trophy, Target, Users } from "lucide-react";
+import { X, Calendar, Clock, Swords, Trophy, Target, Users, BarChart3 } from "lucide-react";
 import type { ScrimItem } from "../../types";
 import { formatDate } from "../../utils/formatters";
 
@@ -12,6 +12,9 @@ interface ScrimDetailModalProps {
 
 export function ScrimDetailModal({ scrim, isOpen, onClose }: ScrimDetailModalProps) {
   if (!isOpen || !scrim) return null;
+
+  const isBR = scrim.mode === "br";
+  const isMME = scrim.mode === "mme";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -30,7 +33,7 @@ export function ScrimDetailModal({ scrim, isOpen, onClose }: ScrimDetailModalPro
             <div className="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
               <Swords className="w-7 h-7 text-emerald-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-lg font-bold text-[#f0f0f5]">{scrim.name}</h3>
               <div className="flex items-center gap-4 mt-1 text-sm text-[#8a8a9e]">
                 {scrim.date && (
@@ -48,6 +51,16 @@ export function ScrimDetailModal({ scrim, isOpen, onClose }: ScrimDetailModalPro
                 {scrim.modality && (
                   <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#1a1a24] text-[#8a8a9e] border border-[#2a2a3a]">
                     {scrim.modality.toUpperCase()}
+                  </span>
+                )}
+                {isBR && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    Battle Royale
+                  </span>
+                )}
+                {isMME && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                    Mata-Mata
                   </span>
                 )}
               </div>
@@ -97,6 +110,30 @@ export function ScrimDetailModal({ scrim, isOpen, onClose }: ScrimDetailModalPro
                 <span className="text-sm font-medium text-[#f0f0f5]">Resultado</span>
               </div>
               <p className="text-sm text-[#8a8a9e]">{scrim.result}</p>
+            </div>
+          )}
+
+          {/* Info do modo */}
+          {isBR && (
+            <div className="bg-blue-500/5 rounded-xl border border-blue-500/10 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-blue-400" />
+                <span className="text-sm font-medium text-blue-400">Battle Royale</span>
+              </div>
+              <p className="text-xs text-[#5a5a6e]">
+                Sistema de pontuação por posição nas quedas. 1º = 15pts, 2º = 12pts, 3º = 10pts...
+              </p>
+            </div>
+          )}
+          {isMME && (
+            <div className="bg-orange-500/5 rounded-xl border border-orange-500/10 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Swords className="w-4 h-4 text-orange-400" />
+                <span className="text-sm font-medium text-orange-400">Mata-Mata em Equipe</span>
+              </div>
+              <p className="text-xs text-[#5a5a6e]">
+                Sistema baseado em rounds ganhos. O time que acumular mais rounds vence a série.
+              </p>
             </div>
           )}
         </div>

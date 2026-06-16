@@ -37,7 +37,7 @@ export const settings = sqliteTable("settings", {
 });
 
 // ============================================================
-// CLANS - Organizações pai
+// CLANS
 // ============================================================
 export const clans = sqliteTable("clans", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -55,7 +55,7 @@ export const clans = sqliteTable("clans", {
 });
 
 // ============================================================
-// TEAMS - Lines/equipes de um clã
+// TEAMS
 // ============================================================
 export const teams = sqliteTable("teams", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -74,7 +74,7 @@ export const teams = sqliteTable("teams", {
 });
 
 // ============================================================
-// PLAYERS - Jogadores com role
+// PLAYERS
 // ============================================================
 export const players = sqliteTable("players", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -140,7 +140,7 @@ export const matches = sqliteTable("matches", {
 });
 
 // ============================================================
-// XTREINOS - Sistema Unificado
+// XTREINOS
 // ============================================================
 export const xtreinos = sqliteTable("xtreinos", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -208,9 +208,6 @@ export const xtreinoPlayerStats = sqliteTable("xtreino_player_stats", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
-// ============================================================
-// AGENDAMENTO DE XTREINOS
-// ============================================================
 export const xtreinoSchedule = sqliteTable("xtreino_schedule", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   date: text("date").notNull().unique(),
@@ -222,7 +219,7 @@ export const xtreinoSchedule = sqliteTable("xtreino_schedule", {
 });
 
 // ============================================================
-// SCRIMS
+// SCRIMS — Agora com campo mode (br | mme)
 // ============================================================
 export const scrims = sqliteTable("scrims", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -232,49 +229,95 @@ export const scrims = sqliteTable("scrims", {
   date: text("date"),
   time: text("time"),
   modality: text("modality"),
+  mode: text("mode").default("br"), // "br" = Battle Royale, "mme" = Mata-Mata em Equipe
   status: text("status").notNull().default("agendado"),
   result: text("result"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// SCRIM RESULTS — Suporta BR (posições) e MME (scores de rounds)
+// ============================================================
 export const scrimResults = sqliteTable("scrim_results", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   scrimId: integer("scrim_id", { mode: "number" }),
   date: text("date").notNull(),
   teamName: text("team_name").notNull(),
+  // BR: posições nas quedas
   q1Pos: integer("q1_pos"),
   q2Pos: integer("q2_pos"),
   q3Pos: integer("q3_pos"),
+  // MME: placar de rounds por queda
   q1Score: integer("q1_score"),
   q2Score: integer("q2_score"),
   q3Score: integer("q3_score"),
+  // MME extended: melhor de 5, 7, etc.
+  q4Score: integer("q4_score"),
+  q5Score: integer("q5_score"),
+  q6Score: integer("q6_score"),
+  q7Score: integer("q7_score"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ============================================================
+// SCRIM PLAYER STATS — Suporta até Q7 para MME extended
+// ============================================================
 export const scrimPlayerStats = sqliteTable("scrim_player_stats", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   scrimId: integer("scrim_id", { mode: "number" }),
   date: text("date").notNull(),
   teamName: text("team_name").notNull(),
   playerName: text("player_name").notNull(),
+  // Q1
   q1Kills: integer("q1_kills").notNull().default(0),
   q1Assists: integer("q1_assists").notNull().default(0),
   q1Deaths: integer("q1_deaths").notNull().default(0),
   q1Damage: integer("q1_damage").notNull().default(0),
   q1Mvp: integer("q1_mvp", { mode: "boolean" }).notNull().default(false),
   q1Score: integer("q1_score").notNull().default(0),
+  // Q2
   q2Kills: integer("q2_kills").notNull().default(0),
   q2Assists: integer("q2_assists").notNull().default(0),
   q2Deaths: integer("q2_deaths").notNull().default(0),
   q2Damage: integer("q2_damage").notNull().default(0),
   q2Mvp: integer("q2_mvp", { mode: "boolean" }).notNull().default(false),
   q2Score: integer("q2_score").notNull().default(0),
+  // Q3
   q3Kills: integer("q3_kills").notNull().default(0),
   q3Assists: integer("q3_assists").notNull().default(0),
   q3Deaths: integer("q3_deaths").notNull().default(0),
   q3Damage: integer("q3_damage").notNull().default(0),
   q3Mvp: integer("q3_mvp", { mode: "boolean" }).notNull().default(false),
   q3Score: integer("q3_score").notNull().default(0),
+  // Q4
+  q4Kills: integer("q4_kills").notNull().default(0),
+  q4Assists: integer("q4_assists").notNull().default(0),
+  q4Deaths: integer("q4_deaths").notNull().default(0),
+  q4Damage: integer("q4_damage").notNull().default(0),
+  q4Mvp: integer("q4_mvp", { mode: "boolean" }).notNull().default(false),
+  q4Score: integer("q4_score").notNull().default(0),
+  // Q5
+  q5Kills: integer("q5_kills").notNull().default(0),
+  q5Assists: integer("q5_assists").notNull().default(0),
+  q5Deaths: integer("q5_deaths").notNull().default(0),
+  q5Damage: integer("q5_damage").notNull().default(0),
+  q5Mvp: integer("q5_mvp", { mode: "boolean" }).notNull().default(false),
+  q5Score: integer("q5_score").notNull().default(0),
+  // Q6
+  q6Kills: integer("q6_kills").notNull().default(0),
+  q6Assists: integer("q6_assists").notNull().default(0),
+  q6Deaths: integer("q6_deaths").notNull().default(0),
+  q6Damage: integer("q6_damage").notNull().default(0),
+  q6Mvp: integer("q6_mvp", { mode: "boolean" }).notNull().default(false),
+  q6Score: integer("q6_score").notNull().default(0),
+  // Q7
+  q7Kills: integer("q7_kills").notNull().default(0),
+  q7Assists: integer("q7_assists").notNull().default(0),
+  q7Deaths: integer("q7_deaths").notNull().default(0),
+  q7Damage: integer("q7_damage").notNull().default(0),
+  q7Mvp: integer("q7_mvp", { mode: "boolean" }).notNull().default(false),
+  q7Score: integer("q7_score").notNull().default(0),
+  // Totais
   totalKills: integer("total_kills").notNull().default(0),
   totalAssists: integer("total_assists").notNull().default(0),
   totalDeaths: integer("total_deaths").notNull().default(0),
@@ -284,7 +327,7 @@ export const scrimPlayerStats = sqliteTable("scrim_player_stats", {
 });
 
 // ============================================================
-// CAMPEONATOS - Resultados separados
+// CAMPEONATOS
 // ============================================================
 export const campeonatoResults = sqliteTable("campeonato_results", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -348,7 +391,7 @@ export const rankings = sqliteTable("rankings", {
 });
 
 // ============================================================
-// SALINHAS - Salas personalizadas da comunidade
+// SALINHAS
 // ============================================================
 export const salinhas = sqliteTable("salinhas", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -360,20 +403,20 @@ export const salinhas = sqliteTable("salinhas", {
   prize1st: text("prize_1st").notNull(),
   prize2nd: text("prize_2nd").notNull(),
   prize3rd: text("prize_3rd").notNull(),
-  specialPrize: text("special_prize"), // Ex: "1k gold top licker"
+  specialPrize: text("special_prize"),
   hostName: text("host_name").notNull(),
   hostTiktok: text("host_tiktok"),
   hostInstagram: text("host_instagram"),
   hostYoutube: text("host_youtube"),
-  roomId: text("room_id"), // ID da sala (disponibilizado na live)
-  roomPassword: text("room_password"), // Senha da sala (disponibilizado na live)
-  bannerUrl: text("banner_url"), // 1080x721
-  postUrl: text("post_url"), // Link do post no perfil
-  status: text("status").notNull().default("aberta"), // aberta, em_andamento, encerrada
+  roomId: text("room_id"),
+  roomPassword: text("room_password"),
+  bannerUrl: text("banner_url"),
+  postUrl: text("post_url"),
+  status: text("status").notNull().default("aberta"),
   winner1st: text("winner_1st"),
   winner2nd: text("winner_2nd"),
   winner3rd: text("winner_3rd"),
-  specialWinner: text("special_winner"), // Top licker
+  specialWinner: text("special_winner"),
   rules: text("rules"),
   notes: text("notes"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),

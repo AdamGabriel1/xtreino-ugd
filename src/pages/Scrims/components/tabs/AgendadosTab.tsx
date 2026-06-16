@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Clock, Shield, Swords, Eye } from "lucide-react";
+import { Calendar, Clock, Shield, Swords, Eye, Target, Users } from "lucide-react";
 import { type ScrimItem, STATUS_COLORS, STATUS_LABELS } from "../../types";
 import { EmptyState } from "../EmptyState";
 
@@ -12,7 +12,7 @@ interface AgendadosTabProps {
 
 export function AgendadosTab({ scrimsList, onScrimClick }: AgendadosTabProps) {
   const [filterModality, setFilterModality] = useState("");
-  const modalities = ["", "solo", "duo", "squad", "4v4"];
+  const modalities = ["", "solo", "duo", "squad", "4v4", "5v5"];
 
   const filtered = scrimsList?.filter(
     (s) => !filterModality || s.modality === filterModality
@@ -60,6 +60,9 @@ export function AgendadosTab({ scrimsList, onScrimClick }: AgendadosTabProps) {
 }
 
 function ScrimCard({ scrim, onClick }: { scrim: ScrimItem; onClick?: () => void }) {
+  const isBR = scrim.mode === "br";
+  const isMME = scrim.mode === "mme";
+
   return (
     <div
       onClick={onClick}
@@ -82,7 +85,7 @@ function ScrimCard({ scrim, onClick }: { scrim: ScrimItem; onClick?: () => void 
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 flex-wrap">
           {scrim.date && (
             <div className="text-sm text-[#8a8a9e]">
               <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {scrim.date}</span>
@@ -99,6 +102,16 @@ function ScrimCard({ scrim, onClick }: { scrim: ScrimItem; onClick?: () => void 
           {scrim.modality && (
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#1a1a24] text-[#8a8a9e] border border-[#2a2a3a]">
               {scrim.modality.toUpperCase()}
+            </span>
+          )}
+          {isBR && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1">
+              <Target className="w-3 h-3" /> BR
+            </span>
+          )}
+          {isMME && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center gap-1">
+              <Users className="w-3 h-3" /> MME
             </span>
           )}
           <Eye className="w-4 h-4 text-[#5a5a6e] opacity-0 group-hover:opacity-100 transition-opacity" />

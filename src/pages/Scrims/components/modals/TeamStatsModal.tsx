@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Trophy, Target, TrendingUp, BarChart3, Users, Flame, Award } from "lucide-react";
+import { X, Trophy, Target, TrendingUp, BarChart3, Users, Flame, Award, Zap } from "lucide-react";
 import { useMemo } from "react";
 import { trpc } from "@/providers/trpc";
 
@@ -20,11 +20,16 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
 
   if (!isOpen) return null;
 
+  // Detectar se o time tem dados BR ou MME (ou ambos)
+  const hasBRData = teamResults?.some(r => r.q1Pos !== null || r.q2Pos !== null || r.q3Pos !== null);
+  const hasMMEData = teamResults?.some(r => r.q1Score !== null || r.q2Score !== null || r.q3Score !== null);
+
   const stats = useMemo(() => {
     if (!teamResults || teamResults.length === 0) {
       return {
         totalScrims: 0,
         totalKills: 0,
+        totalPoints: 0,
         totalRoundWins: 0,
         wins: 0,
         top3Count: 0,
@@ -37,15 +42,11 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       };
     }
 
-    // Calcular estatísticas dos resultados do time
     const totalScrims = teamResults.length;
+
+    // BR stats
     const wins = teamResults.reduce((sum, r) => {
       return sum + [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length;
-    }, 0);
-
-    // Rounds ganhos (score)
-    const totalRoundWins = teamResults.reduce((sum, r) => {
-      return sum + (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0);
     }, 0);
 
     const positions: number[] = [];
@@ -60,11 +61,15 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
     const avgPosition = positions.length > 0
       ? positions.reduce((a, b) => a + b, 0) / positions.length
       : 0;
-
-    // Top 3 (posições 1, 2, 3)
     const top3Count = positions.filter(p => p && p <= 3).length;
 
-    // Jogadores do time (filtrar por teamName nas player stats)
+    // MME stats
+    const totalRoundWins = teamResults.reduce((sum, r) => {
+      return sum + (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0)
+        + (r.q4Score || 0) + (r.q5Score || 0) + (r.q6Score || 0) + (r.q7Score || 0);
+    }, 0);
+
+    // Jogadores do time
     const teamPlayers = (allPlayerStats || []).filter(p => p.teamName === teamName);
     const playerMap = new Map<string, { name: string; kills: number; mvps: number }>();
 
@@ -92,11 +97,12 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
       .map((r) => ({
         date: r.date || "—",
         position: r.q1Pos || 0,
-        roundWins: (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0),
+        roundWins: (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0)
+          + (r.q4Score || 0) + (r.q5Score || 0) + (r.q6Score || 0) + (r.q7Score || 0),
         map: "—",
       }));
 
-    // Calcular streak (vitórias consecutivas)
+    // Streak (vitórias consecutivas)
     let streak = 0;
     for (let i = teamResults.length - 1; i >= 0; i--) {
       const r = teamResults[i];
@@ -108,6 +114,7 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
     return {
       totalScrims,
       totalKills: teamPlayers.reduce((sum, p) => sum + (p.totalKills || 0), 0),
+      totalPoints: 0, // Calculado abaixo se for BR
       totalRoundWins,
       wins,
       top3Count,
@@ -145,6 +152,20 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Mode Badges */}
+          <div className="flex gap-2">
+            {hasBRData && (
+              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                Battle Royale
+              </span>
+            )}
+            {hasMMEData && (
+              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                Mata-Mata em Equipe
+              </span>
+            )}
+          </div>
+
           {/* Cards de resumo */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
@@ -159,12 +180,22 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
               value={stats.totalKills}
               sublabel={stats.totalScrims > 0 ? `${Math.round(stats.totalKills / stats.totalScrims)} média/scrim` : "0"}
             />
-            <StatCard
-              icon={<BarChart3 className="w-4 h-4 text-emerald-400" />}
-              label="Rounds Gan"
-              value={stats.totalRoundWins}
-              sublabel="Total acumulado"
-            />
+            {hasMMEData && (
+              <StatCard
+                icon={<BarChart3 className="w-4 h-4 text-emerald-400" />}
+                label="Rounds Gan"
+                value={stats.totalRoundWins}
+                sublabel="Total acumulado"
+              />
+            )}
+            {hasBRData && (
+              <StatCard
+                icon={<Zap className="w-4 h-4 text-blue-400" />}
+                label="Top 3"
+                value={stats.top3Count}
+                sublabel="Quedas no pódio"
+              />
+            )}
             <StatCard
               icon={<Flame className="w-4 h-4 text-orange-400" />}
               label="Streak"
@@ -173,27 +204,29 @@ export function TeamStatsModal({ teamName, isOpen, onClose }: TeamStatsModalProp
             />
           </div>
 
-          {/* Performance */}
-          <div className="bg-[#1a1a24] rounded-xl border border-[#2a2a3a] p-4">
-            <h3 className="text-sm font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              Performance
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-400">{stats.bestPosition > 0 ? `${stats.bestPosition}º` : "—"}</p>
-                <p className="text-xs text-[#5a5a6e] mt-1">Melhor Posição</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-emerald-400">{stats.avgPosition > 0 ? stats.avgPosition.toFixed(1) : "—"}</p>
-                <p className="text-xs text-[#5a5a6e] mt-1">Média</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-400">{stats.worstPosition > 0 ? `${stats.worstPosition}º` : "—"}</p>
-                <p className="text-xs text-[#5a5a6e] mt-1">Pior Posição</p>
+          {/* Performance BR */}
+          {hasBRData && (
+            <div className="bg-[#1a1a24] rounded-xl border border-[#2a2a3a] p-4">
+              <h3 className="text-sm font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-blue-400" />
+                Performance BR
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-yellow-400">{stats.bestPosition > 0 ? `${stats.bestPosition}º` : "—"}</p>
+                  <p className="text-xs text-[#5a5a6e] mt-1">Melhor Posição</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-emerald-400">{stats.avgPosition > 0 ? stats.avgPosition.toFixed(1) : "—"}</p>
+                  <p className="text-xs text-[#5a5a6e] mt-1">Média</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-red-400">{stats.worstPosition > 0 ? `${stats.worstPosition}º` : "—"}</p>
+                  <p className="text-xs text-[#5a5a6e] mt-1">Pior Posição</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Top Jogadores */}
           <div className="bg-[#1a1a24] rounded-xl border border-[#2a2a3a] p-4">
