@@ -40,7 +40,7 @@ const TEAM_RESULTS = [
   },
   {
     teamName: "K4F",
-    q1Pos: null,  // ← MME não usa posições!
+    q1Pos: null,
     q2Pos: null,
     q3Pos: null,
     q1Score: 1,
