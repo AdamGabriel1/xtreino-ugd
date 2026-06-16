@@ -345,10 +345,27 @@ export const scrimsRouter = createRouter({
     .input(
       z.object({
         date: z.string().optional(),
+        mode: z.enum(["br", "mme"]).optional(),
       })
     )
     .query(({ input }) => {
       const db = getDb();
+
+      // Se filtrar por modo, faz JOIN com scrims para pegar o mode
+      if (input.mode) {
+        const conditions = [eq(scrims.mode, input.mode)];
+        if (input.date) {
+          conditions.push(eq(scrimResults.date, input.date));
+        }
+        return db
+          .select()
+          .from(scrimResults)
+          .innerJoin(scrims, eq(scrimResults.scrimId, scrims.id))
+          .where(and(...conditions))
+          .orderBy(desc(scrimResults.date))
+          .all()
+          .map((row) => row.scrim_results);
+      }
 
       if (input.date) {
         return db
@@ -366,10 +383,27 @@ export const scrimsRouter = createRouter({
     .input(
       z.object({
         date: z.string().optional(),
+        mode: z.enum(["br", "mme"]).optional(),
       })
     )
     .query(({ input }) => {
       const db = getDb();
+
+      // Se filtrar por modo, faz JOIN com scrims para pegar o mode
+      if (input.mode) {
+        const conditions = [eq(scrims.mode, input.mode)];
+        if (input.date) {
+          conditions.push(eq(scrimPlayerStats.date, input.date));
+        }
+        return db
+          .select()
+          .from(scrimPlayerStats)
+          .innerJoin(scrims, eq(scrimPlayerStats.scrimId, scrims.id))
+          .where(and(...conditions))
+          .orderBy(desc(scrimPlayerStats.totalKills))
+          .all()
+          .map((row) => row.scrim_player_stats);
+      }
 
       if (input.date) {
         return db
@@ -387,31 +421,47 @@ export const scrimsRouter = createRouter({
   // ALL TIME — JOGADORES (unificado)
   // ============================================================
 
-  playerStatsAllTime: publicQuery.query(() => {
-    const db = getDb();
-    return db
-      .select({
-        playerName: scrimPlayerStats.playerName,
-        teamName: sql<string>`MAX(${scrimPlayerStats.teamName})`,
-        totalKills: sql<number>`SUM(${scrimPlayerStats.totalKills})`,
-        totalAssists: sql<number>`SUM(${scrimPlayerStats.totalAssists})`,
-        totalDeaths: sql<number>`SUM(${scrimPlayerStats.totalDeaths})`,
-        totalDamage: sql<number>`SUM(${scrimPlayerStats.totalDamage})`,
-        totalMvp: sql<number>`SUM(${scrimPlayerStats.totalMvp})`,
-        totalQ1: sql<number>`SUM(${scrimPlayerStats.q1Kills})`,
-        totalQ2: sql<number>`SUM(${scrimPlayerStats.q2Kills})`,
-        totalQ3: sql<number>`SUM(${scrimPlayerStats.q3Kills})`,
-        totalQ4: sql<number>`SUM(${scrimPlayerStats.q4Kills})`,
-        totalQ5: sql<number>`SUM(${scrimPlayerStats.q5Kills})`,
-        totalQ6: sql<number>`SUM(${scrimPlayerStats.q6Kills})`,
-        totalQ7: sql<number>`SUM(${scrimPlayerStats.q7Kills})`,
-        matches: sql<number>`COUNT(DISTINCT ${scrimPlayerStats.date})`,
-      })
-      .from(scrimPlayerStats)
-      .groupBy(scrimPlayerStats.playerName)
-      .orderBy(desc(sql`SUM(${scrimPlayerStats.totalKills})`))
-      .all();
-  }),
+  playerStatsAllTime: publicQuery
+    .input(
+      z.object({
+        mode: z.enum(["br", "mme"]).optional(),
+      }).optional()
+    )
+    .query(({ input }) => {
+      const db = getDb();
+
+      let query = db
+        .select({
+          playerName: scrimPlayerStats.playerName,
+          teamName: sql<string>`MAX(${scrimPlayerStats.teamName})`,
+          totalKills: sql<number>`SUM(${scrimPlayerStats.totalKills})`,
+          totalAssists: sql<number>`SUM(${scrimPlayerStats.totalAssists})`,
+          totalDeaths: sql<number>`SUM(${scrimPlayerStats.totalDeaths})`,
+          totalDamage: sql<number>`SUM(${scrimPlayerStats.totalDamage})`,
+          totalMvp: sql<number>`SUM(${scrimPlayerStats.totalMvp})`,
+          totalQ1: sql<number>`SUM(${scrimPlayerStats.q1Kills})`,
+          totalQ2: sql<number>`SUM(${scrimPlayerStats.q2Kills})`,
+          totalQ3: sql<number>`SUM(${scrimPlayerStats.q3Kills})`,
+          totalQ4: sql<number>`SUM(${scrimPlayerStats.q4Kills})`,
+          totalQ5: sql<number>`SUM(${scrimPlayerStats.q5Kills})`,
+          totalQ6: sql<number>`SUM(${scrimPlayerStats.q6Kills})`,
+          totalQ7: sql<number>`SUM(${scrimPlayerStats.q7Kills})`,
+          matches: sql<number>`COUNT(DISTINCT ${scrimPlayerStats.date})`,
+        })
+        .from(scrimPlayerStats);
+
+      // Se filtrar por modo, faz JOIN com scrims
+      if (input?.mode) {
+        query = query
+          .innerJoin(scrims, eq(scrimPlayerStats.scrimId, scrims.id))
+          .where(eq(scrims.mode, input.mode)) as any;
+      }
+
+      return query
+        .groupBy(scrimPlayerStats.playerName)
+        .orderBy(desc(sql`SUM(${scrimPlayerStats.totalKills})`))
+        .all();
+    }),
 
   // ============================================================
   // ALL TIME — TIMES BR (pontuação por posição)
@@ -419,7 +469,15 @@ export const scrimsRouter = createRouter({
 
   teamResultsAllTimeBR: publicQuery.query(() => {
     const db = getDb();
-    const allResults = db.select().from(scrimResults).all();
+
+    // Só pega scrims do tipo BR
+    const brResults = db
+      .select()
+      .from(scrimResults)
+      .innerJoin(scrims, eq(scrimResults.scrimId, scrims.id))
+      .where(eq(scrims.mode, "br"))
+      .all()
+      .map((row) => row.scrim_results);
 
     const teamMap = new Map<string, {
       teamName: string;
@@ -432,7 +490,7 @@ export const scrimsRouter = createRouter({
       posCount: number;
     }>();
 
-    for (const r of allResults) {
+    for (const r of brResults) {
       const existing = teamMap.get(r.teamName);
 
       const q1Pts = getPointsByPosition(r.q1Pos);
@@ -465,9 +523,16 @@ export const scrimsRouter = createRouter({
       }
     }
 
-    // Buscar kills por time
-    const allPlayers = db.select().from(scrimPlayerStats).all();
-    for (const p of allPlayers) {
+    // Buscar kills por time (só de scrims BR)
+    const brPlayerStats = db
+      .select()
+      .from(scrimPlayerStats)
+      .innerJoin(scrims, eq(scrimPlayerStats.scrimId, scrims.id))
+      .where(eq(scrims.mode, "br"))
+      .all()
+      .map((row) => row.scrim_player_stats);
+
+    for (const p of brPlayerStats) {
       const team = teamMap.get(p.teamName);
       if (team) {
         team.totalKills += p.totalKills || 0;
@@ -491,7 +556,15 @@ export const scrimsRouter = createRouter({
 
   teamResultsAllTimeMME: publicQuery.query(() => {
     const db = getDb();
-    const allResults = db.select().from(scrimResults).all();
+
+    // Só pega scrims do tipo MME
+    const mmeResults = db
+      .select()
+      .from(scrimResults)
+      .innerJoin(scrims, eq(scrimResults.scrimId, scrims.id))
+      .where(eq(scrims.mode, "mme"))
+      .all()
+      .map((row) => row.scrim_results);
 
     const teamMap = new Map<string, {
       teamName: string;
@@ -501,14 +574,12 @@ export const scrimsRouter = createRouter({
       matches: number;
     }>();
 
-    for (const r of allResults) {
+    for (const r of mmeResults) {
       const existing = teamMap.get(r.teamName);
 
       const roundWins = (r.q1Score || 0) + (r.q2Score || 0) + (r.q3Score || 0)
         + (r.q4Score || 0) + (r.q5Score || 0) + (r.q6Score || 0) + (r.q7Score || 0);
 
-      // Uma "série vencida" é quando o time ganhou mais rounds na scrim
-      // (simplificado: verificamos se q1Score > 0 e o time tem rounds)
       const hasRounds = roundWins > 0;
 
       if (existing) {
@@ -526,9 +597,16 @@ export const scrimsRouter = createRouter({
       }
     }
 
-    // Buscar kills por time
-    const allPlayers = db.select().from(scrimPlayerStats).all();
-    for (const p of allPlayers) {
+    // Buscar kills por time (só de scrims MME)
+    const mmePlayerStats = db
+      .select()
+      .from(scrimPlayerStats)
+      .innerJoin(scrims, eq(scrimPlayerStats.scrimId, scrims.id))
+      .where(eq(scrims.mode, "mme"))
+      .all()
+      .map((row) => row.scrim_player_stats);
+
+    for (const p of mmePlayerStats) {
       const team = teamMap.get(p.teamName);
       if (team) {
         team.totalKills += p.totalKills || 0;

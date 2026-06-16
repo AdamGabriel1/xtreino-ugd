@@ -28,7 +28,7 @@ export default function ScrimsPage() {
     scrimPlayerAllTime,
     scrimTeamAllTimeBR,
     scrimTeamAllTimeMME,
-  } = useScrimData(selectedDate);
+  } = useScrimData(selectedDate, selectedMode);
 
   const normalizedScrimsList = scrimsList as ScrimItem[] | undefined;
 

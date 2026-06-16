@@ -22,12 +22,13 @@ const SCRIM_RESULT = "UGD Threat 3-0 K4F (Vale Deserto, Ilha do Medo, Ilha do Me
 
 // --- RESULTADOS DOS TIMES (posicoes e placares por partida) ---
 // Para MME 4v4, cada partida = uma "queda" com placar de rounds
-// UGD Threat venceu todas (pos 1), K4F perdeu todas (pos 2)
+// UGD Threat venceu todas, K4F perdeu todas
 // Placares: Q1 = 7-1, Q2 = 7-1, Q3 = 7-0
+// IMPORTANTE: MME não usa qXPos! Deixar como null.
 const TEAM_RESULTS = [
   {
     teamName: "UGD Threat",
-    q1Pos: null,
+    q1Pos: null,  // MME não usa posições!
     q2Pos: null,
     q3Pos: null,
     q1Score: 7,
@@ -40,7 +41,7 @@ const TEAM_RESULTS = [
   },
   {
     teamName: "K4F",
-    q1Pos: null,
+    q1Pos: null,  // MME não usa posições!
     q2Pos: null,
     q3Pos: null,
     q1Score: 1,
