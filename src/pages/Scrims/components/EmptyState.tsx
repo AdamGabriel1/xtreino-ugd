@@ -1,7 +1,7 @@
 // src/app/scrims/components/EmptyState.tsx
 "use client";
 
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface EmptyStateProps {
   icon: ReactNode;
