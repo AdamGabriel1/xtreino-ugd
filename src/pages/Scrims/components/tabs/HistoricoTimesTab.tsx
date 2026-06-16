@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart3, Target, Trophy, ChevronRight, Zap } from "lucide-react";
+import { BarChart3, Target, Trophy, ChevronRight, Zap, Users } from "lucide-react";
 import { ScrimTable } from "../tables/ScrimTable";
 import { DateFilter } from "../DateFilter";
 import { EmptyState } from "../EmptyState";
@@ -42,6 +42,7 @@ export function HistoricoTimesTab({
   const isAllTime = selectedDate === "all";
   const isMME = selectedMode === "mme";
   const isBR = selectedMode === "br";
+  const isAllModes = selectedMode === "all";
 
   // ============================================================
   // DADOS BR (Battle Royale)
@@ -353,14 +354,26 @@ export function HistoricoTimesTab({
     },
   ];
 
-  const emptyState = (
+  const emptyStateBR = (
     <EmptyState
-      icon={<BarChart3 className="w-12 h-12" />}
-      title="Nenhum dado disponível"
+      icon={<Target className="w-12 h-12" />}
+      title="Nenhum dado BR"
       subtitle={
         isAllTime
-          ? "Nenhum dado histórico encontrado"
-          : "Nenhum dado para o filtro selecionado"
+          ? "Nenhum dado histórico de Battle Royale encontrado"
+          : "Nenhum dado de Battle Royale para o filtro selecionado"
+      }
+    />
+  );
+
+  const emptyStateMME = (
+    <EmptyState
+      icon={<Users className="w-12 h-12" />}
+      title="Nenhum dado MME"
+      subtitle={
+        isAllTime
+          ? "Nenhum dado histórico de Mata-Mata em Equipe encontrado"
+          : "Nenhum dado de Mata-Mata em Equipe para o filtro selecionado"
       }
     />
   );
@@ -380,24 +393,58 @@ export function HistoricoTimesTab({
         totalScrims={summary.totalScrims}
       />
 
-      {/* BR Table */}
+      {/* BR Section */}
       {!isMME && (
-        <ScrimTable
-          data={dataBR}
-          keyExtractor={(row) => row.id}
-          emptyState={emptyState}
-          columns={columnsBR}
-        />
+        <div className="space-y-3">
+          {(isAllModes || dataBR.length > 0) && (
+            <div className="flex items-center gap-3 pb-2 border-b border-[#2a2a3a]">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Target className="w-4 h-4 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#f0f0f5]">Battle Royale</h3>
+                <p className="text-xs text-[#5a5a6e]">
+                  {dataBR.length > 0 
+                    ? `${dataBR.length} equipe(s)` 
+                    : "Nenhuma equipe nesta data"}
+                </p>
+              </div>
+            </div>
+          )}
+          <ScrimTable
+            data={dataBR}
+            keyExtractor={(row) => row.id}
+            emptyState={emptyStateBR}
+            columns={columnsBR}
+          />
+        </div>
       )}
 
-      {/* MME Table */}
+      {/* MME Section */}
       {!isBR && (
-        <ScrimTable
-          data={dataMME}
-          keyExtractor={(row) => row.id}
-          emptyState={emptyState}
-          columns={columnsMME}
-        />
+        <div className="space-y-3">
+          {(isAllModes || dataMME.length > 0) && (
+            <div className="flex items-center gap-3 pb-2 border-b border-[#2a2a3a]">
+              <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Users className="w-4 h-4 text-orange-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#f0f0f5]">Mata-Mata em Equipe</h3>
+                <p className="text-xs text-[#5a5a6e]">
+                  {dataMME.length > 0 
+                    ? `${dataMME.length} equipe(s)` 
+                    : "Nenhuma equipe nesta data"}
+                </p>
+              </div>
+            </div>
+          )}
+          <ScrimTable
+            data={dataMME}
+            keyExtractor={(row) => row.id}
+            emptyState={emptyStateMME}
+            columns={columnsMME}
+          />
+        </div>
       )}
     </div>
   );
