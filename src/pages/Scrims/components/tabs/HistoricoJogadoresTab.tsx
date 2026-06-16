@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart3, Target } from "lucide-react";
+import { BarChart3, Target, ChevronRight, Users, Zap } from "lucide-react";
 import { ScrimTable } from "../tables/ScrimTable";
 import { DateFilter } from "../DateFilter";
 import { EmptyState } from "../EmptyState";
+import { HistorySummary } from "../HistorySummary";
 import type {
   PlayerStat,
   PlayerAllTime,
@@ -17,6 +18,7 @@ interface HistoricoJogadoresTabProps {
   onDateChange: (date: string) => void;
   scrimPlayerStats?: PlayerStat[];
   scrimPlayerAllTime?: PlayerAllTime[];
+  onPlayerClick?: (playerName: string, teamName: string) => void;
 }
 
 export function HistoricoJogadoresTab({
@@ -25,6 +27,7 @@ export function HistoricoJogadoresTab({
   onDateChange,
   scrimPlayerStats,
   scrimPlayerAllTime,
+  onPlayerClick,
 }: HistoricoJogadoresTabProps) {
   const isAllTime = selectedDate === "all";
 
@@ -62,12 +65,28 @@ export function HistoricoJogadoresTab({
       .sort((a, b) => b.points - a.points);
   }, [isAllTime, scrimPlayerStats, scrimPlayerAllTime]);
 
+  const summary = useMemo(() => {
+    return {
+      totalTeams: new Set(data.map((d) => d.teamName)).size,
+      totalKills: data.reduce((sum, p) => sum + (p.kills || 0), 0),
+      totalPoints: data.reduce((sum, p) => sum + (p.points || 0), 0),
+      totalScrims: data.reduce((sum, p) => sum + (p.participations || 0), 0),
+    };
+  }, [data]);
+
   return (
     <div className="space-y-6">
       <DateFilter
         selectedDate={selectedDate}
         availableDates={availableDates}
         onChange={onDateChange}
+      />
+
+      <HistorySummary
+        totalTeams={summary.totalTeams}
+        totalKills={summary.totalKills}
+        totalPoints={summary.totalPoints}
+        totalScrims={summary.totalScrims}
       />
 
       <ScrimTable
@@ -89,9 +108,13 @@ export function HistoricoJogadoresTab({
             key: "player",
             header: "Jogador",
             cell: (row) => (
-              <span className="text-sm font-bold text-[#f0f0f5]">
+              <button
+                onClick={() => onPlayerClick?.(row.entityName, row.teamName)}
+                className="text-sm font-bold text-[#f0f0f5] hover:text-emerald-400 transition-colors flex items-center gap-1 group"
+              >
                 {row.entityName}
-              </span>
+                <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             ),
           },
           {
@@ -105,7 +128,7 @@ export function HistoricoJogadoresTab({
             key: "points",
             header: (
               <span className="flex items-center justify-center gap-1">
-                <BarChart3 className="w-3 h-3" /> Pontos
+                <Zap className="w-3 h-3" /> Pontos
               </span>
             ),
             cell: (row) => (
@@ -131,7 +154,11 @@ export function HistoricoJogadoresTab({
           },
           {
             key: "participations",
-            header: "Scrims",
+            header: (
+              <span className="flex items-center justify-center gap-1">
+                <Users className="w-3 h-3" /> Scrims
+              </span>
+            ),
             cell: (row) => (
               <span className="text-sm text-[#8a8a9e] text-center block">
                 {row.participations ?? 0}

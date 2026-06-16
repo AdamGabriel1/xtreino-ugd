@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart3, Target, Trophy } from "lucide-react";
+import { BarChart3, Target, Trophy, ChevronRight } from "lucide-react";
 import { ScrimTable } from "../tables/ScrimTable";
 import { DateFilter } from "../DateFilter";
 import { EmptyState } from "../EmptyState";
+import { HistorySummary } from "../HistorySummary";
 import {
   type TeamResult,
   type TeamAllTime,
@@ -12,7 +13,6 @@ import {
   type EnrichedTeamRow,
   getPointsByPosition,
 } from "../../types";
-import { formatDate } from "../../utils/formatters";
 
 interface HistoricoTimesTabProps {
   selectedDate: string;
@@ -21,6 +21,7 @@ interface HistoricoTimesTabProps {
   scrimTeamResults?: TeamResult[];
   scrimPlayerStats?: PlayerStat[];
   scrimTeamAllTime?: TeamAllTime[];
+  onTeamClick?: (teamName: string) => void;
 }
 
 export function HistoricoTimesTab({
@@ -30,19 +31,18 @@ export function HistoricoTimesTab({
   scrimTeamResults,
   scrimPlayerStats,
   scrimTeamAllTime,
+  onTeamClick,
 }: HistoricoTimesTabProps) {
   const isAllTime = selectedDate === "all";
 
   const data = useMemo<EnrichedTeamRow[]>(() => {
     if (!isAllTime) {
-      // Dados de uma data específica
       const teamsWithPoints = (scrimTeamResults || []).map((t) => {
         const q1Points = getPointsByPosition(t.q1Pos);
         const q2Points = getPointsByPosition(t.q2Pos);
         const q3Points = getPointsByPosition(t.q3Pos);
         const positionPoints = q1Points + q2Points + q3Points;
 
-        // Calcular kills do time a partir dos jogadores (FILTRADO POR DATA)
         const playerData = (scrimPlayerStats || []).filter(
           (p) => p.teamName === t.teamName && p.date === selectedDate
         );
@@ -71,12 +71,11 @@ export function HistoricoTimesTab({
       return teamsWithPoints.sort((a, b) => b.points - a.points);
     }
 
-    // Todos os tempos
     return (scrimTeamAllTime || []).map((t, i) => ({
       id: i,
       entityName: t.teamName,
       points: t.totalPoints || 0,
-      positionPoints: 0,
+      positionPoints: t.totalPoints || 0,
       kills: t.totalKills || 0,
       wins: t.wins || 0,
       participations: t.matches || 0,
@@ -89,12 +88,28 @@ export function HistoricoTimesTab({
     }));
   }, [isAllTime, scrimTeamResults, scrimPlayerStats, scrimTeamAllTime, selectedDate]);
 
+  const summary = useMemo(() => {
+    return {
+      totalTeams: data.length,
+      totalKills: data.reduce((sum, t) => sum + (t.kills || 0), 0),
+      totalPoints: data.reduce((sum, t) => sum + (t.positionPoints || 0), 0),
+      totalScrims: data.reduce((sum, t) => sum + (t.participations || 0), 0),
+    };
+  }, [data]);
+
   return (
     <div className="space-y-6">
       <DateFilter
         selectedDate={selectedDate}
         availableDates={availableDates}
         onChange={onDateChange}
+      />
+
+      <HistorySummary
+        totalTeams={summary.totalTeams}
+        totalKills={summary.totalKills}
+        totalPoints={summary.totalPoints}
+        totalScrims={summary.totalScrims}
       />
 
       <ScrimTable
@@ -116,9 +131,13 @@ export function HistoricoTimesTab({
             key: "team",
             header: "Equipe",
             cell: (row) => (
-              <span className="text-sm font-bold text-[#f0f0f5]">
+              <button
+                onClick={() => onTeamClick?.(row.entityName)}
+                className="text-sm font-bold text-[#f0f0f5] hover:text-emerald-400 transition-colors flex items-center gap-1 group"
+              >
                 {row.entityName}
-              </span>
+                <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             ),
           },
           {

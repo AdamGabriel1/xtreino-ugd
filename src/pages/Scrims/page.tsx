@@ -1,21 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Swords, Calendar, Trophy, Target, Plus } from "lucide-react";
+import { Swords, Calendar, Trophy, Target } from "lucide-react";
 import MainLayout from "@/layout/MainLayout";
-import type { TabType } from "./types";
+import type { TabType, ScrimItem } from "./types";
 import { useScrimData } from "./hooks/useScrimData";
 import { AgendadosTab } from "./components/tabs/AgendadosTab";
 import { HistoricoTimesTab } from "./components/tabs/HistoricoTimesTab";
 import { HistoricoJogadoresTab } from "./components/tabs/HistoricoJogadoresTab";
-import { Scrim4v4Modal } from "./components/modals/Scrim4v4Modal";
-import { ScrimBRModal } from "./components/modals/ScrimBRModal";
+import { ScrimDetailModal } from "./components/modals/ScrimDetailModal";
+import { TeamStatsModal } from "./components/modals/TeamStatsModal";
+import { PlayerStatsModal } from "./components/modals/PlayerStatsModal";
 
 export default function ScrimsPage() {
   const [tab, setTab] = useState<TabType>("agendados");
   const [selectedDate, setSelectedDate] = useState<string>("all");
-  const [show4v4Modal, setShow4v4Modal] = useState(false);
-  const [showBRModal, setShowBRModal] = useState(false);
+  const [selectedScrim, setSelectedScrim] = useState<ScrimItem | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string>("");
+  const [selectedPlayer, setSelectedPlayer] = useState<{ name: string; team: string } | null>(null);
 
   const {
     scrimsList,
@@ -25,6 +27,8 @@ export default function ScrimsPage() {
     scrimPlayerAllTime,
     scrimTeamAllTime,
   } = useScrimData(selectedDate);
+
+  const normalizedScrimsList = scrimsList as ScrimItem[] | undefined;
 
   const getTitle = () => {
     if (tab === "agendados") return "Scrims Agendados";
@@ -38,30 +42,11 @@ export default function ScrimsPage() {
       {/* Header */}
       <div className="bg-[#12121a] border-b border-[#2a2a3a]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 mb-2">
-              <Swords className="w-8 h-8 text-emerald-400" />
-              <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
-                Scrims
-              </h1>
-            </div>
-            {/* Botões de adicionar */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShow4v4Modal(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                4v4
-              </button>
-              <button
-                onClick={() => setShowBRModal(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                BR
-              </button>
-            </div>
+          <div className="flex items-center gap-3 mb-2">
+            <Swords className="w-8 h-8 text-emerald-400" />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
+              Scrims
+            </h1>
           </div>
           <p className="text-[#8a8a9e]">{getTitle()}</p>
         </div>
@@ -101,7 +86,12 @@ export default function ScrimsPage() {
         </div>
 
         {/* Tab Content */}
-        {tab === "agendados" && <AgendadosTab scrimsList={scrimsList as any} />}
+        {tab === "agendados" && (
+          <AgendadosTab
+            scrimsList={normalizedScrimsList}
+            onScrimClick={setSelectedScrim}
+          />
+        )}
 
         {tab === "historico-times" && (
           <HistoricoTimesTab
@@ -111,6 +101,7 @@ export default function ScrimsPage() {
             scrimTeamResults={scrimTeamResults}
             scrimPlayerStats={scrimPlayerStats}
             scrimTeamAllTime={scrimTeamAllTime}
+            onTeamClick={setSelectedTeam}
           />
         )}
 
@@ -121,19 +112,30 @@ export default function ScrimsPage() {
             onDateChange={setSelectedDate}
             scrimPlayerStats={scrimPlayerStats}
             scrimPlayerAllTime={scrimPlayerAllTime}
+            onPlayerClick={(name, team) => setSelectedPlayer({ name, team })}
           />
         )}
       </div>
 
       {/* Modals */}
-      <Scrim4v4Modal
-        isOpen={show4v4Modal}
-        onClose={() => setShow4v4Modal(false)}
+      <ScrimDetailModal
+        scrim={selectedScrim}
+        isOpen={!!selectedScrim}
+        onClose={() => setSelectedScrim(null)}
       />
-      <ScrimBRModal
-        isOpen={showBRModal}
-        onClose={() => setShowBRModal(false)}
+      <TeamStatsModal
+        teamName={selectedTeam}
+        isOpen={!!selectedTeam}
+        onClose={() => setSelectedTeam("")}
       />
+      {selectedPlayer && (
+        <PlayerStatsModal
+          playerName={selectedPlayer.name}
+          teamName={selectedPlayer.team}
+          isOpen={!!selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </MainLayout>
   );
 }
