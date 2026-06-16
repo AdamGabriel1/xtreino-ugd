@@ -3,7 +3,7 @@ import { Toaster } from "sonner";
 import Home from "./pages/Home";
 import Campeonatos from "./pages/Campeonatos";
 import XTreinos from "./pages/XTreinos";
-import Scrims from "./pages/Scrims";
+import Scrims from "./pages/Scrims/page";
 import Rankings from "./pages/Rankings";
 import Clans from "./pages/Clans";
 import Jogadores from "./pages/Jogadores";

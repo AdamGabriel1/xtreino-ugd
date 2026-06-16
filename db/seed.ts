@@ -6,6 +6,8 @@ import { seedMinimal } from "./seeds/seed-minimal.js";
 import { seedLogos, seedLogosAuto } from "./seeds/seed-logos.js";
 import { seedAllXtreinos } from "./seeds/seed-xtreinos.js";
 import { seedPlayerUnified } from "./seeds/seed-player.js";
+import { seed as seedScrimPlayers } from "./seeds/seed-scrim-players-4v4";
+import { seed as seedScrim4v4 } from "./seeds/seed-scrim-4v4-ugd-vs-k4f";
 
 export {
   seed,           // seed inicial (admins, settings, clans, teams, players)
@@ -14,4 +16,6 @@ export {
   seedLogosAuto,  // seed automático de logos (escaneia pasta)
   seedAllXtreinos,// 🆕 seed genérico de TODOS os xtreinos
   seedPlayerUnified,
+  seedScrimPlayers,  // Primeiro (garante jogadores no registry)
+  seedScrim4v4,      // Depois (insere dados da scrim)
 };

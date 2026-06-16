@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createRouter, publicQuery, adminQuery } from "../middleware.js";
 import { getDb } from "../queries/connection.js";
 import { scrims, teams, scrimResults, scrimPlayerStats } from "../../db/schema.js";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { verifyToken } from "../lib/auth.js";
 
 export const scrimsRouter = createRouter({
@@ -87,7 +87,143 @@ export const scrimsRouter = createRouter({
     }),
 
   // ============================================================
-  // ROTAS NOVAS (dados historicos de scrims)
+  // ROTAS DE RESULTADOS DOS TIMES (scrim_results)
+  // ============================================================
+
+  /** Listar todos os resultados de times */
+  listResults: publicQuery.query(() => {
+    const db = getDb();
+    return db.select().from(scrimResults).orderBy(desc(scrimResults.createdAt)).all();
+  }),
+
+  /** Criar resultado de time */
+  createResults: adminQuery
+    .input(
+      z.object({
+        scrimId: z.number(),
+        date: z.string(),
+        teamName: z.string(),
+        q1Pos: z.number().nullable().optional(),
+        q2Pos: z.number().nullable().optional(),
+        q3Pos: z.number().nullable().optional(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      db.insert(scrimResults).values(input).run();
+      return { success: true };
+    }),
+
+  /** Atualizar resultado de time */
+  updateResults: adminQuery
+    .input(
+      z.object({
+        id: z.number(),
+        scrimId: z.number().optional(),
+        date: z.string().optional(),
+        teamName: z.string().optional(),
+        q1Pos: z.number().nullable().optional(),
+        q2Pos: z.number().nullable().optional(),
+        q3Pos: z.number().nullable().optional(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const { id, ...data } = input;
+      const db = getDb();
+      db.update(scrimResults).set(data).where(eq(scrimResults.id, id)).run();
+      return { success: true };
+    }),
+
+  /** Deletar resultado de time */
+  deleteResults: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      db.delete(scrimResults).where(eq(scrimResults.id, input.id)).run();
+      return { success: true };
+    }),
+
+  // ============================================================
+  // ROTAS DE ESTATISTICAS DOS JOGADORES (scrim_player_stats)
+  // ============================================================
+
+  /** Listar todas as estatisticas de jogadores */
+  listPlayerStats: publicQuery.query(() => {
+    const db = getDb();
+    return db.select().from(scrimPlayerStats).orderBy(desc(scrimPlayerStats.totalKills)).all();
+  }),
+
+  /** Criar estatistica de jogador */
+  createPlayerStats: adminQuery
+    .input(
+      z.object({
+        scrimId: z.number(),
+        date: z.string(),
+        teamName: z.string(),
+        playerName: z.string(),
+        q1Kills: z.number().default(0),
+        q2Kills: z.number().default(0),
+        q3Kills: z.number().default(0),
+        totalKills: z.number().default(0),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      db.insert(scrimPlayerStats).values(input).run();
+      return { success: true };
+    }),
+
+  /** Atualizar estatistica de jogador */
+  updatePlayerStats: adminQuery
+    .input(
+      z.object({
+        id: z.number(),
+        scrimId: z.number().optional(),
+        date: z.string().optional(),
+        teamName: z.string().optional(),
+        playerName: z.string().optional(),
+        q1Kills: z.number().optional(),
+        q2Kills: z.number().optional(),
+        q3Kills: z.number().optional(),
+        totalKills: z.number().optional(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const { id, ...data } = input;
+      const db = getDb();
+      db.update(scrimPlayerStats).set(data).where(eq(scrimPlayerStats.id, id)).run();
+      return { success: true };
+    }),
+
+  /** Deletar estatistica de jogador */
+  deletePlayerStats: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(({ input, ctx }) => {
+      const payload = verifyToken(ctx.adminToken as string);
+      if (!payload) throw new Error("Invalid token");
+
+      const db = getDb();
+      db.delete(scrimPlayerStats).where(eq(scrimPlayerStats.id, input.id)).run();
+      return { success: true };
+    }),
+
+  // ============================================================
+  // ROTAS DE HISTORICO / CONSULTAS
   // ============================================================
 
   /** Listar datas unicas disponiveis */
@@ -111,13 +247,17 @@ export const scrimsRouter = createRouter({
     )
     .query(({ input }) => {
       const db = getDb();
-      let query = db.select().from(scrimResults);
 
       if (input.date) {
-        query = query.where(eq(scrimResults.date, input.date)) as typeof query;
+        return db
+          .select()
+          .from(scrimResults)
+          .where(eq(scrimResults.date, input.date))
+          .orderBy(scrimResults.q1Pos)
+          .all();
       }
 
-      return query.orderBy(scrimResults.q1Pos).all();
+      return db.select().from(scrimResults).orderBy(desc(scrimResults.date)).all();
     }),
 
   /** Estatisticas dos jogadores por data */
@@ -129,13 +269,17 @@ export const scrimsRouter = createRouter({
     )
     .query(({ input }) => {
       const db = getDb();
-      let query = db.select().from(scrimPlayerStats);
 
       if (input.date) {
-        query = query.where(eq(scrimPlayerStats.date, input.date)) as typeof query;
+        return db
+          .select()
+          .from(scrimPlayerStats)
+          .where(eq(scrimPlayerStats.date, input.date))
+          .orderBy(desc(scrimPlayerStats.totalKills))
+          .all();
       }
 
-      return query.orderBy(desc(scrimPlayerStats.totalKills)).all();
+      return db.select().from(scrimPlayerStats).orderBy(desc(scrimPlayerStats.totalKills)).all();
     }),
 
   /** Top jogadores de todos os tempos (soma total) */
@@ -200,7 +344,7 @@ export const scrimsRouter = createRouter({
           totalQ1Points: q1Points,
           totalQ2Points: q2Points,
           totalQ3Points: q3Points,
-          totalKills: 0, // sera calculado depois
+          totalKills: 0,
           wins: [r.q1Pos, r.q2Pos, r.q3Pos].filter(p => p === 1).length,
           matches: 1,
           q1Sum: r.q1Pos || 0,

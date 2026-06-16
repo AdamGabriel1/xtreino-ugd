@@ -19,6 +19,8 @@ import {
   seedLogosAuto,
   seedAllXtreinos,  // 🆕 seed genérico de xtreinos
   seedPlayerUnified,
+  seedScrimPlayers,
+  seedScrim4v4
 } from "../db/seed.js";
 
 console.log("[BOOT] Starting server...");
@@ -94,6 +96,9 @@ if (env.isProduction) {
     // Seed de logos (manual ou auto)
     runSeedIfNeeded("logos", seedLogos);
     // runSeedIfNeeded("logos_auto", () => seedLogosAuto("public")); // descomente se quiser auto
+
+    runSeedIfNeeded("scrim_players", seedScrimPlayers);
+    runSeedIfNeeded("scrim_4v4", seedScrim4v4);
 
     console.log("[BOOT] All seeds processed");
 
