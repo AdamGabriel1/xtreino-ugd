@@ -630,7 +630,7 @@ export const xtreinosRaw: XtreinoRaw[] = [
   // XTreino 10 — 2026-06-16
   // ========================================
   {
-    id: 19,
+    id: 10,
     date: "2026-06-16",
     colocacoes: [
       ["CMF ATLANTIC", 1, 4, 1],

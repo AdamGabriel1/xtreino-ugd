@@ -408,6 +408,26 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["FURY zLORHAN", "FURY CASUAL", "off"],
   ["KILLUA", "FURY CASUAL", "off"],
   ["VELOZZO", "FURY CASUAL", "off"],
+
+  // CMF ATLANTIC
+  ["CMF Teo", "CMF ATLANTIC", "off"],
+
+  // RED INSS
+  ["RED FELPZ", "RED INSS", "off"],
+
+  // FURY ROYAL / MIX
+  ["M4RTNA FURY", "FURY ROYAL / MIX (Line I)", "off"],
+  ["Sun FURY", "FURY ROYAL / MIX (Line I)", "off"],
+
+  // FURY ELITE / MIX
+  ["Rauan FURY", "FURY ELITE / MIX (Line H)", "off"],
+
+  // CMF ASSALT
+  ["MacroSync", "CMF ASSALT", "off"],
+
+  // UGD LEGENDS
+  ["UGD XOXOTO", "UGD LEGENDS", "off"],
+  ["Sant", "UGD LEGENDS", "off"],
 ];
 
 // --- XTREINOS (lista base, sem dados de jogadores) ---
@@ -423,7 +443,6 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 11/06", "2026-06-11", "finalizado"],
   ["XTreino Underground - 15/06", "2026-06-15", "finalizado"],
   ["XTreino Underground - 16/06", "2026-06-16", "finalizado"],
-
 ];
 
 // ============================================================
