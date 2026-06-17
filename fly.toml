@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for xtreino-ugd on 2026-06-17T17:25:11Z
+# fly.toml app configuration file generated for xtreino-ugd on 2026-06-17T17:44:07Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -16,7 +16,7 @@ primary_region = 'gru'
   auto_extend_size_limit = '10GB'
 
 [http_service]
-  internal_port = 8080
+  internal_port = 10000
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
