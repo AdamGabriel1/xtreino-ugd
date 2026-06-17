@@ -21,7 +21,7 @@ export function seedAllXtreinos() {
   let totalXtreinos = 0;
 
 
-  for (const xt of xtreinosRaw) {
+  for (const xt of allXtreinos) {
     // 1. Cria o registro do xtreino (se não existir)
     const existingXt = db
       .select()
