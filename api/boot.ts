@@ -87,7 +87,7 @@ if (env.isProduction) {
     // ============================================================
     console.log("[BOOT] Checking specific seeds...");
 
-    clearSeedRuns();
+    resetAllSeedRuns();
 
     // 🆕 Seed genérico de todos os xtreinos
     runSeedIfNeeded("xtreinos_all", seedAllXtreinos);
