@@ -10,7 +10,7 @@ import { xtreinosRaw } from "./xtreinos-dados.js";
 import { xtreinosRawNovo } from "./xtreinos-dados-novo.js"; // 🆕
 
 // Junta tudo
-const allXtreinos = xtreinosRawNovo;
+const allXtreinos = [...xtreinosRaw, ...xtreinosRawNovo];
 
 export function seedAllXtreinos() {
   const db = getDb();
