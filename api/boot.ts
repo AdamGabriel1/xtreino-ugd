@@ -5,7 +5,7 @@ import { appRouter } from "./router.js";
 import { createContext } from "./context.js";
 import { env } from "./lib/env.js";
 import { getDb } from "./queries/connection.js";
-import { runSeedIfNeeded, clearSeedRuns } from "../db/seed-runner.js";
+import { runSeedIfNeeded, clearSeedRuns, resetAllSeedRuns } from "../db/seed-runner.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -87,7 +87,7 @@ if (env.isProduction) {
     // ============================================================
     console.log("[BOOT] Checking specific seeds...");
 
-    clearSeedRuns();
+    resetAllSeedRuns(); // 🆕 Limpa TUDO, força re-execução
 
     // 🆕 Seed genérico de todos os xtreinos
     runSeedIfNeeded("xtreinos_all", seedAllXtreinos);

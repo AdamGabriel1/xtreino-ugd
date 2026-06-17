@@ -11,6 +11,8 @@ import { xtreinosRawNovo } from "./xtreinos-dados-novo.js"; // 🆕
 
 // Junta tudo
 const allXtreinos = [...xtreinosRaw, ...xtreinosRawNovo];
+console.log(`[DEBUG] allXtreinos length: ${allXtreinos.length}`);  // Deve mostrar 10
+console.log(`[DEBUG] allXtreinos IDs: ${allXtreinos.map(x => x.id).join(", ")}`);  // Deve mostrar 1,2,3,4,5,6,7,8,9,10
 
 export function seedAllXtreinos() {
   const db = getDb();
