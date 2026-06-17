@@ -7,10 +7,10 @@ import { eq, and } from "drizzle-orm";
 import { xtreinos, xtreinoResults, xtreinoPlayerStats } from "../schema.js";
 import { calcularPontosXtreino } from "../../api/lib/pontuacao.js";
 import { xtreinosRaw } from "./xtreinos-dados.js";
-//import { xtreinosRawNovo } from "./xtreinos-dados-novo.js"; // 🆕
+import { xtreinosRawNovo } from "./xtreinos-dados-novo.js"; // 🆕
 
 // Junta tudo
-//const allXtreinos = [...xtreinosRaw, ...xtreinosRawNovo];
+const allXtreinos = [...xtreinosRaw, ...xtreinosRawNovo];
 
 export function seedAllXtreinos() {
   const db = getDb();
