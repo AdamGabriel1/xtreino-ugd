@@ -122,6 +122,7 @@ const TEAMS_DATA: [string, string, string | null, "active" | "disbanded", string
   ["RED INSS", "RED", "RED", "active", "Line INSS da RED."],
   ["FURY CASUAL", "FURY", "FURY", "active", "Line casual da FURY."],
   ["FURY MIX (ELITE / ROYAL)", "FURY", "FURY", "active", "Line mista Elite/Royal da FURY."],
+  ["CPF VILTRUMITE", "CPF", "CPF", "active", "Time CPF Viltrumite."],
 ];
 
 // --- PLAYERS ---
@@ -428,6 +429,54 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   // UGD LEGENDS
   ["UGD XOXOTO", "UGD LEGENDS", "off"],
   ["Sant", "UGD LEGENDS", "off"],
+
+  // UGD LIGHT
+  ["Nofear'", "UGD LIGHT", "off"],
+  ["Xezn'", "UGD LIGHT", "off"],
+  ["UGD JEM", "UGD LIGHT", "off"],
+  ["UGD Kyz`", "UGD LIGHT", "off"],
+
+  // K4F
+  ["K4F NINE", "K4F", "off"],
+  ["Guilok07", "K4F", "off"],
+  ["NyE Wendxz", "K4F", "off"],
+  ["K4F ÉOurso", "K4F", "off"],
+  ["K4F GUI", "K4F", "off"],
+  ["K4F Aleke", "K4F", "off"],
+  ["K4F Dudu", "K4F", "off"],
+
+  // CMF ATLANTIC
+  ["CMF Syx7", "CMF ATLANTIC", "off"],
+  ["CMF KIRA", "CMF ATLANTIC", "off"],
+  ["CMF Sant", "CMF ATLANTIC", "off"],
+
+  // UGD LEGENDS
+  ["Gabriel qgc", "UGD LEGENDS", "off"],
+  ["Blaze", "UGD LEGENDS", "off"],
+
+  // CPF VILTRUMITE
+  ["CPF gbzin", "CPF VILTRUMITE", "off"],
+  ["CPF zkrw", "CPF VILTRUMITE", "off"],
+  ["Ice", "CPF VILTRUMITE", "off"],
+  ["Biscoito", "CPF VILTRUMITE", "off"],
+  ["[CPF]xitado", "CPF VILTRUMITE", "off"],
+  ["CPF GBZIN", "CPF VILTRUMITE", "off"],
+  ["CPF BISCOITO", "CPF VILTRUMITE", "off"],
+  ["CPF KROM", "CPF VILTRUMITE", "off"],
+  ["CPF ICE KILER", "CPF VILTRUMITE", "off"],
+  ["CPF XITADO", "CPF VILTRUMITE", "off"],
+  ["CPF LUIZ", "CPF VILTRUMITE", "off"],
+  ["CPF PICASSO", "CPF VILTRUMITE", "off"],
+  ["CPF SHOTTZZ", "CPF VILTRUMITE", "off"],
+  ["CPF FLAX", "CPF VILTRUMITE", "off"],
+
+  // FURY ROYAL
+  ["NGLIFE FURY", "FURY ROYAL", "off"],
+  ["Egoist FURY", "FURY ROYAL", "off"],
+
+  // FURY ELITE
+  ["Dexz7RYL", "FURY ELITE", "off"],
+  ["try FURY", "FURY ELITE", "off"],
 ];
 
 // --- XTREINOS (lista base, sem dados de jogadores) ---
@@ -443,6 +492,7 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 11/06", "2026-06-11", "finalizado"],
   ["XTreino Underground - 15/06", "2026-06-15", "finalizado"],
   ["XTreino Underground - 16/06", "2026-06-16", "finalizado"],
+  ["XTreino Underground - 17/06", "2026-06-17", "finalizado"],
 ];
 
 // ============================================================
