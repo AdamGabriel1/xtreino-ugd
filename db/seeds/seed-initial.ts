@@ -136,13 +136,34 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["CMF MOIZO", "CMF", "off"],
   ["CMF Stygian", "CMF", "off"],
   ["CMF Syx", "CMF", "cap"],
+
+  // CMF ATLANTIC
   ["CMF Léo", "CMF ATLANTIC", "cap"],
   ["CMF Kira", "CMF ATLANTIC", "off"],
   ["CMF Moizo", "CMF ATLANTIC", "off"],
+  ["CMF MOZKAXR", "CMF ATLANTIC", "off"],
+  ["CMF Smoke", "CMF ATLANTIC", "off"],
+  ["CMF SANT", "CMF ATLANTIC", "off"],
+  ["CMF Fallet", "CMF ATLANTIC", "off"],
+  ["CMF Syx⁷", "CMF ATLANTIC", "off"],
+  ["CMF M0IZO", "CMF ATLANTIC", "off"],
+  ["CMF MOZKA", "CMF ATLANTIC", "off"],
+  ["CMF Teo", "CMF ATLANTIC", "off"],
+  ["CMF Syx7", "CMF ATLANTIC", "off"],
+  ["CMF KIRA", "CMF ATLANTIC", "off"],
+  ["CMF Sant", "CMF ATLANTIC", "off"],
+  ["CMF HISOKA", "CMF ATLANTIC", "off"],
+
+  // CMF ASSALT
   ["CMF Dnvy", "CMF ASSALT", "cap"],
   ["CMF Lynx7", "CMF ASSALT", "off"],
   ["CMF Max", "CMF ASSALT", "off"],
   ["CMF Thxxxz", "CMF ASSALT", "res"],
+  ["Artur", "CMF ASSALT", "off"],
+  ["CMF Txxz¹", "CMF ASSALT", "off"],
+  ["CMF xeW", "CMF ASSALT", "off"],
+  ["CMF BAELTTK", "CMF ASSALT", "off"],
+  ["MacroSync", "CMF ASSALT", "off"],
 
   // Eternity
   ["Black 永", "Eternity", "off"],
@@ -161,10 +182,16 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["Diana FURY", "FURY", "off"],
   ["VN' FURY", "FURY", "off"],
   ["perfection z", "FURY", "off"],
+
+  // FURY ELITE
   ["DIANA", "FURY ELITE", "cap"],
   ["RAUAN", "FURY ELITE", "off"],
   ["SUN", "FURY ELITE", "off"],
   ["DEX", "FURY ELITE", "off"],
+  ["Dexz7RYL", "FURY ELITE", "off"],
+  ["try FURY", "FURY ELITE", "off"],
+
+  // FURY ROYAL
   ["VN", "FURY ROYAL", "cap"],
   ["NG", "FURY ROYAL", "off"],
   ["EGOIST", "FURY ROYAL", "off"],
@@ -173,21 +200,6 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["NOKI", "FURY ROYAL", "res"],
   ["NGLIFE FURY", "FURY ROYAL", "off"],
   ["Egoist FURY", "FURY ROYAL", "off"],
-  ["Dexz7RYL", "FURY ELITE", "off"],
-  ["try FURY", "FURY ELITE", "off"],
-
-  // FURY MIX
-  ["Dexz⁷ᴿʸᴸ", "FURY MIX (ELITE / ROYAL)", "off"],
-  ["B4RBOSA⁷", "FURY MIX (ELITE / ROYAL)", "off"],
-  ["NOKI FURY", "FURY MIX (ELITE / ROYAL)", "off"],
-  ["Diana FURY", "FURY MIX (ELITE / ROYAL)", "off"],
-
-  // FURY ELITE / MIX (Line H)
-  ["Rauan FURY", "FURY ELITE / MIX (Line H)", "off"],
-
-  // FURY ROYAL / MIX (Line I)
-  ["M4RTNA FURY", "FURY ROYAL / MIX (Line I)", "off"],
-  ["Sun FURY", "FURY ROYAL / MIX (Line I)", "off"],
 
   // FURY CASUAL
   ["AM Akyra🥷", "FURY CASUAL", "off"],
@@ -196,6 +208,19 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["FURY zLORHAN", "FURY CASUAL", "off"],
   ["KILLUA", "FURY CASUAL", "off"],
   ["VELOZZO", "FURY CASUAL", "off"],
+
+  // FURY MIX (ELITE / ROYAL)
+  ["Diana FURY", "FURY MIX (ELITE / ROYAL)", "off"],
+  ["Dexz⁷ᴿʸᴸ", "FURY MIX (ELITE / ROYAL)", "off"],
+  ["B4RBOSA⁷", "FURY MIX (ELITE / ROYAL)", "off"],
+  ["NOKI FURY", "FURY MIX (ELITE / ROYAL)", "off"],
+
+  // FURY ELITE / MIX (Line H)
+  ["Rauan FURY", "FURY ELITE / MIX (Line H)", "off"],
+
+  // FURY ROYAL / MIX (Line I)
+  ["M4RTNA FURY", "FURY ROYAL / MIX (Line I)", "off"],
+  ["Sun FURY", "FURY ROYAL / MIX (Line I)", "off"],
 
   // INF
   ["INF Noxz7", "INF", "off"],
@@ -301,7 +326,7 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["UGD JEM", "UGD Light", "off"],
   ["UGD Kyz`", "UGD Light", "off"],
 
-  // UGD Royal (desativada)
+  // UGD Royal
   ["Dexz", "UGD Royal", "cap"],
   ["MayaZ", "UGD Royal", "off"],
   ["OFFz", "UGD Royal", "off"],
@@ -328,6 +353,7 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["CANTS", "UGD OLYMPIQUE", "res"],
 
   // UGD Threat
+  ["Lorex", "UGD Threat", "off"],
   ["Rivers AR", "UGD Threat", "off"],
   ["UGD ARISE", "UGD Threat", "off"],
   ["UGD Ares", "UGD Threat", "off"],
@@ -341,7 +367,7 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["Arise", "UGD Threat", "off"],
   ["Santz", "UGD Threat", "res"],
 
-  // Lambda
+  // Λつつ
   ["Striker71", "Λつつ", "off"],
   ["Striker81", "Λつつ", "off"],
   ["ØNE ???", "Λつつ", "cap"],
@@ -366,13 +392,13 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["EME々Akaza", "EmE", "off"],
   ["EME々Lulu", "EmE", "off"],
 
-  // VOID STRIKE
+  // ♱VØID×STRIKE♱
   ["♱Vøid♱.D_R", "♱VØID×STRIKE♱", "cap"],
   ["♱Vøid♱+gute", "♱VØID×STRIKE♱", "off"],
   ["♱Vøid♱.nino", "♱VØID×STRIKE♱", "off"],
   ["™VØID°⁷⁷⁷", "♱VØID×STRIKE♱", "off"],
 
-  // 7KW
+  // 7KW_LHETAL
   ["(NTC)patrikm", "7KW_LHETAL", "cap"],
   ["_061_kakashi", "7KW_LHETAL", "off"],
   ["RL.MATADOR☠️", "7KW_LHETAL", "off"],
@@ -405,20 +431,20 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["CPF ICE!", "CPF CANCELADO", "res"],
 
   // CPF VILTRUMITE
+  ["CPF FLAX", "CPF VILTRUMITE", "off"],
+  ["CPF GBZIN", "CPF VILTRUMITE", "off"],
+  ["CPF KROM", "CPF VILTRUMITE", "off"],
+  ["CPF BISCOITO", "CPF VILTRUMITE", "off"],
+  ["CPF LUIZ", "CPF VILTRUMITE", "off"],
+  ["CPF XITADO", "CPF VILTRUMITE", "off"],
   ["CPF gbzin", "CPF VILTRUMITE", "off"],
   ["CPF zkrw", "CPF VILTRUMITE", "off"],
   ["Ice", "CPF VILTRUMITE", "off"],
   ["Biscoito", "CPF VILTRUMITE", "off"],
   ["[CPF]xitado", "CPF VILTRUMITE", "off"],
-  ["CPF GBZIN", "CPF VILTRUMITE", "off"],
-  ["CPF BISCOITO", "CPF VILTRUMITE", "off"],
-  ["CPF KROM", "CPF VILTRUMITE", "off"],
   ["CPF ICE KILER", "CPF VILTRUMITE", "off"],
-  ["CPF XITADO", "CPF VILTRUMITE", "off"],
-  ["CPF LUIZ", "CPF VILTRUMITE", "off"],
   ["CPF PICASSO", "CPF VILTRUMITE", "off"],
   ["CPF SHOTTZZ", "CPF VILTRUMITE", "off"],
-  ["CPF FLAX", "CPF VILTRUMITE", "off"],
   ["CPF Ohara", "CPF VILTRUMITE", "off"],
   ["qgc", "CPF VILTRUMITE", "off"],
   ["Vw", "CPF VILTRUMITE", "off"],
@@ -437,30 +463,6 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   ["ackerman", "vengeance", "off"],
   ["VNG ¿¿¿", "vengeance", "off"],
   ["VNG SCAVEIRA", "vengeance", "off"],
-
-  // CMF ATLANTIC extras
-  ["CMF MOZKAXR", "CMF ATLANTIC", "off"],
-  ["CMF Smoke", "CMF ATLANTIC", "off"],
-  ["CMF SANT", "CMF ATLANTIC", "off"],
-  ["CMF Fallet", "CMF ATLANTIC", "off"],
-  ["CMF Syx⁷", "CMF ATLANTIC", "off"],
-  ["CMF M0IZO", "CMF ATLANTIC", "off"],
-  ["CMF MOZKA", "CMF ATLANTIC", "off"],
-  ["CMF Teo", "CMF ATLANTIC", "off"],
-  ["CMF Syx7", "CMF ATLANTIC", "off"],
-  ["CMF KIRA", "CMF ATLANTIC", "off"],
-  ["CMF Sant", "CMF ATLANTIC", "off"],
-  ["CMF HISOKA", "CMF ATLANTIC", "off"],
-
-  // CMF ASSALT extras
-  ["Artur", "CMF ASSALT", "off"],
-  ["CMF Txxz¹", "CMF ASSALT", "off"],
-  ["CMF xeW", "CMF ASSALT", "off"],
-  ["CMF BAELTTK", "CMF ASSALT", "off"],
-  ["MacroSync", "CMF ASSALT", "off"],
-
-  // UGD Threat extra
-  ["Lorex", "UGD Threat", "off"],
 ];
 
 // --- XTREINOS (lista base, sem dados de jogadores) ---
@@ -508,12 +510,7 @@ export function seed() {
     orgName: "𝙐𝙉𝘿𝙀𝙍𝙂𝙍𝙊𝙐𝙉𝘿",
     discordLink: "https://discord.gg/QpvaHxzPW",
     whatsappLink: "https://chat.whatsapp.com/Ks4fDFnA7eBHk9ULHuHyzm",
-    defaultRules: `1. Respeitar todos os participantes
-2. Proibido uso de cheats/hacks
-3. Pontualidade obrigatoria
-4. Decisoes da staff sao finais
-5. SEM AUXILIO DE MIRA
-6. PROIBIDO LANCA GRANADA E LANCA CHAMAS`,
+    defaultRules: "1. Respeitar todos os participantes\n2. Proibido uso de cheats/hacks\n3. Pontualidade obrigatoria\n4. Decisoes da staff sao finais\n5. SEM AUXILIO DE MIRA\n6. PROIBIDO LANCA GRANADA E LANCA CHAMAS",
     defaultTimesMx: "6:00",
     defaultTimesBr: "9:00",
     primaryColor: "#006400",

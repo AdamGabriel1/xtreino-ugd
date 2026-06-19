@@ -31,23 +31,43 @@ export function seedPlayerUnified() {
   // O master fica visível na listagem. Os outros somem e viram "histórico".
   // ============================================================
   const unifiedMap: Record<string, string[]> = {
-    "Cool": ["UGD cool7", "Rivers AR", "UGD Ares", "cool"],
+    // Underground
+    "Cool": ["UGD cool7", "Rivers AR", "UGD Ares", "cool", "UGD cool⁷"],
     "Santz": ["UGD Sant", "UGD Neo"],
-    "CMF Moizo": ["CMF MOIZO"],
     "Kaze": ["UGD Kaze"],
     "Treon": ["UGD Treon"],
-    "CMF Léo": ["CMF Leo"],
-    "VN": ["VN' FURY"],
     "Arise": ["UGD Arise"],
-    "snow777": ["RED snow777", "REÐ snow777"],
-    "Lango": ["REÐ LANGØ", "RED LANGO"],
+    "Lorex": ["Lorex"], // Mesmo nick, times diferentes (OLYMPIQUE → Threat)
+
+    // CMF
+    "CMF Moizo": ["CMF MOIZO"],
+    "CMF Léo": ["CMF Leo"],
+
+    // FURY
+    "VN": ["VN' FURY"],
     "DEX": ["Dexz"],
     "OFF": ["OFFz"],
     "NG": ["MayaZ"],
+    "NOKI": ["Noki"],
+    "Diana FURY": ["Diana FURY"], // Mesmo nick, times diferentes (FURY → MIX)
+
+    // RED
+    "snow777": ["RED snow777", "REÐ snow777"],
+    "Lango": ["REÐ LANGØ", "RED LANGO"],
     "Apenas": ["REÐ APENAS", "REÐ Apenas", "RED APENAS"],
     "MARTNA": ["REÐ M4RTINA"],
+
+    // EmE
     "EME々Akaza": ["GzmAkaza"],
-    "NOKI": ["Noki"]
+
+    // CPF — Mesmos nicks em times diferentes (CANCELADO → VILTRUMITE)
+    "CPF BISCOITO": ["CPF BISCOITO"],
+    "CPF FLAX": ["CPF FLAX"],
+    "CPF GBZIN": ["CPF GBZIN"],
+    "CPF KROM": ["CPF KROM"],
+    "CPF LUIZ": ["CPF LUIZ"],
+    "CPF XITADO": ["CPF XITADO"],
+
     // Adicione mais: "Nick Atual": ["antigo1", "antigo2", "antigo3"],
   };
 
