@@ -477,6 +477,17 @@ const PLAYERS_DATA: [string, string, "cap" | "off" | "res"][] = [
   // FURY ELITE
   ["Dexz7RYL", "FURY ELITE", "off"],
   ["try FURY", "FURY ELITE", "off"],
+
+  // UGD Threat
+  ["Lorex", "UGD Threat", "off"],
+
+  // CMF ATLANTIC
+  ["CMF HISOKA", "CMF ATLANTIC", "off"],
+
+  // CPF VILTRUMITE
+  ["CPF Ohara", "CPF VILTRUMITE", "off"],
+  ["qgc", "CPF VILTRUMITE", "off"],
+  ["Vw", "CPF VILTRUMITE", "off"],
 ];
 
 // --- XTREINOS (lista base, sem dados de jogadores) ---
@@ -493,6 +504,7 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 15/06", "2026-06-15", "finalizado"],
   ["XTreino Underground - 16/06", "2026-06-16", "finalizado"],
   ["XTreino Underground - 17/06", "2026-06-17", "finalizado"],
+  ["XTreino Underground - 18/06", "2026-06-18", "finalizado"],
 ];
 
 // ============================================================
