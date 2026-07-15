@@ -158,6 +158,7 @@ const XTREINOS_DATA: [string, string, "finalizado" | "aberto"][] = [
   ["XTreino Underground - 07/07", "2026-07-07", "finalizado"],
   ["XTreino Underground - 09/07", "2026-07-09", "finalizado"],
   ["XTreino Underground - 13/07", "2026-07-14", "finalizado"],
+  ["XTreino Underground - 14/07", "2026-07-14", "finalizado"],
 ];
 
 // ============================================================
