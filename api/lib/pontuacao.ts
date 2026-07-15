@@ -1,5 +1,6 @@
 // pontuacao.ts
-import { POSITION_POINTS, calcPosPoints } from '../../src/hooks/useXtreinoCalculations';
+import { XTREINO_POSITION_POINTS as POSITION_POINTS, XTREINO_KILL_POINTS as KILL_POINTS } from "@/constants/gameRules";
+import { calcPosPoints } from "@/hooks/xtreinos/useXtreinoCalculations";
 
 export { POSITION_POINTS as PONTOS_POR_POSICAO };
 export const getPontosPosicao = calcPosPoints;

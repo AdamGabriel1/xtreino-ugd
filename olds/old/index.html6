@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DEVILS MOBILE LEAGUE | Blood Strike</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #060913;
+            --bg-card: #0a0f1e;
+            --bg-surface: #0f1525;
+            --border-subtle: #1a2235;
+            --border-hover: #2a3550;
+            --accent-rose: #f43f5e;
+            --accent-rose-glow: rgba(244,63,94,0.15);
+            --accent-amber: #f59e0b;
+            --accent-sky: #38bdf8;
+            --accent-emerald: #10b981;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: manipulation;
+        }
+
+        body { 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary); 
+            font-family: 'Inter', 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, .nav-brand, .font-display { 
+            font-family: 'Rajdhani', sans-serif; 
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-rose); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(244,63,94,0.1); }
+            50% { box-shadow: 0 0 30px rgba(244,63,94,0.2); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .animate-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+        .animate-slide-in { animation: slideIn 0.4s ease-out forwards; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+        .page-link.active { 
+            color: var(--accent-rose); 
+            border-color: var(--accent-rose); 
+            background: linear-gradient(to top, var(--accent-rose-glow), transparent);
+        }
+
+        .tab-btn.active { 
+            border-bottom: 3px solid var(--accent-rose); 
+            color: var(--accent-rose); 
+            background: linear-gradient(to top, var(--accent-rose-glow), transparent);
+        }
+
+        .glass-card {
+            background: rgba(15, 21, 37, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .team-slot {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .team-slot:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-rose);
+            box-shadow: 0 8px 32px rgba(244,63,94,0.1);
+        }
+        .team-slot.filled {
+            background: linear-gradient(135deg, rgba(244,63,94,0.05), rgba(15,21,37,0.8));
+            border-color: rgba(244,63,94,0.3);
+        }
+        .team-slot.empty {
+            background: rgba(10, 15, 30, 0.5);
+            border-style: dashed;
+            border-color: var(--border-hover);
+        }
+
+        @media (max-width: 640px) {
+            .mobile-full { width: 100% !important; }
+            .mobile-stack { flex-direction: column !important; }
+            .mobile-center { text-align: center !important; }
+            .mobile-p-2 { padding: 0.5rem !important; }
+            .mobile-text-sm { font-size: 0.875rem !important; }
+            .hide-mobile { display: none !important; }
+
+            .bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 60;
+                background: rgba(6, 9, 19, 0.95);
+                backdrop-filter: blur(20px);
+                border-top: 1px solid var(--border-subtle);
+                padding: 0.5rem 0;
+            }
+
+            .bottom-nav-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                padding: 0.5rem;
+                font-size: 0.65rem;
+                color: var(--text-muted);
+                transition: color 0.2s;
+                flex: 1;
+            }
+
+            .bottom-nav-btn.active {
+                color: var(--accent-rose);
+            }
+
+            .bottom-nav-btn i {
+                font-size: 1.25rem;
+                margin-bottom: 2px;
+            }
+
+            main {
+                padding-bottom: 80px !important;
+            }
+        }
+
+        .data-table th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg-surface);
+        }
+
+        .data-table tr {
+            transition: background 0.2s;
+        }
+
+        .data-table tr:hover {
+            background: rgba(244,63,94,0.03);
+        }
+
+        .input-ghost {
+            background: transparent;
+            border: 1px dashed var(--border-hover);
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+        .input-ghost:focus {
+            border-color: var(--accent-rose);
+            color: var(--text-primary);
+            outline: none;
+            background: rgba(244,63,94,0.05);
+        }
+
+        .badge-live {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse-glow 2s infinite;
+        }
+
+        .badge-upcoming {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .tz-card {
+            background: linear-gradient(135deg, rgba(15,21,37,0.8), rgba(10,15,30,0.6));
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s;
+        }
+        .tz-card:hover {
+            border-color: var(--accent-sky);
+            transform: translateY(-2px);
+        }
+
+        .rule-card {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(15,21,37,0.6));
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .slot-progress {
+            height: 4px;
+            background: var(--border-subtle);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .slot-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-rose), var(--accent-amber));
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .btn-copy {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-copy::after {
+            content: 'Copiado!';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: var(--accent-emerald);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: transform 0.3s;
+            pointer-events: none;
+        }
+        .btn-copy.copied::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-surface) 25%, var(--border-subtle) 50%, var(--bg-surface) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.375rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .btn-touch {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 9, 19, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+
+        .page-section {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .page-section.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .page-section:not(.hidden) {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Top Navigation -->
+    <nav class="bg-slate-950/90 backdrop-blur-xl border-b border-slate-900 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchPage('home')">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-rose-600 to-rose-800 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-lg shadow-rose-600/20 animate-pulse-glow">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <div class="hidden sm:block">
+                        <span class="text-xl sm:text-2xl font-black tracking-wider text-white nav-brand leading-none">DEVILS MOBILE</span>
+                        <span class="text-xs text-rose-500 font-bold tracking-widest block -mt-1">LEAGUE</span>
+                    </div>
+                    <div class="sm:hidden">
+                        <span class="text-lg font-black tracking-wider text-white nav-brand">DML</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex space-x-1">
+                    <button onclick="switchPage('home')" id="nav-home" class="page-link active text-gray-400 hover:text-white px-4 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer rounded-lg hover:bg-white/5">
+                        <i class="fa-solid fa-house mr-2"></i>INICIO
+                    </button>
+                    <button onclick="switchPage('tabela')" id="nav-tabela" class="page-link text-gray-400 hover:text-white px-4 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer rounded-lg hover:bg-white/5">
+                        <i class="fa-solid fa-table mr-2"></i>TABELAS
+                    </button>
+                    <button onclick="switchPage('times')" id="nav-times" class="page-link text-gray-400 hover:text-white px-4 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer rounded-lg hover:bg-white/5">
+                        <i class="fa-solid fa-chart-simple mr-2"></i>ESTATISTICAS
+                    </button>
+                    <button onclick="switchPage('inscricao')" id="nav-inscricao" class="page-link text-gray-400 hover:text-white px-4 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer rounded-lg hover:bg-white/5">
+                        <i class="fa-solid fa-plus-circle mr-2"></i>INSCRICAO
+                    </button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-400 hover:text-white p-2 btn-touch">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile dropdown menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-900 bg-slate-950/95 backdrop-blur-xl">
+            <div class="px-4 py-3 space-y-1">
+                <button onclick="switchPage('home'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 font-semibold text-sm flex items-center gap-3">
+                    <i class="fa-solid fa-house w-5"></i> Inicio
+                </button>
+                <button onclick="switchPage('tabela'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 font-semibold text-sm flex items-center gap-3">
+                    <i class="fa-solid fa-table w-5"></i> Tabelas
+                </button>
+                <button onclick="switchPage('times'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 font-semibold text-sm flex items-center gap-3">
+                    <i class="fa-solid fa-chart-simple w-5"></i> Estatisticas
+                </button>
+                <button onclick="switchPage('inscricao'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 font-semibold text-sm flex items-center gap-3">
+                    <i class="fa-solid fa-plus-circle w-5"></i> Inscricao de Times
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tournament Info Bar -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border-b border-slate-900/60 py-3 sticky top-16 sm:top-20 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
+                <span class="bg-rose-500/10 text-rose-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md border border-rose-500/20 whitespace-nowrap">
+                    <i class="fa-solid fa-fire mr-1"></i> X-Treino Oficial
+                </span>
+                <span class="text-gray-400 text-xs sm:text-sm font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-rose-500"></i>
+                    <span id="tournament-date">20/05/26</span>
+                </span>
+                <span class="hidden sm:inline text-gray-600">|</span>
+                <span class="text-gray-400 text-xs sm:text-sm font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen text-sky-400"></i>
+                    Mobile
+                </span>
+                <span class="hidden sm:inline text-gray-600">|</span>
+                <span class="text-gray-400 text-xs sm:text-sm font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-users text-emerald-400"></i>
+                    Squad
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <select id="select-mes" onchange="aoMudarMes()" class="w-32 sm:w-40 bg-slate-950 border border-slate-800 text-xs sm:text-sm rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-rose-500 transition appearance-none cursor-pointer">
+                        <option value="Maio">Maio</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none"></i>
+                </div>
+                <div class="relative">
+                    <select id="select-dia" onchange="aoMudarDia()" class="w-32 sm:w-40 bg-slate-950 border border-slate-800 text-xs sm:text-sm rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-rose-500 transition appearance-none cursor-pointer">
+                        <option value="20">20</option>
+                        <option value="19">19</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- HOME PAGE -->
+        <section id="page-home" class="page-section animate-fade-in">
+            <!-- Hero Banner -->
+            <div class="relative bg-gradient-to-br from-slate-900 via-slate-950 to-rose-950/20 rounded-2xl p-6 sm:p-10 mb-6 sm:mb-8 border border-slate-800/60 overflow-hidden shadow-2xl">
+                <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-rose-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-10 -top-10 w-40 h-40 bg-sky-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 max-w-3xl">
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        <span class="bg-rose-500/10 text-rose-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-md border border-rose-500/20">
+                            DEVILS MOBILE LEAGUE
+                        </span>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-md border border-emerald-500/20">
+                            <i class="fa-solid fa-circle text-[6px] mr-1 animate-pulse"></i> Em Andamento
+                        </span>
+                    </div>
+
+                    <h1 class="text-3xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-3">
+                        Arena <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-rose-600">Blood Strike</span>
+                    </h1>
+                    <p class="text-gray-400 text-sm sm:text-base mb-6 max-w-xl">
+                        Acompanhe as parciais, tabelas acumuladas de 3 quedas e rendimento individual. 
+                        Coordenacao: <span class="text-rose-400 font-bold">Diretoria do Cla</span>
+                    </p>
+
+                    <div class="flex flex-wrap gap-2 sm:gap-3 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300">
+                        <div class="bg-slate-950/80 px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-800/80 flex items-center gap-2">
+                            <i class="fa-solid fa-crosshairs text-rose-500"></i> BR Mode
+                        </div>
+                        <div class="bg-slate-950/80 px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-800/80 flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch text-rose-500"></i> 3 Quedas
+                        </div>
+                        <div class="bg-slate-950/80 px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-slate-800/80 flex items-center gap-2">
+                            <i class="fa-solid fa-map text-rose-500"></i> Ilhas do Medo
+                        </div>
+                        <div class="bg-rose-500/10 text-rose-400 px-3 sm:px-4 py-2 sm:py-3 rounded-xl border border-rose-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-calendar"></i> <span id="data-display-hero">20 de Maio</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Row -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="text-2xl sm:text-3xl font-black text-white mb-1" id="stat-teams">7</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-bold">Equipes</div>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="text-2xl sm:text-3xl font-black text-rose-400 mb-1">15</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-bold">Slots Totais</div>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="text-2xl sm:text-3xl font-black text-amber-400 mb-1">3</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-bold">Quedas</div>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="text-2xl sm:text-3xl font-black text-sky-400 mb-1">8</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-bold">Fusos Horarios</div>
+                </div>
+            </div>
+
+            <!-- Time Zones -->
+            <div class="mb-6 sm:mb-8">
+                <h2 class="text-lg sm:text-xl font-bold uppercase tracking-wider text-white border-l-4 border-rose-500 pl-3 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-rose-500"></i> Horarios por Regiao
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1E7;&#x1F1F7;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Brasil</div>
+                            <div class="text-sm sm:text-base font-black text-white">8:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1F2;&#x1F1FD;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Mexico</div>
+                            <div class="text-sm sm:text-base font-black text-white">5:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1E6;&#x1F1F7;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Argentina</div>
+                            <div class="text-sm sm:text-base font-black text-white">8:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1FA;&#x1F1F8;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">USA</div>
+                            <div class="text-sm sm:text-base font-black text-white">7:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1E8;&#x1F1F4;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Colombia</div>
+                            <div class="text-sm sm:text-base font-black text-white">6:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1E9;&#x1F1F4;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Rep. Dom.</div>
+                            <div class="text-sm sm:text-base font-black text-white">7:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1FB;&#x1F1EA;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Venezuela</div>
+                            <div class="text-sm sm:text-base font-black text-white">7:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="tz-card rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                        <span class="text-xl">&#x1F1F5;&#x1F1EA;</span>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Peru</div>
+                            <div class="text-sm sm:text-base font-black text-white">6:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules & Format -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
+                <div class="rule-card rounded-xl p-4 sm:p-5">
+                    <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Regras Importantes
+                    </h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-start gap-2 text-sm text-gray-300">
+                            <i class="fa-solid fa-ban text-red-500 mt-0.5"></i>
+                            <span>TODOS AUXILIOS BANIDOS</span>
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-gray-300">
+                            <i class="fa-solid fa-fire-flame-curved text-red-500 mt-0.5"></i>
+                            <span>PROIBIDO LANCA CHAMAS</span>
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-gray-300">
+                            <i class="fa-solid fa-clock text-amber-500 mt-0.5"></i>
+                            <span>Pedido de desistencia ate 19:30</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="glass-card rounded-xl p-4 sm:p-5">
+                    <h3 class="text-sm font-bold text-sky-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info"></i> Formato do Torneio
+                    </h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-start gap-2 text-sm text-gray-300">
+                            <i class="fa-solid fa-parachute-box text-sky-500 mt-0.5"></i>
+                            <span>3 Quedas no modo Battle Royale</span>
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-gray-300">
+                            <i class="fa-solid fa-map-location-dot text-sky-500 mt-0.5"></i>
+                            <span>3 Ilhas do Medo (mesmo mapa)</span>
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-gray-300">
+                            <i class="fa-solid fa-users text-sky-500 mt-0.5"></i>
+                            <span>Squad (4 jogadores por equipe)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <a href="https://chat.whatsapp.com/BGrWBFrLQVc3HrpCfdeqbw" target="_blank" class="glass-card rounded-xl p-4 sm:p-5 flex items-center justify-between hover:border-emerald-500/40 hover:bg-emerald-500/5 transition group btn-touch">
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-600/10 flex items-center justify-center text-emerald-400 text-lg sm:text-xl group-hover:scale-110 transition">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm sm:text-base">Scrim WhatsApp</h3>
+                            <p class="text-[10px] sm:text-xs text-gray-500">Grupo oficial</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-700 group-hover:text-emerald-400 transition text-xs"></i>
+                </a>
+                <a href="https://discord.gg/vYGkNex878" target="_blank" class="glass-card rounded-xl p-4 sm:p-5 flex items-center justify-between hover:border-indigo-500/40 hover:bg-indigo-500/5 transition group btn-touch">
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-400 text-lg sm:text-xl group-hover:scale-110 transition">
+                            <i class="fa-brands fa-discord"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm sm:text-base">Discord Server</h3>
+                            <p class="text-[10px] sm:text-xs text-gray-500">Comunicacao oficial</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-700 group-hover:text-indigo-400 transition text-xs"></i>
+                </a>
+                <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-rose-500/40 hover:bg-rose-500/5 transition group btn-touch" onclick="copyToClipboard('https://discord.gg/vYGkNex878', this)">
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-600/10 flex items-center justify-center text-rose-400 text-lg sm:text-xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm sm:text-base">Compartilhar</h3>
+                            <p class="text-[10px] sm:text-xs text-gray-500">Copiar link do evento</p>
+                        </div>
+                    </div>
+                    <i class="fa-regular fa-copy text-gray-700 group-hover:text-rose-400 transition text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Teams Grid -->
+            <div>
+                <div class="flex items-center justify-between mb-4 sm:mb-6">
+                    <h2 class="text-lg sm:text-xl font-bold uppercase tracking-wider text-white border-l-4 border-rose-500 pl-3 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-rose-500"></i>
+                        Equipes Confirmadas 
+                        <span class="bg-rose-500/10 text-rose-400 text-xs px-2 py-0.5 rounded-md border border-rose-500/20 ml-2">
+                            <span id="count-times">7</span>/15
+                        </span>
+                    </h2>
+                    <div class="slot-progress w-24 sm:w-32">
+                        <div class="slot-progress-fill" id="slot-progress-bar" style="width: 46.67%"></div>
+                    </div>
+                </div>
+
+                <div id="lista-inscritos" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                    <!-- Teams rendered via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TABELA PAGE -->
+        <section id="page-tabela" class="page-section hidden">
+            <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold uppercase tracking-wider text-white border-l-4 border-rose-500 pl-3 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-rose-500"></i> Tabela Parcial Diaria
+                    </h2>
+                    <p class="text-gray-500 text-xs mt-1 ml-4">Pontuacao: 1=12pt, 2=10pt, 3=8pt, 4=7pt... + 1pt por Kill</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="exportTable()" class="bg-slate-950 border border-slate-800 hover:border-rose-500/50 text-gray-400 hover:text-white px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 btn-touch">
+                        <i class="fa-solid fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex border-b border-slate-900 mb-4 sm:mb-6 overflow-x-auto pb-1">
+                <button onclick="switchTab('geral')" id="tab-geral" class="tab-btn active px-4 sm:px-5 py-3 text-xs font-bold uppercase tracking-widest cursor-pointer whitespace-nowrap transition flex items-center gap-2">
+                    <i class="fa-solid fa-ranking-star"></i> Geral
+                </button>
+                <button onclick="switchTab('q1')" id="tab-q1" class="tab-btn px-4 sm:px-5 py-3 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest cursor-pointer whitespace-nowrap transition flex items-center gap-2">
+                    <i class="fa-solid fa-1"></i> 1 Queda
+                </button>
+                <button onclick="switchTab('q2')" id="tab-q2" class="tab-btn px-4 sm:px-5 py-3 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest cursor-pointer whitespace-nowrap transition flex items-center gap-2">
+                    <i class="fa-solid fa-2"></i> 2 Queda
+                </button>
+                <button onclick="switchTab('q3')" id="tab-q3" class="tab-btn px-4 sm:px-5 py-3 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest cursor-pointer whitespace-nowrap transition flex items-center gap-2">
+                    <i class="fa-solid fa-3"></i> 3 Queda
+                </button>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="table-responsive">
+                    <table class="w-full text-left border-collapse data-table">
+                        <thead>
+                            <tr class="bg-slate-900/80 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gray-400 border-b border-slate-900">
+                                <th class="py-3 sm:py-4 px-2 sm:px-4 text-center w-12 sm:w-16">Pos</th>
+                                <th class="py-3 sm:py-4 px-3 sm:px-6">Equipe</th>
+                                <th class="py-3 sm:py-4 px-2 sm:px-4 text-center col-queda">Q1 (PP/PK)</th>
+                                <th class="py-3 sm:py-4 px-2 sm:px-4 text-center col-queda">Q2 (PP/PK)</th>
+                                <th class="py-3 sm:py-4 px-2 sm:px-4 text-center col-queda">Q3 (PP/PK)</th>
+                                <th class="py-3 sm:py-4 px-2 sm:px-4 text-center">Total PP</th>
+                                <th class="py-3 sm:py-4 px-2 sm:px-4 text-center">Total PK</th>
+                                <th class="py-3 sm:py-4 px-3 sm:px-6 text-center bg-rose-950/20 font-black text-rose-400 border-l border-slate-900">PT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-corpo" class="divide-y divide-slate-900 text-xs sm:text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIMES PAGE -->
+        <section id="page-times" class="page-section hidden">
+            <div class="mb-6 sm:mb-8 max-w-md relative">
+                <input type="text" id="search-bar" oninput="filtrarEstatisticas()" placeholder="Buscar time ou jogador..." 
+                    class="w-full bg-slate-950 border border-slate-900 hover:border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm text-white focus:outline-none focus:border-rose-500 transition shadow-inner">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+                <button onclick="document.getElementById('search-bar').value=''; filtrarEstatisticas()" class="absolute right-3 top-3 text-gray-500 hover:text-white transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="container-times-detalhes" class="grid grid-cols-1 gap-6 sm:gap-8">
+            </div>
+        </section>
+
+        <!-- INSCRICAO PAGE -->
+        <section id="page-inscricao" class="page-section hidden">
+            <div class="max-w-2xl mx-auto">
+                <div class="mb-6 sm:mb-8">
+                    <h2 class="text-xl sm:text-2xl font-bold uppercase tracking-wider text-white border-l-4 border-rose-500 pl-3 flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-user-plus text-rose-500"></i> Inscricao de Times
+                    </h2>
+                    <p class="text-gray-500 text-sm ml-4">Adicione os nomes das equipes para gerar a tabela automaticamente. Os slots vazios serao preenchidos conforme as inscricoes.</p>
+                </div>
+
+                <!-- Quick Add -->
+                <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> Adicionar Equipe Rapido
+                    </h3>
+                    <div class="flex gap-2 sm:gap-3">
+                        <input type="text" id="quick-team-name" placeholder="Nome da equipe..." 
+                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-rose-500 transition"
+                            onkeypress="if(event.key==='Enter') adicionarEquipe()">
+                        <button onclick="adicionarEquipe()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 sm:px-6 py-3 rounded-xl font-bold text-sm transition flex items-center gap-2 btn-touch whitespace-nowrap">
+                            <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Adicionar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Team Slots Manager -->
+                <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-sky-400"></i> Slots do Torneio
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="limparTodosSlots()" class="text-xs text-gray-500 hover:text-red-400 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-500/10">
+                                <i class="fa-solid fa-trash"></i> Limpar
+                            </button>
+                            <button onclick="embaralharSlots()" class="text-xs text-gray-500 hover:text-amber-400 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-amber-500/10">
+                                <i class="fa-solid fa-shuffle"></i> Sortear
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="slot-progress mb-4">
+                        <div class="slot-progress-fill" id="inscricao-progress" style="width: 46.67%"></div>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-4 text-right">
+                        <span id="slots-preenchidos">7</span> de <span id="slots-totais">15</span> slots preenchidos
+                    </div>
+
+                    <div id="slots-container" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                        <!-- Slots rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="gerarTabela()" class="flex-1 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition flex items-center justify-center gap-2 btn-touch shadow-lg shadow-rose-600/20">
+                        <i class="fa-solid fa-table"></i> Gerar Tabela de Classificacao
+                    </button>
+                    <button onclick="exportarLista()" class="flex-1 bg-slate-950 border border-slate-800 hover:border-sky-500/50 text-gray-400 hover:text-white py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition flex items-center justify-center gap-2 btn-touch">
+                        <i class="fa-solid fa-file-export"></i> Exportar Lista
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-4 sm:py-6 text-center text-xs text-gray-500 font-medium">
+        <p class="mb-1">&copy; 2026 DEVILS MOBILE LEAGUE. Sincronizado via Planilha CSV.</p>
+        <p class="text-[10px] text-gray-600">Blood Strike Tournament Dashboard v2.0</p>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav md:hidden">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <button onclick="switchPage('home')" id="bottom-nav-home" class="bottom-nav-btn active">
+                <i class="fa-solid fa-house"></i>
+                <span>Inicio</span>
+            </button>
+            <button onclick="switchPage('tabela')" id="bottom-nav-tabela" class="bottom-nav-btn">
+                <i class="fa-solid fa-table"></i>
+                <span>Tabela</span>
+            </button>
+            <button onclick="switchPage('times')" id="bottom-nav-times" class="bottom-nav-btn">
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>Stats</span>
+            </button>
+            <button onclick="switchPage('inscricao')" id="bottom-nav-inscricao" class="bottom-nav-btn">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>Inscrever</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-50 transition-all duration-300 opacity-0 translate-y-4 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-check-circle text-emerald-400"></i>
+        <span id="toast-message" class="text-sm font-medium">Operacao realizada!</span>
+    </div>
+
+    <script>
+        // Tournament Configuration
+        const CONFIG = {
+            organizador: "Diretoria do Cla",
+            tournament: {
+                name: "DEVILS MOBILE LEAGUE",
+                platform: "MOBILE",
+                mode: "SQUAD",
+                date: "20/05/26",
+                maps: "3 Ilhas do Medo",
+                drops: 3,
+                maxSlots: 15,
+                rules: [
+                    "TODOS AUXILIOS BANIDOS",
+                    "PROIBIDO LANCA CHAMAS"
+                ],
+                withdrawal: "19:30"
+            },
+            links: {
+                scrim: "https://chat.whatsapp.com/BGrWBFrLQVc3HrpCfdeqbw",
+                discord: "https://discord.gg/vYGkNex878"
+            },
+            times: {
+                "Mexico": "5:00 PM",
+                "Argentina": "8:00 PM", 
+                "Brazil": "8:00 PM",
+                "Dominican Republic": "7:00 PM",
+                "Colombia": "6:00 PM",
+                "USA": "7:00 PM",
+                "Venezuela": "7:00 PM",
+                "Peru": "6:00 PM"
+            }
+        };
+
+        const CSV_URL = 'data/campeonato.csv';
+        let bancoDeDadosCompleto = [];
+        let dataSelecionada = { mes: "Maio", dia: "20" };
+        let slots = [];
+
+        // Initialize
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('org-name') && (document.getElementById('org-name').innerText = CONFIG.organizador);
+            inicializarSlots();
+            carregarDados();
+            renderizarHome();
+        });
+
+        // ========== SLOTS SYSTEM ==========
+        function inicializarSlots() {
+            const defaultTeams = [
+                "RED MAGIC BR", "RED DEVILS2", "LA MAFIA", "UGD THREAT", 
+                "FURY RISING", "UGD LIGHT", "CMF ATLANTIC", "", "", "", "", "", "", "", ""
+            ];
+            slots = defaultTeams.map((name, idx) => ({
+                id: idx + 1,
+                name: name,
+                filled: name !== ""
+            }));
+            renderizarSlots();
+            atualizarProgresso();
+        }
+
+        function renderizarSlots() {
+            const container = document.getElementById('slots-container');
+            if (!container) return;
+
+            container.innerHTML = slots.map(slot => `
+                <div class="flex items-center gap-3 p-3 rounded-xl border transition-all ${slot.filled ? 'team-slot filled' : 'team-slot empty'}">
+                    <div class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-xs font-black ${slot.filled ? 'text-rose-400' : 'text-gray-600'} border border-slate-800 flex-shrink-0">
+                        ${String(slot.id).padStart(2, '0')}
+                    </div>
+                    <input type="text" 
+                        value="${slot.name}" 
+                        onchange="atualizarSlot(${slot.id}, this.value)"
+                        placeholder="Slot vazio..."
+                        class="flex-1 bg-transparent border-none text-sm font-semibold ${slot.filled ? 'text-white' : 'text-gray-500'} focus:outline-none focus:text-white placeholder-gray-600">
+                    ${slot.filled ? `
+                        <button onclick="removerSlot(${slot.id})" class="text-gray-600 hover:text-red-400 transition p-1 btn-touch">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function atualizarSlot(id, name) {
+            const slot = slots.find(s => s.id === id);
+            if (slot) {
+                slot.name = name.trim();
+                slot.filled = slot.name !== "";
+                renderizarSlots();
+                atualizarProgresso();
+                renderizarHome();
+            }
+        }
+
+        function removerSlot(id) {
+            const slot = slots.find(s => s.id === id);
+            if (slot) {
+                slot.name = "";
+                slot.filled = false;
+                renderizarSlots();
+                atualizarProgresso();
+                renderizarHome();
+                showToast('Equipe removida', 'info');
+            }
+        }
+
+        function adicionarEquipe() {
+            const input = document.getElementById('quick-team-name');
+            const name = input.value.trim();
+            if (!name) {
+                showToast('Digite o nome da equipe', 'error');
+                return;
+            }
+
+            const emptySlot = slots.find(s => !s.filled);
+            if (!emptySlot) {
+                showToast('Todos os slots estao preenchidos!', 'error');
+                return;
+            }
+
+            emptySlot.name = name;
+            emptySlot.filled = true;
+            input.value = '';
+            renderizarSlots();
+            atualizarProgresso();
+            renderizarHome();
+            showToast('"' + name + '" adicionada ao slot ' + String(emptySlot.id).padStart(2, '0'), 'success');
+        }
+
+        function limparTodosSlots() {
+            if (!confirm('Tem certeza que deseja limpar todos os slots?')) return;
+            slots.forEach(s => { s.name = ""; s.filled = false; });
+            renderizarSlots();
+            atualizarProgresso();
+            renderizarHome();
+            showToast('Todos os slots foram limpos', 'info');
+        }
+
+        function embaralharSlots() {
+            const filled = slots.filter(s => s.filled).map(s => s.name);
+            const shuffled = filled.sort(() => Math.random() - 0.5);
+            let idx = 0;
+            slots.forEach(s => {
+                if (idx < shuffled.length) {
+                    s.name = shuffled[idx++];
+                    s.filled = true;
+                } else {
+                    s.name = "";
+                    s.filled = false;
+                }
+            });
+            renderizarSlots();
+            atualizarProgresso();
+            renderizarHome();
+            showToast('Slots embaralhados!', 'success');
+        }
+
+        function atualizarProgresso() {
+            const filled = slots.filter(s => s.filled).length;
+            const total = slots.length;
+            const pct = (filled / total) * 100;
+
+            const inscProg = document.getElementById('inscricao-progress');
+            if (inscProg) inscProg.style.width = pct + '%';
+
+            const sp = document.getElementById('slots-preenchidos');
+            if (sp) sp.textContent = filled;
+
+            const st = document.getElementById('slots-totais');
+            if (st) st.textContent = total;
+
+            const sb = document.getElementById('slot-progress-bar');
+            if (sb) sb.style.width = pct + '%';
+
+            const ct = document.getElementById('count-times');
+            if (ct) ct.textContent = filled;
+
+            const stat = document.getElementById('stat-teams');
+            if (stat) stat.textContent = filled;
+        }
+
+        function gerarTabela() {
+            const teams = slots.filter(s => s.filled).map(s => s.name);
+            if (teams.length < 2) {
+                showToast('Adicione pelo menos 2 equipes', 'error');
+                return;
+            }
+
+            const csvData = generateTournamentData(teams);
+            console.log('Tabela gerada:', csvData);
+
+            showToast('Tabela gerada com ' + teams.length + ' equipes!', 'success');
+            switchPage('tabela');
+            renderizarTabela('geral');
+        }
+
+        function generateTournamentData(teams) {
+            const data = [];
+            teams.forEach((team, idx) => {
+                data.push({
+                    Mes: dataSelecionada.mes,
+                    Dia: dataSelecionada.dia,
+                    Time: team,
+                    Jogador: 'Player_' + team.substring(0,3),
+                    Q1_Pos: Math.floor(Math.random() * teams.length) + 1,
+                    Q2_Pos: Math.floor(Math.random() * teams.length) + 1,
+                    Q3_Pos: Math.floor(Math.random() * teams.length) + 1,
+                    Q1_Kills: Math.floor(Math.random() * 15),
+                    Q2_Kills: Math.floor(Math.random() * 15),
+                    Q3_Kills: Math.floor(Math.random() * 15),
+                    Dano_Medio: String(Math.floor(Math.random() * 2000 + 500)),
+                    MVP_Vezes: Math.floor(Math.random() * 3)
+                });
+            });
+            bancoDeDadosCompleto = data;
+            return data;
+        }
+
+        function exportarLista() {
+            const teams = slots.filter(s => s.filled).map(s => String(s.id).padStart(2, '0') + ' - ' + s.name).join('\n');
+            const empty = slots.filter(s => !s.filled).map(s => String(s.id).padStart(2, '0') + ' - [Vazio]').join('\n');
+            const text = '*DEVILS MOBILE LEAGUE*\n\n*EQUIPES CONFIRMADAS:*\n' + teams + '\n\n*SLOTS VAZIOS:*\n' + empty + '\n\n*Total: ' + slots.filter(s => s.filled).length + '/15*';
+
+            copyToClipboard(text);
+            showToast('Lista copiada para area de transferencia!', 'success');
+        }
+
+        // ========== DATA LOADING ==========
+        async function carregarDados() {
+            try {
+                const response = await fetch(CSV_URL);
+                if (!response.ok) throw new Error('CSV not found');
+                const text = await response.text();
+                bancoDeDadosCompleto = parseCSV(text);
+                renderizarPainelCompleto();
+            } catch (error) {
+                console.log("CSV nao encontrado, usando dados locais");
+                const teams = slots.filter(s => s.filled).map(s => s.name);
+                if (teams.length > 0) {
+                    generateTournamentData(teams);
+                    renderizarPainelCompleto();
+                }
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const result = [];
+            const headers = lines[0].split(';');
+            for(let i=1; i<lines.length; i++) {
+                const obj = {};
+                const currentline = lines[i].split(';');
+                for(let j=0; j<headers.length; j++) {
+                    obj[headers[j].trim()] = currentline[j] ? currentline[j].trim() : "";
+                }
+                result.push(obj);
+            }
+            return result;
+        }
+
+        function renderizarPainelCompleto() {
+            const ddh = document.getElementById('data-display-hero');
+            if (ddh) ddh.innerText = dataSelecionada.dia + ' de ' + dataSelecionada.mes;
+            renderizarHome();
+            renderizarTabela('geral');
+            renderizarTimesDetalhes();
+        }
+
+        // ========== PAGE NAVIGATION ==========
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.page-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav-btn').forEach(btn => btn.classList.remove('active'));
+
+            const page = document.getElementById('page-' + pageId);
+            if (page) {
+                page.classList.remove('hidden');
+                page.classList.add('animate-fade-in');
+            }
+
+            const nav = document.getElementById('nav-' + pageId);
+            if (nav) nav.classList.add('active');
+
+            const bottomNav = document.getElementById('bottom-nav-' + pageId);
+            if (bottomNav) bottomNav.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // ========== HOME RENDERING ==========
+        function renderizarHome() {
+            const container = document.getElementById('lista-inscritos');
+            if (!container) return;
+
+            container.innerHTML = '';
+            const filledSlots = slots.filter(s => s.filled);
+
+            if (filledSlots.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 sm:py-12">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-900 flex items-center justify-center">
+                            <i class="fa-solid fa-users-slash text-2xl text-gray-600"></i>
+                        </div>
+                        <p class="text-sm text-gray-500">Nenhuma equipe inscrita ainda</p>
+                        <button onclick="switchPage('inscricao')" class="mt-3 text-rose-400 text-sm font-semibold hover:text-rose-300 transition">
+                            Ir para Inscricoes <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            filledSlots.forEach((slot, index) => {
+                const initials = slot.name.substring(0, 2).toUpperCase();
+                const colors = ['from-rose-600 to-rose-800', 'from-sky-600 to-sky-800', 'from-amber-600 to-amber-800', 'from-emerald-600 to-emerald-800', 'from-violet-600 to-violet-800', 'from-orange-600 to-orange-800', 'from-pink-600 to-pink-800'];
+                const colorClass = colors[index % colors.length];
+
+                container.innerHTML += `
+                    <div class="team-slot filled rounded-xl p-3 sm:p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-rose-500/50 transition shadow-lg cursor-pointer" onclick="switchPage('times')">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-sm sm:text-lg shadow-md">
+                            ${initials}
+                        </div>
+                        <div class="font-bold text-white text-xs sm:text-sm truncate w-full tracking-wide">${slot.name}</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Slot ${String(slot.id).padStart(2, '0')}</div>
+                    </div>
+                `;
+            });
+
+            const emptyCount = slots.filter(s => !s.filled).length;
+            if (emptyCount > 0) {
+                container.innerHTML += `
+                    <div class="team-slot empty rounded-xl p-3 sm:p-4 text-center flex flex-col items-center justify-center gap-2 cursor-pointer" onclick="switchPage('inscricao')">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-slate-900/50 border border-dashed border-slate-700 flex items-center justify-center text-gray-600">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <div class="text-xs text-gray-500">+${emptyCount} vagas</div>
+                    </div>
+                `;
+            }
+        }
+
+        // ========== TABLE SYSTEM ==========
+        function obterPontosPosicao(posicao) {
+            const tabelaPontos = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
+            return tabelaPontos[posicao] || 0;
+        }
+
+        function processarEquipesFiltradas() {
+            const dadosFiltrados = bancoDeDadosCompleto.filter(item => item.Mes === dataSelecionada.mes && item.Dia === dataSelecionada.dia);
+            const equipes = {};
+
+            dadosFiltrados.forEach(row => {
+                const tName = row.Time;
+                if (!tName) return;
+                if (!equipes[tName]) {
+                    equipes[tName] = {
+                        nome: tName, jogadores: [],
+                        q1_pos: parseInt(row.Q1_Pos) || 0, q2_pos: parseInt(row.Q2_Pos) || 0, q3_pos: parseInt(row.Q3_Pos) || 0,
+                        q1_kills: 0, q2_kills: 0, q3_kills: 0, total_kills: 0, strikes: 0
+                    };
+                }
+                equipes[tName].q1_kills += parseInt(row.Q1_Kills) || 0;
+                equipes[tName].q2_kills += parseInt(row.Q2_Kills) || 0;
+                equipes[tName].q3_kills += parseInt(row.Q3_Kills) || 0;
+
+                equipes[tName].jogadores.push({
+                    nick: row.Jogador,
+                    q1_k: parseInt(row.Q1_Kills) || 0, q2_k: parseInt(row.Q2_Kills) || 0, q3_k: parseInt(row.Q3_Kills) || 0,
+                    total_k: (parseInt(row.Q1_Kills) || 0) + (parseInt(row.Q2_Kills) || 0) + (parseInt(row.Q3_Kills) || 0),
+                    dano: row.Dano_Medio || "Sem Info", mvp: parseInt(row.MVP_Vezes) || 0
+                });
+            });
+
+            return Object.values(equipes).map(eq => {
+                eq.total_kills = eq.q1_kills + eq.q2_kills + eq.q3_kills;
+                eq.q1_pp = obterPontosPosicao(eq.q1_pos);
+                eq.q2_pp = obterPontosPosicao(eq.q2_pos);
+                eq.q3_pp = obterPontosPosicao(eq.q3_pos);
+                eq.total_pp = eq.q1_pp + eq.q2_pp + eq.q3_pp;
+                eq.pt = eq.total_pp + eq.total_kills;
+
+                let booyahs = 0;
+                if(eq.q1_pos === 1) booyahs++;
+                if(eq.q2_pos === 1) booyahs++;
+                if(eq.q3_pos === 1) booyahs++;
+                eq.strikes = booyahs;
+                return eq;
+            });
+        }
+
+        function switchTab(mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-white'));
+            document.getElementById('tab-' + mode).classList.add('active');
+            renderizarTabela(mode);
+        }
+
+        function renderizarTabela(modo) {
+            let listasEquipes = processarEquipesFiltradas();
+            const corpo = document.getElementById('tabela-corpo');
+            if (!corpo) return;
+
+            corpo.innerHTML = '';
+
+            if (modo === 'geral') {
+                listasEquipes.sort((a, b) => b.pt - a.pt || b.total_kills - a.total_kills);
+            } else {
+                listasEquipes.sort((a, b) => (a[modo + '_pp'] + a[modo + '_kills']) - (b[modo + '_pp'] + b[modo + '_kills'])).reverse();
+            }
+
+            document.querySelectorAll('.col-queda').forEach(c => c.style.display = modo !== 'geral' ? 'none' : '');
+
+            if (listasEquipes.length === 0) {
+                corpo.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-12 text-center text-gray-500 text-sm">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-900 flex items-center justify-center">
+                                <i class="fa-solid fa-table-cells text-2xl text-gray-600"></i>
+                            </div>
+                            Nenhum dado disponivel para esta data
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            listasEquipes.forEach((eq, index) => {
+                let posBadge = (index + 1) + 'o';
+                if(index === 0) posBadge = '<span class="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black px-2.5 py-0.5 rounded-md text-xs shadow">1o</span>';
+                if(index === 1) posBadge = '<span class="bg-slate-300 text-slate-950 font-black px-2.5 py-0.5 rounded-md text-xs">2o</span>';
+                if(index === 2) posBadge = '<span class="bg-amber-700 text-white font-black px-2.5 py-0.5 rounded-md text-xs">3o</span>';
+
+                if (modo === 'geral') {
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-slate-900/40 transition border-b border-slate-900/40">
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center font-bold text-gray-500">${posBadge}</td>
+                            <td class="py-3 sm:py-4 px-3 sm:px-6 font-bold text-white flex items-center gap-2 sm:gap-2.5">
+                               <div class="w-6 h-6 rounded bg-slate-900 text-[10px] flex items-center justify-center text-rose-400 font-bold border border-slate-800 flex-shrink-0">${eq.nome.substring(0,2).toUpperCase()}</div> 
+                               <span class="truncate max-w-[100px] sm:max-w-none">${eq.nome}</span>
+                            </td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-400 col-queda text-xs sm:text-sm">${eq.q1_pp}/${eq.q1_kills}</td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-400 col-queda text-xs sm:text-sm">${eq.q2_pp}/${eq.q2_kills}</td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-400 col-queda text-xs sm:text-sm">${eq.q3_pp}/${eq.q3_kills}</td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300 font-semibold">${eq.total_pp}</td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300 font-semibold">${eq.total_kills}</td>
+                            <td class="py-3 sm:py-4 px-3 sm:px-6 text-center bg-rose-950/5 font-black text-base sm:text-lg text-rose-400 border-l border-slate-900">${eq.pt}</td>
+                        </tr>
+                    `;
+                } else {
+                    let ppQ = eq[modo + '_pp'], pkQ = eq[modo + '_kills'], totQ = ppQ + pkQ, nPos = eq[modo + '_pos'];
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-slate-900/40 transition border-b border-slate-900/40">
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center font-bold text-gray-500">${posBadge}</td>
+                            <td class="py-3 sm:py-4 px-3 sm:px-6 font-bold text-white flex items-center gap-2">
+                               <div class="w-6 h-6 rounded bg-slate-900 text-[10px] flex items-center justify-center text-rose-400 font-bold border border-slate-800 flex-shrink-0">${eq.nome.substring(0,2).toUpperCase()}</div> 
+                               <span class="truncate max-w-[100px] sm:max-w-none">${eq.nome}</span>
+                               <span class="text-xs text-gray-500 font-normal hidden sm:inline">(${nPos}o na Queda)</span>
+                            </td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300 font-semibold">${ppQ} PP</td>
+                            <td class="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300 font-semibold">${pkQ} Kills</td>
+                            <td class="py-3 sm:py-4 px-3 sm:px-6 text-center bg-rose-950/5 font-black text-base sm:text-lg text-rose-400 border-l border-slate-900">${totQ} pts</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function exportTable() {
+            let listasEquipes = processarEquipesFiltradas();
+            listasEquipes.sort((a, b) => b.pt - a.pt);
+
+            let csv = "Posicao;Equipe;Q1_PP;Q1_Kills;Q2_PP;Q2_Kills;Q3_PP;Q3_Kills;Total_PP;Total_Kills;PT_Total\n";
+            listasEquipes.forEach((eq, idx) => {
+                csv += (idx+1) + ";" + eq.nome + ";" + eq.q1_pp + ";" + eq.q1_kills + ";" + eq.q2_pp + ";" + eq.q2_kills + ";" + eq.q3_pp + ";" + eq.q3_kills + ";" + eq.total_pp + ";" + eq.total_kills + ";" + eq.pt + "\n";
+            });
+
+            copyToClipboard(csv);
+            showToast('Tabela copiada para CSV!', 'success');
+        }
+
+        // ========== TEAM STATS ==========
+        function renderizarTimesDetalhes(filtroTexto) {
+            filtroTexto = filtroTexto || "";
+            const listasEquipes = processarEquipesFiltradas();
+            const container = document.getElementById('container-times-detalhes');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            listasEquipes.forEach(eq => {
+                const bateComTime = eq.nome.toLowerCase().includes(filtroTexto.toLowerCase());
+                const bateComPlayer = eq.jogadores.some(p => p.nick.toLowerCase().includes(filtroTexto.toLowerCase()));
+                if (filtroTexto && !bateComTime && !bateComPlayer) return;
+
+                let pRows = "";
+                eq.jogadores.forEach(p => {
+                    pRows += `
+                        <tr class="border-b border-slate-900/40 hover:bg-slate-950/80 transition">
+                            <td class="py-2 sm:py-3 px-3 sm:px-4 font-bold text-white flex items-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-user text-[10px] text-slate-600"></i>${p.nick}
+                            </td>
+                            <td class="py-2 sm:py-3 px-3 sm:px-4 text-center font-bold text-gray-200 text-xs sm:text-sm">${p.total_k}</td>
+                            <td class="py-2 sm:py-3 px-3 sm:px-4 text-center text-gray-400 text-xs sm:text-sm">${p.dano}</td>
+                            <td class="py-2 sm:py-3 px-3 sm:px-4 text-center text-amber-400 font-bold text-xs sm:text-sm">${p.mvp > 0 ? '<i class="fa-solid fa-star text-[10px] mr-1"></i>' + p.mvp : '0'}</td>
+                        </tr>
+                    `;
+                });
+
+                const avgPos = ((eq.q1_pos + eq.q2_pos + eq.q3_pos) / 3).toFixed(1);
+
+                container.innerHTML += `
+                    <div class="bg-slate-950 border border-slate-900 rounded-2xl p-4 sm:p-6 shadow-xl relative animate-fade-in">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-900 pb-3 sm:pb-4 mb-3 sm:mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-rose-600 to-slate-900 flex items-center justify-center font-black text-base sm:text-lg text-white border border-rose-500/20 shadow-md flex-shrink-0">
+                                    ${eq.nome.substring(0,2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-bold text-white tracking-wide uppercase">${eq.nome}</h3>
+                                    <p class="text-[10px] sm:text-xs text-gray-500 font-medium">${dataSelecionada.dia} de ${dataSelecionada.mes} • ${eq.jogadores.length} jogadores</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${eq.strikes > 0 ? '<span class="bg-amber-500/10 text-amber-400 text-xs font-bold px-2 py-1 rounded-md border border-amber-500/20"><i class="fa-solid fa-crown mr-1"></i>' + eq.strikes + ' Booyah</span>' : ''}
+                                <span class="bg-rose-500/10 text-rose-400 text-xs font-bold px-2 py-1 rounded-md border border-rose-500/20">${eq.pt} PT</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-3 sm:mt-4">
+                            <div class="bg-slate-900/40 p-2 sm:p-3 rounded-xl border border-slate-900 text-center">
+                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Kills</span>
+                                <div class="text-lg sm:text-xl font-black text-white mt-0.5">${eq.total_kills}</div>
+                            </div>
+                            <div class="bg-slate-900/40 p-2 sm:p-3 rounded-xl border border-slate-900 text-center">
+                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Pontos</span>
+                                <div class="text-lg sm:text-xl font-black text-rose-500 mt-0.5">${eq.pt}</div>
+                            </div>
+                            <div class="bg-slate-900/40 p-2 sm:p-3 rounded-xl border border-slate-900 text-center">
+                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Vitorias</span>
+                                <div class="text-lg sm:text-xl font-black text-amber-400 mt-0.5"><i class="fa-solid fa-crown text-xs mr-1"></i>${eq.strikes}</div>
+                            </div>
+                            <div class="bg-slate-900/40 p-2 sm:p-3 rounded-xl border border-slate-900 text-center">
+                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Pos. Media</span>
+                                <div class="text-lg sm:text-xl font-black text-sky-400 mt-0.5">${avgPos}o</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 sm:mt-6">
+                            <div class="overflow-x-auto rounded-xl border border-slate-900 bg-slate-900/10">
+                                <table class="w-full text-left text-xs sm:text-sm">
+                                    <thead>
+                                        <tr class="bg-slate-900/50 text-gray-400 uppercase tracking-wider font-bold border-b border-slate-900">
+                                            <th class="py-2 sm:py-3 px-3 sm:px-4">Jogador</th>
+                                            <th class="py-2 sm:py-3 px-3 sm:px-4 text-center">Kills</th>
+                                            <th class="py-2 sm:py-3 px-3 sm:px-4 text-center">Dano</th>
+                                            <th class="py-2 sm:py-3 px-3 sm:px-4 text-center">MVP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${pRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (container.innerHTML === '' && filtroTexto) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-900 flex items-center justify-center">
+                            <i class="fa-solid fa-magnifying-glass text-2xl text-gray-600"></i>
+                        </div>
+                        <p class="text-sm text-gray-500">Nenhum time ou jogador encontrado</p>
+                    </div>
+                `;
+            }
+        }
+
+        function filtrarEstatisticas() {
+            const texto = document.getElementById('search-bar').value;
+            renderizarTimesDetalhes(texto);
+        }
+
+        // ========== UTILITIES ==========
+        function copyToClipboard(text, btnElement) {
+            btnElement = btnElement || null;
+            navigator.clipboard.writeText(text).then(() => {
+                if (btnElement) {
+                    btnElement.classList.add('copied');
+                    setTimeout(() => btnElement.classList.remove('copied'), 2000);
+                }
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            });
+        }
+
+        function showToast(message, type) {
+            type = type || 'success';
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            msg.textContent = message;
+
+            if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-xmark text-red-400';
+            } else if (type === 'info') {
+                icon.className = 'fa-solid fa-circle-info text-sky-400';
+            } else {
+                icon.className = 'fa-solid fa-check-circle text-emerald-400';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        }
+
+        function aoMudarMes() {
+            dataSelecionada.mes = document.getElementById('select-mes').value;
+            renderizarPainelCompleto();
+        }
+
+        function aoMudarDia() {
+            dataSelecionada.dia = document.getElementById('select-dia').value;
+            renderizarPainelCompleto();
+        }
+
+        // Close mobile menu on outside click
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('mobile-menu');
+            const btn = e.target.closest('button');
+            if (menu && !menu.classList.contains('hidden') && btn && !btn.onclick) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

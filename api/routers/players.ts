@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware.js";
-import { getDb } from "../queries/connection.js";
+import { createRouter, publicQuery, adminQuery } from "../../api/middleware.js";
+import { getDb } from "../../api/queries/connection.js";
 import { players, teams, xtreinos, xtreinoPlayerStats, playerMerges } from "../../db/schema.js";
 import { eq, desc, inArray } from "drizzle-orm";
-import { verifyToken } from "../lib/auth.js";
+import { verifyToken } from "../../api/lib/auth.js";
 
 export const playersRouter = createRouter({
   // ===== PUBLICO: Lista de xtreinos para filtros =====

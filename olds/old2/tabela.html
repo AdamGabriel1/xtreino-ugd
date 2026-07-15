@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xtreino Blood Strike - Tabela</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<base target="_blank">
+</head>
+<body>
+    <div id="particles"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-icon">⚡</span>
+            <span class="logo-text">XTREINO <span class="highlight">BS</span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">🏠 Início</a></li>
+            <li><a href="tabela.html" class="active">📊 Tabela</a></li>
+            <li><a href="times.html">👥 Times</a></li>
+        </ul>
+        <div class="nav-social">
+            <a href="#" class="social-btn discord" title="Discord"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg" alt="Discord"></a>
+            <a href="#" class="social-btn youtube" title="YouTube"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"></a>
+            <a href="#" class="social-btn tiktok" title="TikTok"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>📊 Tabela de Classificação</h1>
+            <p>Acompanhe o desempenho de todos os times</p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-container">
+            <div class="filter-group">
+                <label for="month-filter">📅 Mês:</label>
+                <select id="month-filter">
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="day-filter">📆 Dia:</label>
+                <select id="day-filter">
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="search-input">🔍 Pesquisar Time:</label>
+                <input type="text" id="search-input" placeholder="Nome do time...">
+            </div>
+            <button class="btn btn-primary" id="apply-filters">Aplicar Filtros</button>
+            <button class="btn btn-secondary" id="clear-filters">Limpar</button>
+        </div>
+
+        <!-- Info do Dia Selecionado -->
+        <div class="selected-info" id="selected-info">
+            <span class="info-badge">📅 <span id="info-month">Todos os meses</span></span>
+            <span class="info-badge">📆 <span id="info-day">Todos os dias</span></span>
+            <span class="info-badge">👥 <span id="info-teams">0</span> times</span>
+        </div>
+
+        <!-- Tabela Principal -->
+        <div class="table-container">
+            <table class="main-table" id="main-table">
+                <thead>
+                    <tr>
+                        <th>🏆 Pos</th>
+                        <th>⚔️ Time</th>
+                        <th>Q1 PP</th>
+                        <th>Q1 PK</th>
+                        <th>Q2 PP</th>
+                        <th>Q2 PK</th>
+                        <th>Q3 PP</th>
+                        <th>Q3 PK</th>
+                        <th>📊 PP Total</th>
+                        <th>💀 PK Total</th>
+                        <th>⭐ PT Total</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Dados serão inseridos via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legenda -->
+        <div class="legend">
+            <div class="legend-item"><span class="legend-color gold"></span> 🥇 1º Lugar</div>
+            <div class="legend-item"><span class="legend-color silver"></span> 🥈 2º Lugar</div>
+            <div class="legend-item"><span class="legend-color bronze"></span> 🥉 3º Lugar</div>
+            <div class="legend-item"><span>PP = Pontos por Posição</span></div>
+            <div class="legend-item"><span>PK = Pontos por Kill</span></div>
+            <div class="legend-item"><span>PT = Pontos Totais (PP + PK)</span></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 Xtreino Blood Strike. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        let allData = [];
+
+        // Sistema de pontuação por posição (padrão BR)
+        const positionPoints = {
+            1: 12, 2: 9, 3: 7, 4: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 0, 10: 0,
+            11: 0, 12: 0, 13: 0, 14: 0, 15: 0
+        };
+
+        async function loadTableData() {
+            allData = await loadCSV('data/campeonato.csv');
+
+            // Preencher filtros
+            const months = [...new Set(allData.map(r => r.Mes))];
+            const days = [...new Set(allData.map(r => r.Dia))];
+
+            const monthSelect = document.getElementById('month-filter');
+            const daySelect = document.getElementById('day-filter');
+
+            months.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                monthSelect.appendChild(opt);
+            });
+
+            days.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                daySelect.appendChild(opt);
+            });
+
+            renderTable(allData);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="no-data">Nenhum dado encontrado para os filtros selecionados.</td></tr>';
+                document.getElementById('info-teams').textContent = '0';
+                return;
+            }
+
+            const teamStats = calculateTeamStats(data);
+            const sortedTeams = Object.values(teamStats).sort((a, b) => b.PT - a.PT);
+
+            document.getElementById('info-teams').textContent = sortedTeams.length;
+
+            sortedTeams.forEach((team, index) => {
+                const row = document.createElement('tr');
+                const posClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+
+                row.innerHTML = `
+                    <td class="pos-cell ${posClass}">${index + 1}º</td>
+                    <td class="team-cell">
+                        <div class="team-inline">
+                            <div class="mini-logo">${team.Time.substring(0, 2).toUpperCase()}</div>
+                            <span>${team.Time}</span>
+                        </div>
+                    </td>
+                    <td>${team.Q1_PP}</td>
+                    <td>${team.Q1_PK}</td>
+                    <td>${team.Q2_PP}</td>
+                    <td>${team.Q2_PK}</td>
+                    <td>${team.Q3_PP}</td>
+                    <td>${team.Q3_PK}</td>
+                    <td class="pp-total">${team.PP}</td>
+                    <td class="pk-total">${team.PK}</td>
+                    <td class="pt-total">${team.PT}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function applyFilters() {
+            const month = document.getElementById('month-filter').value;
+            const day = document.getElementById('day-filter').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+
+            let filtered = allData;
+
+            if (month !== 'all') {
+                filtered = filtered.filter(r => r.Mes === month);
+            }
+            if (day !== 'all') {
+                filtered = filtered.filter(r => r.Dia === day);
+            }
+            if (search) {
+                filtered = filtered.filter(r => r.Time.toLowerCase().includes(search));
+            }
+
+            document.getElementById('info-month').textContent = month === 'all' ? 'Todos os meses' : month;
+            document.getElementById('info-day').textContent = day === 'all' ? 'Todos os dias' : day;
+
+            renderTable(filtered);
+        }
+
+        document.getElementById('apply-filters').addEventListener('click', applyFilters);
+        document.getElementById('clear-filters').addEventListener('click', () => {
+            document.getElementById('month-filter').value = 'all';
+            document.getElementById('day-filter').value = 'all';
+            document.getElementById('search-input').value = '';
+            document.getElementById('info-month').textContent = 'Todos os meses';
+            document.getElementById('info-day').textContent = 'Todos os dias';
+            renderTable(allData);
+        });
+
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+
+        loadTableData();
+    </script>
+</body>
+</html>

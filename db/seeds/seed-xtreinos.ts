@@ -4,7 +4,7 @@
 
 import { getDb } from "../../api/queries/connection.js";
 import { eq, and } from "drizzle-orm";
-import { xtreinos, xtreinoResults, xtreinoPlayerStats } from "../schema.js";
+import { xtreinos, xtreinoResults, xtreinoPlayerStats } from "@db/schema.js";
 import { calcularPontosXtreino } from "../../api/lib/pontuacao.js";
 import { xtreinosRaw } from "./xtreinos-dados.js";
 //import { xtreinosRawNovo } from "./xtreinos-dados-novo.js"; // 🆕

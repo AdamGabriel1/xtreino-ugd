@@ -15,7 +15,7 @@ import {
   ChevronRight,
   type LucideProps,
 } from "lucide-react";
-import MainLayout from "@/layout/MainLayout";
+import MainLayout from "@/components/layout/MainLayout";
 import { useState } from "react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 

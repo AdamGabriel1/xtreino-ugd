@@ -1,0 +1,1 @@
+for arquivo in *; do echo "========== $arquivo =========="; cat "$arquivo"; echo ""; done > arquivo_final.txt

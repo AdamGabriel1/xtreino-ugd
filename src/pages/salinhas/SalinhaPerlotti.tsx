@@ -13,7 +13,7 @@ import {
   Gamepad2,
   User,
 } from "lucide-react";
-import MainLayout from "@/layout/MainLayout";
+import MainLayout from "@/components/layout/MainLayout";
 import { useState } from "react";
 
 // ==================== DADOS DAS SALINHAS ====================

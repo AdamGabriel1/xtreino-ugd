@@ -32,7 +32,7 @@ cp db/seeds/_template.ts db/seeds/2026-06-04.ts
 
 ```typescript
 // No topo do arquivo, adicione:
-import { seed as seed20260604 } from "../db/seeds/2026-06-04.js";
+import { seed as seed20260604 } from "@db/seeds/2026-06-04.js";
 
 // Na secao de seeds diarios, adicione:
 runSeedIfNeeded("daily_2026_06_04", seed20260604);

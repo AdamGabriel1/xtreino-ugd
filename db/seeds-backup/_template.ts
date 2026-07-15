@@ -1,6 +1,6 @@
 import { getDb } from "../../api/queries/connection.js";
 import { eq } from "drizzle-orm";
-// import { championships, xtreinos, teams, players } from "../schema.js";
+// import { championships, xtreinos, teams, players } from "@db/schema.js";
 
 /**
  * Seed do dia {{DATE}}

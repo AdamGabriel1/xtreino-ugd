@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware.js";
-import { getDb } from "../queries/connection.js";
+import { createRouter, publicQuery, adminQuery } from "../../api/middleware.js";
+import { getDb } from "../../api/queries/connection.js";
 import {
   rankings,
   teams,
@@ -13,7 +13,7 @@ import {
   scrimPlayerStats,
 } from "../../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
-import { verifyToken } from "../lib/auth.js";
+import { verifyToken } from "../../api/lib/auth.js";
 
 export const rankingsRouter = createRouter({
   teams: publicQuery
@@ -193,8 +193,6 @@ export const rankingsRouter = createRouter({
     >();
 
     for (const r of scrResults) {
-      const pts =
-        (4 - (r.q1Pos ?? 99)) * 5 + (4 - (r.q2Pos ?? 99)) * 5 + (4 - (r.q3Pos ?? 99)) * 5;
       const existing = scrTeamMap.get(r.teamName) ?? {
         points: 0,
         kills: 0,
@@ -202,7 +200,7 @@ export const rankingsRouter = createRouter({
         participations: 0,
       };
       scrTeamMap.set(r.teamName, {
-        points: existing.points + pts,
+        points: existing.points,
         kills: existing.kills,
         wins: existing.wins,
         participations: existing.participations + 1,

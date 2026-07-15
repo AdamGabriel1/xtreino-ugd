@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xtreino Blood Strike - Times</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<base target="_blank">
+</head>
+<body>
+    <div id="particles"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-icon">⚡</span>
+            <span class="logo-text">XTREINO <span class="highlight">BS</span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">🏠 Início</a></li>
+            <li><a href="tabela.html">📊 Tabela</a></li>
+            <li><a href="times.html" class="active">👥 Times</a></li>
+        </ul>
+        <div class="nav-social">
+            <a href="#" class="social-btn discord" title="Discord"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg" alt="Discord"></a>
+            <a href="#" class="social-btn youtube" title="YouTube"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"></a>
+            <a href="#" class="social-btn tiktok" title="TikTok"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>👥 Times e Jogadores</h1>
+            <p>Estatísticas detalhadas de cada time e jogador</p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-container">
+            <div class="filter-group">
+                <label for="team-filter">🔍 Filtrar Time:</label>
+                <select id="team-filter">
+                    <option value="all">Todos os Times</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="player-search">🔍 Pesquisar Jogador:</label>
+                <input type="text" id="player-search" placeholder="Nome do jogador...">
+            </div>
+        </div>
+
+        <!-- Lista de Times -->
+        <div class="teams-detail-container" id="teams-container">
+            <!-- Times serão renderizados aqui -->
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 Xtreino Blood Strike. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        let allData = [];
+
+        async function loadTeamsData() {
+            allData = await loadCSV('data/campeonato.csv');
+
+            const teams = [...new Set(allData.map(r => r.Time))];
+            const teamSelect = document.getElementById('team-filter');
+
+            teams.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                teamSelect.appendChild(opt);
+            });
+
+            renderTeams(allData);
+
+            // Verificar se há parâmetro URL para time específico
+            const urlParams = new URLSearchParams(window.location.search);
+            const teamParam = urlParams.get('team');
+            if (teamParam) {
+                teamSelect.value = teamParam;
+                filterTeams();
+            }
+        }
+
+        function renderTeams(data) {
+            const container = document.getElementById('teams-container');
+            container.innerHTML = '';
+
+            const teamStats = calculateTeamStats(data);
+            const teams = [...new Set(data.map(r => r.Time))];
+            const sortedTeams = teams.sort((a, b) => (teamStats[b]?.PT || 0) - (teamStats[a]?.PT || 0));
+
+            sortedTeams.forEach(team => {
+                const players = data.filter(r => r.Time === team);
+                const stats = teamStats[team];
+
+                const teamCard = document.createElement('div');
+                teamCard.className = 'team-detail-card';
+                teamCard.setAttribute('data-team', team);
+
+                // Calcular estatísticas dos jogadores
+                const playerStats = players.map(p => {
+                    const q1_pp = getPositionPoints(parseInt(p.Q1_Pos));
+                    const q1_pk = parseInt(p.Q1_Kills);
+                    const q2_pp = getPositionPoints(parseInt(p.Q2_Pos));
+                    const q2_pk = parseInt(p.Q2_Kills);
+                    const q3_pp = getPositionPoints(parseInt(p.Q3_Pos));
+                    const q3_pk = parseInt(p.Q3_Kills);
+                    const totalKills = q1_pk + q2_pk + q3_pk;
+                    const totalPP = q1_pp + q2_pp + q3_pp;
+                    const totalPT = totalPP + totalKills;
+
+                    return {
+                        ...p,
+                        Q1_PP: q1_pp, Q1_PK: q1_pk,
+                        Q2_PP: q2_pp, Q2_PK: q2_pk,
+                        Q3_PP: q3_pp, Q3_PK: q3_pk,
+                        TotalKills: totalKills,
+                        TotalPP: totalPP,
+                        TotalPT: totalPT
+                    };
+                }).sort((a, b) => b.TotalPT - a.TotalPT);
+
+                teamCard.innerHTML = `
+                    <div class="team-detail-header">
+                        <div class="team-detail-logo">${team.substring(0, 2).toUpperCase()}</div>
+                        <div class="team-detail-info">
+                            <h2>${team}</h2>
+                            <div class="team-detail-stats">
+                                <span class="detail-stat">👥 ${players.length} jogadores</span>
+                                <span class="detail-stat">📊 ${stats?.PP || 0} PP</span>
+                                <span class="detail-stat">💀 ${stats?.PK || 0} PK</span>
+                                <span class="detail-stat">⭐ ${stats?.PT || 0} PT</span>
+                            </div>
+                        </div>
+                        <div class="team-detail-rank">#${sortedTeams.indexOf(team) + 1}</div>
+                    </div>
+
+                    <div class="team-positions-summary">
+                        <h4>📍 Posições nas Quedas</h4>
+                        <div class="positions-grid">
+                            <div class="position-item">
+                                <span class="pos-label">Q1</span>
+                                <span class="pos-value">${stats?.Q1_Pos || '-'}</span>
+                            </div>
+                            <div class="position-item">
+                                <span class="pos-label">Q2</span>
+                                <span class="pos-value">${stats?.Q2_Pos || '-'}</span>
+                            </div>
+                            <div class="position-item">
+                                <span class="pos-label">Q3</span>
+                                <span class="pos-value">${stats?.Q3_Pos || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="players-table-container">
+                        <h4>🎮 Jogadores</h4>
+                        <table class="players-table">
+                            <thead>
+                                <tr>
+                                    <th>Jogador</th>
+                                    <th>Q1 Kills</th>
+                                    <th>Q2 Kills</th>
+                                    <th>Q3 Kills</th>
+                                    <th>Total Kills</th>
+                                    <th>PP</th>
+                                    <th>PT</th>
+                                    <th>MVP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${playerStats.map(p => `
+                                    <tr>
+                                        <td class="player-name-cell">
+                                            <span class="player-avatar">🎮</span>
+                                            ${p.Jogador}
+                                        </td>
+                                        <td>${p.Q1_Kills}</td>
+                                        <td>${p.Q2_Kills}</td>
+                                        <td>${p.Q3_Kills}</td>
+                                        <td class="kills-total">${p.TotalKills}</td>
+                                        <td>${p.TotalPP}</td>
+                                        <td class="pt-cell">${p.TotalPT}</td>
+                                        <td>${parseInt(p.MVP_Vezes) > 0 ? '⭐ ' + p.MVP_Vezes : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.appendChild(teamCard);
+            });
+        }
+
+        function filterTeams() {
+            const teamFilter = document.getElementById('team-filter').value;
+            const playerSearch = document.getElementById('player-search').value.toLowerCase();
+
+            let filtered = allData;
+
+            if (teamFilter !== 'all') {
+                filtered = filtered.filter(r => r.Time === teamFilter);
+            }
+
+            if (playerSearch) {
+                filtered = filtered.filter(r => r.Jogador.toLowerCase().includes(playerSearch));
+            }
+
+            renderTeams(filtered);
+        }
+
+        document.getElementById('team-filter').addEventListener('change', filterTeams);
+        document.getElementById('player-search').addEventListener('input', filterTeams);
+
+        loadTeamsData();
+    </script>
+</body>
+</html>

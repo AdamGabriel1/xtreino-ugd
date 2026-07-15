@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xtreino Blood Strike - Início</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<base target="_blank">
+</head>
+<body>
+    <!-- Partículas de fundo -->
+    <div id="particles"></div>
+
+    <!-- Navegação -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-icon">⚡</span>
+            <span class="logo-text">XTREINO <span class="highlight">BS</span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">🏠 Início</a></li>
+            <li><a href="tabela.html">📊 Tabela</a></li>
+            <li><a href="times.html">👥 Times</a></li>
+        </ul>
+        <div class="nav-social">
+            <a href="#" class="social-btn discord" title="Discord"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg" alt="Discord"></a>
+            <a href="#" class="social-btn youtube" title="YouTube"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"></a>
+            <a href="#" class="social-btn tiktok" title="TikTok"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">🏆 CAMPEONATO EM ANDAMENTO</div>
+            <h1 class="hero-title">
+                <span class="glitch" data-text="XTREINO">XTREINO</span>
+                <span class="hero-subtitle">BLOOD STRIKE</span>
+            </h1>
+            <p class="hero-desc">O maior campeonato de Battle Royale do Blood Strike. <br>15 times, 3 quedas, apenas 1 campeão.</p>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="total-teams">0</span>
+                    <span class="stat-label">Times</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="total-players">0</span>
+                    <span class="stat-label">Jogadores</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">3</span>
+                    <span class="stat-label">Quedas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">BR</span>
+                    <span class="stat-label">Formato</span>
+                </div>
+            </div>
+
+            <div class="hero-buttons">
+                <a href="tabela.html" class="btn btn-primary">📊 Ver Tabela</a>
+                <a href="times.html" class="btn btn-secondary">👥 Ver Times</a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="floating-card card-1">
+                <span class="card-icon">🥇</span>
+                <span class="card-text">1º Lugar</span>
+                <span class="card-value" id="first-place">-</span>
+            </div>
+            <div class="floating-card card-2">
+                <span class="card-icon">🥈</span>
+                <span class="card-text">2º Lugar</span>
+                <span class="card-value" id="second-place">-</span>
+            </div>
+            <div class="floating-card card-3">
+                <span class="card-icon">🥉</span>
+                <span class="card-text">3º Lugar</span>
+                <span class="card-value" id="third-place">-</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Times Inscritos -->
+    <section class="teams-section">
+        <div class="section-header">
+            <h2>⚔️ Times Inscritos</h2>
+            <p>Conheça os guerreiros que disputam o xtreino</p>
+        </div>
+
+        <div class="teams-grid" id="teams-grid">
+            <!-- Times serão carregados via JS -->
+        </div>
+    </section>
+
+    <!-- Organizador -->
+    <section class="organizer-section">
+        <div class="organizer-card">
+            <div class="organizer-icon">👑</div>
+            <h3>Organizador</h3>
+            <p class="organizer-name">Xtreino Blood Strike</p>
+            <p class="organizer-desc">Competição organizada pela comunidade para a comunidade. Todos os jogadores são bem-vindos!</p>
+        </div>
+    </section>
+
+    <!-- Redes Sociais -->
+    <section class="social-section">
+        <div class="section-header">
+            <h2>🌐 Siga nas Redes</h2>
+            <p>Acompanhe tudo sobre o xtreino</p>
+        </div>
+        <div class="social-grid">
+            <a href="#" class="social-card discord-card">
+                <div class="social-icon">💬</div>
+                <h3>Discord</h3>
+                <p>Entre no servidor oficial</p>
+                <span class="social-link">discord.gg/xtreinobs</span>
+            </a>
+            <a href="#" class="social-card youtube-card">
+                <div class="social-icon">▶️</div>
+                <h3>YouTube</h3>
+                <p>Assista as partidas</p>
+                <span class="social-link">@XtreinoBS</span>
+            </a>
+            <a href="#" class="social-card tiktok-card">
+                <div class="social-icon">🎵</div>
+                <h3>TikTok</h3>
+                <p>Melhores momentos</p>
+                <span class="social-link">@xtreinobs</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 Xtreino Blood Strike. Todos os direitos reservados.</p>
+        <p>Feito com ❤️ pela comunidade</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Carregar dados específicos da página inicial
+        async function loadHomeData() {
+            const data = await loadCSV('data/campeonato.csv');
+
+            // Contar times e jogadores
+            const teams = [...new Set(data.map(r => r.Time))];
+            const players = data.length;
+
+            document.getElementById('total-teams').textContent = teams.length;
+            document.getElementById('total-players').textContent = players;
+
+            // Calcular ranking
+            const teamStats = calculateTeamStats(data);
+            const sortedTeams = Object.values(teamStats).sort((a, b) => b.PT - a.PT);
+
+            if (sortedTeams[0]) document.getElementById('first-place').textContent = sortedTeams[0].Time;
+            if (sortedTeams[1]) document.getElementById('second-place').textContent = sortedTeams[1].Time;
+            if (sortedTeams[2]) document.getElementById('third-place').textContent = sortedTeams[2].Time;
+
+            // Renderizar grid de times
+            const grid = document.getElementById('teams-grid');
+            teams.forEach(team => {
+                const teamPlayers = data.filter(r => r.Time === team);
+                const teamStat = teamStats[team];
+
+                const card = document.createElement('div');
+                card.className = 'team-card';
+                card.innerHTML = `
+                    <div class="team-card-header">
+                        <div class="team-logo">${team.substring(0, 2).toUpperCase()}</div>
+                        <h3>${team}</h3>
+                    </div>
+                    <div class="team-card-body">
+                        <div class="team-info">
+                            <span class="info-item">👥 ${teamPlayers.length} jogadores</span>
+                            <span class="info-item">🏆 ${teamStat ? teamStat.PT : 0} pts</span>
+                        </div>
+                        <div class="team-players-preview">
+                            ${teamPlayers.slice(0, 3).map(p => `<span class="player-tag">${p.Jogador}</span>`).join('')}
+                            ${teamPlayers.length > 3 ? `<span class="player-tag more">+${teamPlayers.length - 3}</span>` : ''}
+                        </div>
+                    </div>
+                    <a href="times.html?team=${encodeURIComponent(team)}" class="team-card-btn">Ver Time →</a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        loadHomeData();
+    </script>
+</body>
+</html>

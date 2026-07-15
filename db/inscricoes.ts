@@ -19,14 +19,44 @@ export interface InscricaoEquipeInput {
   registeredBy?: string;
 }
 
-export interface InscricaoEquipe extends InscricaoEquipeInput {
+// Status alinhados com o frontend (português)
+export type InscricaoStatus = "confirmada" | "pendente" | "cancelada" | "reserva";
+
+export interface InscricaoEquipe {
   id: number;
   xtreinoId: number;
-  status: "confirmada" | "pendente" | "cancelada";
+  teamId: number | null;
+  teamName: string;
+  status: InscricaoStatus;
   isReserve: boolean;
   isFixed: boolean;
   slotNumber: number | null;
   registeredAt: string | null;
+  players: string[];
+  position: number;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function mapStatus(dbStatus: string): InscricaoStatus {
+  switch (dbStatus) {
+    case "confirmed": return "confirmada";
+    case "cancelled": return "cancelada";
+    case "pending": return "pendente";
+    default: return "pendente";
+  }
+}
+
+function mapStatusToDb(frontendStatus: InscricaoStatus): string {
+  switch (frontendStatus) {
+    case "confirmada": return "confirmed";
+    case "cancelada": return "cancelled";
+    case "pendente": return "pending";
+    case "reserva": return "pending";
+    default: return "pending";
+  }
 }
 
 // ============================================================
@@ -212,16 +242,23 @@ export function reativarInscricao(xtreinoId: number, teamName: string): boolean 
   return true;
 }
 
-export function getInscricoesPorXtreino(xtreinoId: number) {
+export function getInscricoesPorXtreino(xtreinoId: number): InscricaoEquipe[] {
   const db = getDb();
   const equipes = db.select().from(xtreinoTeams).where(eq(xtreinoTeams.xtreinoId, xtreinoId)).orderBy(xtreinoTeams.slotNumber).all();
 
-  const result = [];
+  const result: InscricaoEquipe[] = [];
   for (const equipe of equipes) {
     const jogadores = db.select().from(xtreinoPlayers).where(eq(xtreinoPlayers.xtreinoTeamId, equipe.id)).all();
     result.push({
-      ...equipe,
-      status: equipe.status === "confirmed" ? "confirmada" : equipe.status === "cancelled" ? "cancelada" : equipe.status,
+      id: equipe.id,
+      xtreinoId: equipe.xtreinoId,
+      teamId: equipe.teamId,
+      teamName: equipe.teamName,
+      status: mapStatus(equipe.status),
+      isReserve: equipe.isReserve,
+      isFixed: equipe.isFixed,
+      slotNumber: equipe.slotNumber,
+      registeredAt: equipe.registeredAt,
       players: jogadores.map(j => j.playerName),
       position: equipe.slotNumber ?? 0,
     });

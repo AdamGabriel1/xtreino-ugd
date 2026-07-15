@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Plus, Trash2, Users, CheckCircle2, Clock, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import type { InscricaoEquipe, XtreinoEvento } from "@/types/inscricoes";
+import { GoogleFormsSection } from "./GoogleFormsSection";
 
 interface InscricoesManagerProps {
   xtreino: XtreinoEvento;
@@ -10,7 +11,7 @@ interface InscricoesManagerProps {
   allTeams: Array<{ id: number; name: string; tag: string }> | undefined;
   onRegister: (data: { teamName: string; players: string[]; isReserve: boolean }) => void;
   onCancel: (data: { teamName: string }) => void;
-  onReactivate: (data: { teamName: string; players: string[]; isReserve: boolean }) => void;
+  onReactivate: (data: { teamName: string }) => void;
   onRemove: (data: { teamName: string }) => void;
   isPending: boolean;
   isAdmin?: boolean;
@@ -107,10 +108,9 @@ export function InscricoesManager({
     }
   };
 
-  const handleReactivate = (teamName: string, players: string[]) => {
+  const handleReactivate = (teamName: string) => {
     if (confirm(`Reativar inscrição de "${teamName}"?`)) {
-      const isReserve = confirmedTeams.length >= xtreino.maxTeams;
-      onReactivate({ teamName, players, isReserve });
+      onReactivate({ teamName });
     }
   };
 
@@ -129,16 +129,17 @@ export function InscricoesManager({
         <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-6">
           <h3 className="font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
             <Plus className="w-4 h-4 text-red-400" />
-            Inscrever Equipe
+            Inscrever Equipe (4x4)
           </h3>
 
           <div className="space-y-4">
+            {/* Seleção do Time / Novo Time */}
             <div className="flex flex-col sm:flex-row gap-3">
               {isNewTeam ? (
                 <input
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="Nome do novo time..."
+                  placeholder="NOME DA LINE..."
                   className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
                 />
               ) : (
@@ -147,7 +148,7 @@ export function InscricoesManager({
                   onChange={(e) => setSelectedExistingTeam(e.target.value)}
                   className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
                 >
-                  <option value="">Selecione um time...</option>
+                  <option value="">Selecione uma Line existente...</option>
                   {availableTeams.map((team) => (
                     <option key={team.id} value={team.name}>
                       {team.name} {fixedSet.has(team.name.toLowerCase()) ? "📌" : "🎫"}
@@ -160,38 +161,50 @@ export function InscricoesManager({
                 onClick={() => setIsNewTeam(!isNewTeam)}
                 className="px-4 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#8a8a9e] text-sm hover:text-[#f0f0f5] transition-all"
               >
-                {isNewTeam ? "Usar existente" : "Novo time"}
+                {isNewTeam ? "Usar existente" : "Nova Line"}
               </button>
             </div>
 
+            {/* Jogadores */}
             <div>
-              <label className="block text-sm text-[#8a8a9e] mb-2">Jogadores (1-6)</label>
+              <label className="block text-sm text-[#8a8a9e] mb-2">Jogadores (4 Titulares + até 2 Reservas)</label>
               <div className="grid sm:grid-cols-2 gap-2">
-                {playerInputs.map((player, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      value={player}
-                      onChange={(e) => handlePlayerInputChange(index, e.target.value)}
-                      placeholder={`Jogador ${index + 1}`}
-                      className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
-                    />
-                    {playerInputs.length > 1 && (
-                      <button
-                        onClick={() => handleRemovePlayerInput(index)}
-                        className="px-2 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-red-400 hover:bg-red-500/10 transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {playerInputs.map((player, index) => {
+                  // Define o placeholder correto baseado na posição
+                  let placeholder = `Jogador ${index + 1}`;
+                  if (index === 0) placeholder = "CAPITÃO";
+                  else if (index === 1) placeholder = "PLAYER 2";
+                  else if (index === 2) placeholder = "PLAYER 3";
+                  else if (index === 3) placeholder = "PLAYER 4";
+                  else if (index === 4) placeholder = "RESERVA 1";
+                  else if (index === 5) placeholder = "RESERVA 2";
+
+                  return (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        value={player}
+                        onChange={(e) => handlePlayerInputChange(index, e.target.value)}
+                        placeholder={placeholder}
+                        className="flex-1 px-3 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-[#f0f0f5] text-sm focus:outline-none focus:border-red-500/50"
+                      />
+                      {playerInputs.length > 1 && (
+                        <button
+                          onClick={() => handleRemovePlayerInput(index)}
+                          className="px-2 py-2 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-red-400 hover:bg-red-500/10 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {playerInputs.length < 6 && (
                 <button
                   onClick={handleAddPlayerInput}
                   className="mt-2 text-sm text-[#8a8a9e] hover:text-[#f0f0f5] transition-colors"
                 >
-                  + Adicionar jogador
+                  + Adicionar reserva
                 </button>
               )}
             </div>
@@ -201,11 +214,17 @@ export function InscricoesManager({
               disabled={isPending}
               className="w-full px-6 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-all disabled:opacity-50"
             >
-              {isPending ? "Inscrevendo..." : "Inscrever Equipe"}
+              {isPending ? "Inscrevendo..." : "Inscrever Line"}
             </button>
           </div>
         </div>
       )}
+
+      {/* Google Forms Integration */}
+      <GoogleFormsSection
+        xtreinoStatus={xtreino.status}
+        googleFormsUrl={xtreino.googleFormsUrl} // opcional, tem default
+      />
 
       {/* Lista de Confirmados */}
       <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] overflow-hidden">
@@ -327,7 +346,7 @@ export function InscricoesManager({
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => handleReactivate(team.teamName, team.players || [])}
+                    onClick={() => handleReactivate(team.teamName)}
                     className="p-1.5 rounded hover:bg-green-500/10 text-green-400 transition-all"
                     title="Reativar"
                   >
@@ -371,7 +390,7 @@ export function InscricoesManager({
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => handleReactivate(team.teamName, team.players || [])}
+                    onClick={() => handleReactivate(team.teamName)}
                     className="p-1.5 rounded hover:bg-green-500/10 text-green-400 transition-all"
                     title="Reativar"
                   >

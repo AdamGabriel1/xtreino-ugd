@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devils Mobile League | Blood Strike Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+        body { 
+            background-color: #060913; 
+            color: #f1f5f9; 
+            font-family: 'Space Grotesk', sans-serif; 
+        }
+        h1, h2, h3, h4, .nav-brand { font-family: 'Rajdhani', sans-serif; }
+
+        .tab-btn.active { 
+            border-bottom: 3px solid #f43f5e; 
+            color: #f43f5e; 
+            background: linear-gradient(to top, rgba(244,63,94,0.05), transparent); 
+        }
+        .page-link.active { 
+            color: #f43f5e; 
+            border-color: #f43f5e; 
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(244,63,94,0.1); }
+            50% { box-shadow: 0 0 30px rgba(244,63,94,0.3); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f43f5e;
+        }
+
+        /* Card de time hover effect */
+        .team-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .team-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(244,63,94,0.4);
+            box-shadow: 0 20px 40px rgba(244,63,94,0.1);
+        }
+
+        /* Loading skeleton */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Medalhas */
+        .medal-gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .medal-silver { background: linear-gradient(135deg, #e5e7eb, #9ca3af); }
+        .medal-bronze { background: linear-gradient(135deg, #b45309, #92400e); }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 50;
+        }
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Xtreino button pulse */
+        @keyframes xtreino-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        }
+        .xtreino-btn {
+            animation: xtreino-pulse 2s infinite;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased">
+
+    <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
+    <nav class="bg-slate-950/80 backdrop-blur-md border-b border-slate-900 sticky top-0 z-50 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-rose-600 rounded-bl-xl rounded-tr-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-rose-600/30">DML</div>
+                    <span class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 nav-brand">DEVILS MOBILE <span class="text-rose-500">LEAGUE</span></span>
+                </div>
+                <div class="flex space-x-2 md:space-x-6">
+                    <button onclick="switchPage('home')" id="nav-home" class="page-link active text-gray-400 hover:text-white px-3 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer">INÍCIO</button>
+                    <button onclick="switchPage('tabela')" id="nav-tabela" class="page-link text-gray-400 hover:text-white px-3 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer">TABELAS</button>
+                    <button onclick="switchPage('times')" id="nav-times" class="page-link text-gray-400 hover:text-white px-3 py-2 border-b-2 border-transparent font-bold text-sm tracking-wide transition cursor-pointer">ESTATÍSTICAS</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAINEL CENTRAL DE SELEÇÃO DE DATA & FILTRO -->
+    <div class="bg-slate-900/40 border-b border-slate-900/60 py-4 backdrop-blur-sm sticky top-20 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-calendar-days text-rose-500 text-base"></i>
+                <span class="text-gray-400 font-medium">Histórico do Campeonato:</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <div class="relative flex-grow sm:flex-grow-0">
+                    <select id="select-mes" onchange="aoMudarMes()" class="w-full sm:w-40 bg-slate-950 border border-slate-800 text-sm rounded-xl px-4 py-2.5 text-white font-semibold focus:outline-none focus:border-rose-500 transition appearance-none cursor-pointer">
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-xs text-gray-500 pointer-events-none"></i>
+                </div>
+                <div class="relative flex-grow sm:flex-grow-0">
+                    <select id="select-dia" onchange="aoMudarDia()" class="w-full sm:w-40 bg-slate-950 border border-slate-800 text-sm rounded-xl px-4 py-2.5 text-white font-semibold focus:outline-none focus:border-rose-500 transition appearance-none cursor-pointer">
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-xs text-gray-500 pointer-events-none"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- PÁGINA 1: INÍCIO (HOME) -->
+        <section id="page-home" class="page-section animate-fade-in">
+            <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-rose-950/20 rounded-2xl p-6 md:p-10 mb-8 border border-slate-800/60 relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-rose-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-10 -top-10 w-40 h-40 bg-rose-600/5 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-3xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="bg-rose-500/10 text-rose-400 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md border border-rose-500/20">Torneio Ativo</span>
+                        <span id="status-live" class="bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Ao Vivo
+                        </span>
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-black text-white uppercase tracking-tight mt-4 mb-2">Devils Mobile League</h1>
+                    <p class="text-gray-400 text-base md:text-lg mb-6">Acompanhe as tabelas acumuladas de 3 quedas nas Ilhas do Medo e o rendimento individual dos squads sob coordenação da organização.</p>
+
+                    <div class="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-wider text-gray-300">
+                        <div class="bg-slate-950 px-4 py-3 rounded-xl border border-slate-800/80 flex items-center gap-2"><i class="fa-solid fa-mobile-screen-button text-rose-500"></i> MOBILE ONLY</div>
+                        <div class="bg-slate-950 px-4 py-3 rounded-xl border border-slate-800/80 flex items-center gap-2"><i class="fa-solid fa-users text-rose-500"></i> SQUAD MODO</div>
+                        <div class="bg-slate-950 px-4 py-3 rounded-xl border border-slate-800/80 flex items-center gap-2"><i class="fa-solid fa-mountain text-rose-500"></i> 3 ILHAS DO MEDO</div>
+                        <div class="bg-rose-500/10 text-rose-400 px-4 py-3 rounded-xl border border-rose-500/20 flex items-center gap-2"><i class="fa-solid fa-clock shadow-sm"></i> Exibindo: <span id="data-display-hero" class="font-black">...</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD DE REGRAS E HORÁRIOS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-6 hover:border-rose-500/20 transition">
+                    <h3 class="text-lg font-bold text-white mb-4 uppercase tracking-wider border-b border-slate-900 pb-2"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>Regras Importantes</h3>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-ban text-rose-500 mt-1 text-xs"></i> <span><strong>Todos os auxílios estão banidos</strong> nas salas personalizadas.</span></li>
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-fire text-rose-500 mt-1 text-xs"></i> <span><strong>Proibido terminantemente o uso de Lança-Chamas</strong>.</span></li>
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-circle-exclamation text-amber-500 mt-1 text-xs"></i> <span>Desistências ou alterações de última hora permitidas apenas <strong>até às 19:30</strong>.</span></li>
+                    </ul>
+                </div>
+                <div class="bg-slate-950 border border-slate-900 rounded-2xl p-6 hover:border-rose-500/20 transition">
+                    <h3 class="text-lg font-bold text-white mb-4 uppercase tracking-wider border-b border-slate-900 pb-2"><i class="fa-solid fa-earth-americas text-rose-500 mr-2"></i>Fusos e Horários (Cronograma)</h3>
+                    <div class="grid grid-cols-2 gap-3 text-xs uppercase font-semibold text-gray-400">
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇧🇷 Brasil:</span> <span class="text-rose-400 font-bold">20:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇦🇷 Argentina:</span> <span class="text-rose-400 font-bold">20:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇲🇽 México:</span> <span class="text-rose-400 font-bold">17:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇩🇴 R. Dominicana:</span> <span class="text-rose-400 font-bold">19:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇨🇴 Colômbia:</span> <span class="text-rose-400 font-bold">18:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇺🇸 Estados Unidos:</span> <span class="text-rose-400 font-bold">19:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇻🇪 Venezuela:</span> <span class="text-rose-400 font-bold">19:00h</span></div>
+                        <div class="flex justify-between border-b border-slate-900/60 pb-1"><span>🇵🇪 Peru:</span> <span class="text-rose-400 font-bold">18:00h</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REDES SOCIAIS / ACESSOS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                <a id="link-scrim" href="https://chat.whatsapp.com/BGrWBFrLQVc3HrpCfdeqbw" target="_blank" class="bg-slate-950 border border-slate-900 rounded-xl p-5 flex items-center justify-between hover:border-emerald-500/40 hover:bg-slate-900/20 transition group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-600/10 flex items-center justify-center text-emerald-400 text-xl group-hover:scale-105 transition"><i class="fa-brands fa-whatsapp"></i></div>
+                        <div><h3 class="font-bold text-white text-base">Grupo Scrim WhatsApp</h3><p class="text-xs text-gray-500">Acessar grupo oficial</p></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-700 group-hover:text-emerald-400 transition text-xs"></i>
+                </a>
+                <a id="link-discord" href="https://discord.gg/vYGkNex878" target="_blank" class="bg-slate-950 border border-slate-900 rounded-xl p-5 flex items-center justify-between hover:border-indigo-500/40 hover:bg-slate-900/20 transition group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-400 text-xl group-hover:scale-105 transition"><i class="fa-brands fa-discord"></i></div>
+                        <div><h3 class="font-bold text-white text-base">Discord Oficial</h3><p class="text-xs text-gray-500">Comunidade e Suporte</p></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-700 group-hover:text-indigo-400 transition text-xs"></i>
+                </a>
+            </div>
+
+            <!-- TIMES INSCRITOS COM LOGOS -->
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold uppercase tracking-wider text-white border-l-4 border-rose-500 pl-3">Equipes Confirmadas / Slots (<span id="count-times">0</span>)</h2>
+                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                        <i class="fa-solid fa-circle text-emerald-500 text-[8px]"></i>
+                        <span>Clique no time para ver detalhes</span>
+                    </div>
+                </div>
+                <div id="lista-inscritos" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                </div>
+            </div>
+        </section>
+
+        <!-- PÁGINA 2: TABELAS DE CLASSIFICAÇÃO -->
+        <section id="page-tabela" class="page-section hidden animate-fade-in">
+            <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold uppercase tracking-wider text-white border-l-4 border-rose-500 pl-3">Tabela Parcial Diária</h2>
+                    <p class="text-gray-500 text-xs mt-1">Pontuação Base: 1º=12pt, 2º=10pt, 3º=8pt, 4º=7pt... + 1 ponto por Eliminação (Kill).</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-950 border border-slate-900 rounded-xl px-4 py-2">
+                    <i class="fa-solid fa-trophy text-amber-400 text-sm"></i>
+                    <span class="text-xs text-gray-400 font-semibold">Total de Equipes: <span id="total-equipes-tabela" class="text-white font-bold">0</span></span>
+                </div>
+            </div>
+
+            <!-- Sub-Abas de Queda -->
+            <div class="flex border-b border-slate-900 mb-6 overflow-x-auto">
+                <button onclick="switchTab('geral')" id="tab-geral" class="tab-btn active px-5 py-3 text-xs font-bold uppercase tracking-widest cursor-pointer whitespace-nowrap transition">Pontuação Geral</button>
+                <button onclick="switchTab('q1')" id="tab-q1" class="tab-btn px-5 py-3 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest cursor-pointer whitespace-nowrap transition">1ª Ilha</button>
+                <button onclick="switchTab('q2')" id="tab-q2" class="tab-btn px-5 py-3 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest cursor-pointer whitespace-nowrap transition">2ª Ilha</button>
+                <button onclick="switchTab('q3')" id="tab-q3" class="tab-btn px-5 py-3 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest cursor-pointer whitespace-nowrap transition">3ª Ilha</button>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/60 text-[11px] font-bold uppercase tracking-widest text-gray-400 border-b border-slate-900">
+                                <th class="py-4 px-4 text-center w-16">Pos</th>
+                                <th class="py-4 px-6">Equipe</th>
+                                <th class="py-4 px-4 text-center col-queda">Q1 (PP/PK)</th>
+                                <th class="py-4 px-4 text-center col-queda">Q2 (PP/PK)</th>
+                                <th class="py-4 px-4 text-center col-queda">Q3 (PP/PK)</th>
+                                <th class="py-4 px-4 text-center">Total PP</th>
+                                <th class="py-4 px-4 text-center">Total PK</th>
+                                <th class="py-4 px-6 text-center bg-rose-950/20 font-black text-rose-400 border-l border-slate-900">PT (Total)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-corpo" class="divide-y divide-slate-900 text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PÁGINA 3: TIMES & ESTATÍSTICAS -->
+        <section id="page-times" class="page-section hidden animate-fade-in">
+            <div class="mb-8 max-w-md relative">
+                <input type="text" id="search-bar" oninput="filtrarEstatisticas()" placeholder="Buscar time ou nick do jogador..." class="w-full bg-slate-950 border border-slate-900 hover:border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm text-white focus:outline-none focus:border-rose-500 transition shadow-inner">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+            </div>
+
+            <div id="container-times-detalhes" class="grid grid-cols-1 gap-8">
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-6 text-center text-xs text-gray-500 font-medium">
+        <p>&copy; 2026 Devils Mobile League | Sincronizado via Planilha CSV.</p>
+        <p class="mt-1 text-gray-600">Desenvolvido para comunidade Blood Strike Mobile</p>
+    </footer>
+
+    <!-- LOGICA DO SITE -->
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO DE LOGOS E LINKS XTREINO
+        // ============================================
+        // Adicione aqui os links das logos e Xtreino para cada time
+        // Quando não houver logo definida, será usado um avatar gerado automaticamente
+        const TEAM_CONFIG = {
+            "UGD": {
+                logo: "", // URL da logo do time UGD
+                xtreino: "", // Link do Xtreino do time UGD
+                cor: "#f43f5e"
+            },
+            "RED": {
+                logo: "",
+                xtreino: "",
+                cor: "#ef4444"
+            },
+            "RED Lango": {
+                logo: "",
+                xtreino: "",
+                cor: "#dc2626"
+            },
+            "LMF": {
+                logo: "",
+                xtreino: "",
+                cor: "#3b82f6"
+            },
+            "KOV": {
+                logo: "",
+                xtreino: "",
+                cor: "#8b5cf6"
+            },
+            "CMF": {
+                logo: "",
+                xtreino: "",
+                cor: "#06b6d4"
+            },
+            "Time_E": {
+                logo: "",
+                xtreino: "",
+                cor: "#f59e0b"
+            }
+        };
+
+        // URL base do CSV - pode ser alterada para qualquer servidor/host
+        const CSV_URL = 'data/campeonato.csv';
+
+        let bancoDeDadosCompleto = [];
+        let dataSelecionada = { mes: "", dia: "" };
+        let equipesProcessadas = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarDados();
+        });
+
+        async function carregarDados() {
+            try {
+                // Tentar carregar CSV externo
+                const response = await fetch(CSV_URL + '?t=' + Date.now()); // Cache buster
+                if (!response.ok) throw new Error('CSV não encontrado');
+                const text = await response.text();
+                bancoDeDadosCompleto = parseCSV(text);
+
+                if (bancoDeDadosCompleto.length === 0) {
+                    throw new Error('CSV vazio');
+                }
+
+                inicializarFiltrosDeData();
+                console.log("✅ CSV carregado com sucesso:", bancoDeDadosCompleto.length, "registros");
+            } catch (error) {
+                console.warn("⚠️ Erro ao carregar CSV externo:", error.message);
+                console.log("🔄 Carregando dados de fallback...");
+                usarDadosMockCompleto();
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('').filter(line => line.trim() !== '');
+            const result = [];
+            if(lines.length === 0) return result;
+            const headers = lines[0].split(';');
+            for(let i=1; i<lines.length; i++) {
+                const obj = {};
+                const currentline = lines[i].split(';');
+                for(let j=0; j<headers.length; j++) {
+                    obj[headers[j].trim()] = currentline[j] ? currentline[j].trim() : "";
+                }
+                // Validar dados mínimos
+                if (obj.Time && obj.Dia && obj.Mes) {
+                    result.push(obj);
+                }
+            }
+            return result;
+        }
+
+        function inicializarFiltrosDeData() {
+            const selectMes = document.getElementById('select-mes');
+            const mesesUnicos = [...new Set(bancoDeDadosCompleto.map(item => item.Mes))].filter(Boolean).sort();
+
+            selectMes.innerHTML = "";
+            mesesUnicos.forEach(m => {
+                selectMes.innerHTML += `<option value="${m}">${m}</option>`;
+            });
+
+            if(mesesUnicos.length > 0) {
+                dataSelecionada.mes = mesesUnicos[0];
+                atualizarDiasDisponiveis(dataSelecionada.mes);
+            }
+        }
+
+        function atualizarDiasDisponiveis(mes) {
+            const selectDia = document.getElementById('select-dia');
+            const linhasDoMes = bancoDeDadosCompleto.filter(item => item.Mes === mes);
+            const diasUnicos = [...new Set(linhasDoMes.map(item => item.Dia))].filter(Boolean).sort((a, b) => {
+                // Ordenar numericamente (Dia 1, Dia 2, etc.)
+                const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+
+            selectDia.innerHTML = "";
+            diasUnicos.forEach(d => {
+                selectDia.innerHTML += `<option value="${d}">${d}</option>`;
+            });
+
+            if(diasUnicos.length > 0) {
+                dataSelecionada.dia = diasUnicos[diasUnicos.length - 1]; // Seleciona o dia mais recente por padrão
+                selectDia.value = dataSelecionada.dia;
+                renderizarPainelCompleto();
+            }
+        }
+
+        function aoMudarMes() {
+            dataSelecionada.mes = document.getElementById('select-mes').value;
+            atualizarDiasDisponiveis(dataSelecionada.mes);
+        }
+
+        function aoMudarDia() {
+            dataSelecionada.dia = document.getElementById('select-dia').value;
+            renderizarPainelCompleto();
+        }
+
+        function renderizarPainelCompleto() {
+            document.getElementById('data-display-hero').innerText = `${dataSelecionada.dia} de ${dataSelecionada.mes}`;
+            equipesProcessadas = processarEquipesFiltradas();
+            renderizarHome();
+            renderizarTabela('geral');
+            renderizarTimesDetalhes();
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.page-link').forEach(link => link.classList.remove('active'));
+
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            document.getElementById(`nav-${pageId}`).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function obterPontosPosicao(posicao) {
+            const tabelaPontos = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
+            return tabelaPontos[posicao] || 0;
+        }
+
+        function processarEquipesFiltradas() {
+            const dadosFiltrados = bancoDeDadosCompleto.filter(item => 
+                item.Mes === dataSelecionada.mes && item.Dia === dataSelecionada.dia
+            );
+            const equipes = {};
+
+            dadosFiltrados.forEach(row => {
+                const tName = row.Time;
+                if (!tName) return;
+                if (!equipes[tName]) {
+                    equipes[tName] = {
+                        nome: tName, 
+                        jogadores: [],
+                        q1_pos: parseInt(row.Q1_Pos) || 0, 
+                        q2_pos: parseInt(row.Q2_Pos) || 0, 
+                        q3_pos: parseInt(row.Q3_Pos) || 0,
+                        q1_kills: 0, 
+                        q2_kills: 0, 
+                        q3_kills: 0, 
+                        total_kills: 0, 
+                        strikes: 0,
+                        config: TEAM_CONFIG[tName] || { logo: "", xtreino: "", cor: "#f43f5e" }
+                    };
+                }
+                equipes[tName].q1_kills += parseInt(row.Q1_Kills) || 0;
+                equipes[tName].q2_kills += parseInt(row.Q2_Kills) || 0;
+                equipes[tName].q3_kills += parseInt(row.Q3_Kills) || 0;
+
+                if(row.Jogador) {
+                    equipes[tName].jogadores.push({
+                        nick: row.Jogador,
+                        q1_k: parseInt(row.Q1_Kills) || 0, 
+                        q2_k: parseInt(row.Q2_Kills) || 0, 
+                        q3_k: parseInt(row.Q3_Kills) || 0,
+                        total_k: (parseInt(row.Q1_Kills) || 0) + (parseInt(row.Q2_Kills) || 0) + (parseInt(row.Q3_Kills) || 0),
+                        dano: row.Dano_Medio || "Sem Info", 
+                        mvp: parseInt(row.MVP_Vezes) || 0
+                    });
+                }
+            });
+
+            return Object.values(equipes).map(eq => {
+                eq.total_kills = eq.q1_kills + eq.q2_kills + eq.q3_kills;
+                eq.q1_pp = obterPontosPosicao(eq.q1_pos);
+                eq.q2_pp = obterPontosPosicao(eq.q2_pos);
+                eq.q3_pp = obterPontosPosicao(eq.q3_pos);
+                eq.total_pp = eq.q1_pp + eq.q2_pp + eq.q3_pp;
+                eq.pt = eq.total_pp + eq.total_kills;
+
+                let booyahs = 0;
+                if(eq.q1_pos === 1) booyahs++;
+                if(eq.q2_pos === 1) booyahs++;
+                if(eq.q3_pos === 1) booyahs++;
+                eq.strikes = booyahs;
+
+                // Calcular média de posição
+                const posicoesValidas = [eq.q1_pos, eq.q2_pos, eq.q3_pos].filter(p => p > 0);
+                eq.posicao_media = posicoesValidas.length > 0 
+                    ? (posicoesValidas.reduce((a,b) => a+b, 0) / posicoesValidas.length).toFixed(1)
+                    : "0.0";
+
+                return eq;
+            });
+        }
+
+        // ============================================
+        // FUNÇÕES DE RENDERIZAÇÃO
+        // ============================================
+
+        function gerarAvatarTime(nome, cor) {
+            // Gera um avatar com as iniciais do time
+            const iniciais = nome.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+            return `
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg text-white border-2 shadow-lg" 
+                     style="background: linear-gradient(135deg, ${cor}40, ${cor}20); border-color: ${cor}60;">
+                    ${iniciais}
+                </div>`;
+        }
+
+        function renderizarLogoTime(nome, config, tamanho = "w-12 h-12") {
+            if (config.logo && config.logo.trim() !== "") {
+                return `<img src="${config.logo}" alt="${nome}" class="${tamanho} rounded-xl object-cover border-2 shadow-lg" style="border-color: ${config.cor}40;" onerror="this.outerHTML='${gerarAvatarTime(nome, config.cor).replace(/"/g, "'")}'">`;
+            }
+            return gerarAvatarTime(nome, config.cor);
+        }
+
+        function renderizarHome() {
+            const container = document.getElementById('lista-inscritos');
+            document.getElementById('count-times').innerText = equipesProcessadas.length;
+            container.innerHTML = '';
+
+            if(equipesProcessadas.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fa-solid fa-circle-exclamation text-rose-500 text-3xl mb-3"></i>
+                        <p class="text-sm text-gray-500">Nenhum time cadastrado para este dia no CSV.</p>
+                        <p class="text-xs text-gray-600 mt-1">Verifique se o arquivo campeonato.csv está na mesma pasta.</p>
+                    </div>`;
+                return;
+            }
+
+            equipesProcessadas.forEach((eq, index) => {
+                const config = eq.config;
+                const xtreinoLink = config.xtreino ? `
+                    <a href="${config.xtreino}" target="_blank" 
+                       class="xtreino-btn inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border border-emerald-500/20 hover:bg-emerald-500/20 transition mt-2">
+                        <i class="fa-solid fa-external-link-alt text-[8px]"></i> Xtreino
+                    </a>
+                ` : '';
+
+                container.innerHTML += `
+                    <div onclick="switchPage('times')" class="team-card bg-slate-950 border border-slate-900 rounded-xl p-4 text-center flex flex-col items-center justify-center gap-2 cursor-pointer shadow-lg relative overflow-hidden group">
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-rose-500 text-xs"></i>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-rose-500 font-bold text-xs mb-1">
+                            SLOT ${String(index + 1).padStart(2, '0')}
+                        </div>
+                        ${renderizarLogoTime(eq.nome, config, "w-14 h-14")}
+                        <div class="font-bold text-white text-sm truncate w-full tracking-wide mt-1">${eq.nome}</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">${eq.jogadores.length} Players</div>
+                        ${xtreinoLink}
+                    </div>`;
+            });
+        }
+
+        function switchTab(mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-white'));
+            document.getElementById(`tab-${mode}`).classList.add('active');
+            renderizarTabela(mode);
+        }
+
+        function renderizarTabela(modo) {
+            let listasEquipes = [...equipesProcessadas];
+            const corpo = document.getElementById('tabela-corpo');
+            corpo.innerHTML = '';
+
+            document.getElementById('total-equipes-tabela').innerText = listasEquipes.length;
+
+            if (modo === 'geral') {
+                listasEquipes.sort((a, b) => b.pt - a.pt || b.total_kills - a.total_kills);
+            } else {
+                listasEquipes.sort((a, b) => {
+                    const scoreA = a[`${modo}_pp`] + a[`${modo}_kills`];
+                    const scoreB = b[`${modo}_pp`] + b[`${modo}_kills`];
+                    return scoreB - scoreA;
+                });
+            }
+
+            document.querySelectorAll('.col-queda').forEach(c => c.style.display = modo !== 'geral' ? 'none' : '');
+
+            listasEquipes.forEach((eq, index) => {
+                let posBadge = `${index + 1}º`;
+                if(index === 0) posBadge = `<span class="medal-gold text-slate-950 font-black px-2.5 py-0.5 rounded-md text-xs shadow">1º</span>`;
+                if(index === 1) posBadge = `<span class="medal-silver text-slate-950 font-black px-2.5 py-0.5 rounded-md text-xs">2º</span>`;
+                if(index === 2) posBadge = `<span class="medal-bronze text-white font-black px-2.5 py-0.5 rounded-md text-xs">3º</span>`;
+
+                const config = eq.config;
+                const logoHtml = renderizarLogoTime(eq.nome, config, "w-8 h-8");
+
+                if (modo === 'geral') {
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-slate-900/40 transition border-b border-slate-900/40 group">
+                            <td class="py-4 px-4 text-center font-bold text-gray-500">${posBadge}</td>
+                            <td class="py-4 px-6 font-bold text-white">
+                                <div class="flex items-center gap-2.5">
+                                    ${logoHtml}
+                                    <div>
+                                        <div class="text-white font-bold">${eq.nome}</div>
+                                        ${config.xtreino ? `<a href="${config.xtreino}" target="_blank" class="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><i class="fa-solid fa-external-link-alt text-[8px]"></i> Xtreino</a>` : ''}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-center text-gray-400 col-queda">
+                                <span class="font-semibold text-white">${eq.q1_pp}</span><span class="text-gray-600">/</span><span class="text-rose-400">${eq.q1_kills}</span>
+                            </td>
+                            <td class="py-4 px-4 text-center text-gray-400 col-queda">
+                                <span class="font-semibold text-white">${eq.q2_pp}</span><span class="text-gray-600">/</span><span class="text-rose-400">${eq.q2_kills}</span>
+                            </td>
+                            <td class="py-4 px-4 text-center text-gray-400 col-queda">
+                                <span class="font-semibold text-white">${eq.q3_pp}</span><span class="text-gray-600">/</span><span class="text-rose-400">${eq.q3_kills}</span>
+                            </td>
+                            <td class="py-4 px-4 text-center text-gray-300 font-bold">${eq.total_pp}</td>
+                            <td class="py-4 px-4 text-center text-rose-400 font-bold">${eq.total_kills}</td>
+                            <td class="py-4 px-6 text-center bg-rose-950/5 font-black text-base text-rose-400 border-l border-slate-900">${eq.pt}</td>
+                        </tr>`;
+                } else {
+                    let ppQ = eq[`${modo}_pp`], pkQ = eq[`${modo}_kills`], totQ = ppQ + pkQ, nPos = eq[`${modo}_pos`];
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-slate-900/40 transition border-b border-slate-900/40">
+                            <td class="py-4 px-4 text-center font-bold text-gray-500">${posBadge}</td>
+                            <td class="py-4 px-6 font-bold text-white">
+                                <div class="flex items-center gap-2">
+                                    ${logoHtml}
+                                    <div>
+                                        <div>${eq.nome}</div>
+                                        <span class="text-xs text-gray-500 font-normal">(${nPos}º na Queda)</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-center text-gray-300 font-semibold">${ppQ} PP</td>
+                            <td class="py-4 px-4 text-center text-rose-400 font-semibold">${pkQ} Kills</td>
+                            <td class="py-4 px-6 text-center bg-rose-950/5 font-black text-base text-rose-400 border-l border-slate-900">${totQ} pts</td>
+                        </tr>`;
+                }
+            });
+        }
+
+        function renderizarTimesDetalhes(filtroTexto = "") {
+            const container = document.getElementById('container-times-detalhes');
+            container.innerHTML = '';
+
+            const equipesFiltradas = equipesProcessadas.filter(eq => {
+                const bateComTime = eq.nome.toLowerCase().includes(filtroTexto.toLowerCase());
+                const bateComPlayer = eq.jogadores.some(p => p.nick.toLowerCase().includes(filtroTexto.toLowerCase()));
+                return !filtroTexto || bateComTime || bateComPlayer;
+            });
+
+            // Ordenar por pontuação total
+            equipesFiltradas.sort((a, b) => b.pt - a.pt);
+
+            equipesFiltradas.forEach((eq, index) => {
+                const config = eq.config;
+
+                let pRows = "";
+                // Ordenar jogadores por kills
+                const jogadoresOrdenados = [...eq.jogadores].sort((a, b) => b.total_k - a.total_k);
+
+                jogadoresOrdenados.forEach((p, pIndex) => {
+                    const isTop = pIndex === 0 && p.total_k > 0;
+                    pRows += `
+                        <tr class="border-b border-slate-900/40 hover:bg-slate-950/80 transition ${isTop ? 'bg-rose-950/10' : ''}">
+                            <td class="py-3 px-4 font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-user text-xs ${isTop ? 'text-rose-400' : 'text-slate-600'}"></i>
+                                ${p.nick}
+                                ${p.mvp > 0 ? `<span class="ml-1 text-[10px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20"><i class="fa-solid fa-star text-[8px]"></i> MVP</span>` : ''}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="font-bold ${isTop ? 'text-rose-400' : 'text-gray-200'}">${p.total_k}</div>
+                                <div class="text-[10px] text-gray-600">${p.q1_k}/${p.q2_k}/${p.q3_k}</div>
+                            </td>
+                            <td class="py-3 px-4 text-center text-gray-400">${p.dano}</td>
+                            <td class="py-3 px-4 text-center text-amber-400 font-bold">${p.mvp > 0 ? '<i class="fa-solid fa-crown text-xs mr-1"></i>' + p.mvp : '0'}</td>
+                        </tr>`;
+                });
+
+                const xtreinoBtn = config.xtreino ? `
+                    <a href="${config.xtreino}" target="_blank" 
+                       class="xtreino-btn inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/20 transition">
+                        <i class="fa-solid fa-external-link-alt"></i> Perfil Xtreino
+                    </a>
+                ` : '';
+
+                // Calcular tendência (setas de posição)
+                const tendencia = eq.pt > 30 ? '🔥' : eq.pt > 20 ? '📈' : '➡️';
+
+                container.innerHTML += `
+                    <div class="bg-slate-950 border border-slate-900 rounded-2xl p-6 shadow-xl relative overflow-hidden hover:border-rose-500/20 transition duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-rose-600/5 to-transparent rounded-bl-full pointer-events-none"></div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-900 pb-4 mb-4">
+                            <div class="flex items-center gap-4">
+                                ${renderizarLogoTime(eq.nome, config, "w-14 h-14")}
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-xl font-bold text-white tracking-wide uppercase">${eq.nome}</h3>
+                                        <span class="text-lg">${tendencia}</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 font-medium">${dataSelecionada.dia} de ${dataSelecionada.mes} • ${eq.jogadores.length} jogadores</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                ${xtreinoBtn}
+                                <div class="text-right">
+                                    <div class="text-2xl font-black text-rose-400">${eq.pt} <span class="text-xs text-gray-500 font-normal">PTS</span></div>
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">${eq.strikes}x Booyah</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-900 text-center hover:border-rose-500/20 transition">
+                                <span class="text-[11px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kills Coletivas</span>
+                                <div class="text-xl font-black text-white">${eq.total_kills}</div>
+                            </div>
+                            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-900 text-center hover:border-rose-500/20 transition">
+                                <span class="text-[11px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Pontos Posição</span>
+                                <div class="text-xl font-black text-sky-400">${eq.total_pp}</div>
+                            </div>
+                            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-900 text-center hover:border-rose-500/20 transition">
+                                <span class="text-[11px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Vitórias</span>
+                                <div class="text-xl font-black text-amber-400"><i class="fa-solid fa-crown mr-1 text-sm"></i>${eq.strikes}</div>
+                            </div>
+                            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-900 text-center hover:border-rose-500/20 transition">
+                                <span class="text-[11px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Posição Média</span>
+                                <div class="text-xl font-black text-sky-400">${eq.posicao_media}º</div>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico de performance por queda -->
+                        <div class="mb-4 flex items-center gap-4 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-3 h-3 rounded bg-rose-500/20 border border-rose-500/40"></div>
+                                <span class="text-gray-400">Q1: ${eq.q1_pos}º (${eq.q1_pp}pp + ${eq.q1_kills}k)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-3 h-3 rounded bg-sky-500/20 border border-sky-500/40"></div>
+                                <span class="text-gray-400">Q2: ${eq.q2_pos}º (${eq.q2_pp}pp + ${eq.q2_kills}k)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/40"></div>
+                                <span class="text-gray-400">Q3: ${eq.q3_pos}º (${eq.q3_pp}pp + ${eq.q3_kills}k)</span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-900 bg-slate-900/10">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="bg-slate-900/50 text-gray-400 uppercase tracking-wider font-bold border-b border-slate-900">
+                                        <th class="py-3 px-4">Jogador</th>
+                                        <th class="py-3 px-4 text-center">Kills (Q1/Q2/Q3)</th>
+                                        <th class="py-3 px-4 text-center">Média Dano</th>
+                                        <th class="py-3 px-4 text-center">MVP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${pRows}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function filtrarEstatisticas() {
+            const texto = document.getElementById('search-bar').value;
+            renderizarTimesDetalhes(texto);
+        }
+
+        // ============================================
+        // DADOS MOCK (FALLBACK)
+        // ============================================
+        function usarDadosMockCompleto() {
+            const mockCSV = `Mes;Dia;Time;Jogador;Q1_Pos;Q1_Kills;Q2_Pos;Q2_Kills;Q3_Pos;Q3_Kills;Dano_Medio;MVP_Vezes
+Maio;Dia 19;UGD;UGD Treon;1;11;4;12;1;13;Sem Informações;1
+Maio;Dia 19;UGD;UGD cool7;1;8;4;10;1;6;Sem Informações;0
+Maio;Dia 19;UGD;UGD Kaze;1;13;4;1;1;8;Sem Informações;1
+Maio;Dia 19;UGD;UGD ARISE;1;8;4;8;1;4;Sem Informações;0
+Maio;Dia 19;RED;RED snow777;2;3;7;0;4;1;Sem Informações;0
+Maio;Dia 19;RED;RED APENAS;2;7;7;0;4;4;Sem Informações;0
+Maio;Dia 19;RED;CF ALMEIDA;2;0;7;0;4;1;Sem Informações;0
+Maio;Dia 19;RED;LMF Boss;2;5;7;0;4;3;Sem Informações;0
+Maio;Dia 19;RED Lango;RED LANGO;3;4;1;7;7;0;Sem Informações;0
+Maio;Dia 19;RED Lango;RED KENNZY;3;6;1;6;7;0;Sem Informações;1
+Maio;Dia 19;RED Lango;MOL ADRIAN;3;2;1;1;7;0;Sem Informações;0
+Maio;Dia 19;RED Lango;LXELTINHO;3;1;1;5;7;0;Sem Informações;0
+Maio;Dia 19;LMF;LMF LACERDA;4;2;6;0;5;3;Sem Informações;0
+Maio;Dia 19;LMF;LMF CALOP12;4;1;6;0;5;1;Sem Informações;0
+Maio;Dia 19;LMF;LMF mtfacil;4;1;6;0;5;5;Sem Informações;0
+Maio;Dia 19;LMF;LMF XIT;4;1;6;0;5;0;Sem Informações;0
+Maio;Dia 19;KOV;KOV FushyX;5;5;5;2;3;2;Sem Informações;0
+Maio;Dia 19;KOV;KOV ADAN;5;7;5;5;3;2;Sem Informações;0
+Maio;Dia 19;KOV;TTKKAIKE;5;5;5;2;3;0;Sem Informações;0
+Maio;Dia 19;KOV;KOV ALONE;5;0;5;1;3;5;Sem Informações;0
+Maio;Dia 19;CMF;CMF Syx;7;0;3;7;2;7;Sem Informações;0
+Maio;Dia 19;CMF;CMF Lyx7;7;0;3;7;2;3;Sem Informações;0
+Maio;Dia 19;CMF;CMF MOIZO;7;0;3;4;2;5;Sem Informações;0
+Maio;Dia 19;CMF;CMF Stygian;7;0;3;3;2;7;Sem Informações;0
+Maio;Dia 19;Time_E;RED REZE;6;0;2;0;6;0;Sem Informações;0
+Maio;Dia 19;Time_E;Muggle;6;0;2;6;6;0;Sem Informações;0
+Maio;Dia 19;Time_E;Shxrk;6;0;2;4;6;0;Sem Informações;0`;
+
+            bancoDeDadosCompleto = parseCSV(mockCSV);
+            inicializarFiltrosDeData();
+        }
+    </script>
+</body>
+</html>

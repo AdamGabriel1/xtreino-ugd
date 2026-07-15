@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Trophy, Search, Calendar, Users } from "lucide-react";
 import { trpc } from "@/providers/trpc";
-import MainLayout from "@/layout/MainLayout";
+import MainLayout from "@/components/layout/MainLayout";
 
 const statusLabels: Record<string, { text: string; class: string }> = {
   ativo: { text: "Ativo", class: "bg-emerald-500/10 text-emerald-400" },

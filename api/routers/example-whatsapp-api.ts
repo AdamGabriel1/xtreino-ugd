@@ -3,7 +3,7 @@
 // Coloque isso na sua API/route do painel admin
 // ============================================================
 
-import { getDb } from "../queries/connection.js";
+import { getDb } from "../../api/queries/connection.js";
 import { settings, xtreinos, teams } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { 

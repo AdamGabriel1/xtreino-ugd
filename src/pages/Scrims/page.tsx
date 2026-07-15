@@ -1,257 +1,123 @@
-"use client";
+import { Link } from "react-router-dom";
+import { 
+  Swords, Users, Target, ArrowRight, Shield, Calendar, 
+  Crosshair, TrendingUp, BarChart3 
+} from "lucide-react";
+import MainLayout from "@/components/layout/MainLayout";
 
-import { useState } from "react";
-import { Swords, Calendar, Trophy, Target, BarChart3, Users } from "lucide-react";
-import MainLayout from "@/layout/MainLayout";
-import type { TabType, ScrimItem, ScrimMode } from "./types";
-import { useScrimData } from "./hooks/useScrimData";
-import { AgendadosTab } from "./components/tabs/AgendadosTab";
-import { HistoricoTimesTab } from "./components/tabs/HistoricoTimesTab";
-import { HistoricoJogadoresTab } from "./components/tabs/HistoricoJogadoresTab";
-import { ScrimDetailModal } from "./components/modals/ScrimDetailModal";
-import { TeamStatsModal } from "./components/modals/TeamStatsModal";
-import { PlayerStatsModal } from "./components/modals/PlayerStatsModal";
+const MODES = [
+  { 
+    id: "br", 
+    title: "Battle Royale (BR)", 
+    icon: <Target className="w-6 h-6 text-blue-400" />, 
+    color: "border-blue-500/20 hover:border-blue-500/50",
+    bgColor: "bg-blue-500/10",
+    desc: "Partidas no modo clássico de Sobrevivência. Pontuação dinâmica baseada na posição final da queda (1º lugar = 15pts, 2º = 12pts...) somado às kills realizadas.",
+    link: "/scrims/agendados"
+  },
+  { 
+    id: "mme", 
+    title: "Mata-Mata em Equipe (MME)", 
+    icon: <Users className="w-6 h-6 text-orange-400" />, 
+    color: "border-orange-500/20 hover:border-orange-500/50",
+    bgColor: "bg-orange-500/10",
+    desc: "Sistema de confronto direto em séries (Melhor de 3, 5, 7...). O time que vencer mais rounds ganha a scrim. Foco extremo em mira, coordenada e团队战术.",
+    link: "/scrims/agendados"
+  },
+];
 
-export default function ScrimsPage() {
-  const [tab, setTab] = useState<TabType>("agendados");
-  const [selectedDate, setSelectedDate] = useState<string>("all");
-  const [selectedMode, setSelectedMode] = useState<ScrimMode | "all">("all");
-  const [selectedScrim, setSelectedScrim] = useState<ScrimItem | null>(null);
-  const [selectedTeam, setSelectedTeam] = useState<string>("");
-  const [selectedPlayer, setSelectedPlayer] = useState<{ name: string; team: string } | null>(null);
+const QUICK_LINKS = [
+  { to: "/scrims/agendados", label: "Partidas Agendadas", icon: <Calendar className="w-4 h-4" /> },
+  { to: "/scrims/ranking-jogadores", label: "Ranking Jogadores", icon: <Crosshair className="w-4 h-4" /> },
+  { to: "/scrims/ranking-times", label: "Ranking Times", icon: <Shield className="w-4 h-4" /> },
+  { to: "/scrims/agendados", label: "Ver Hub Completo", icon: <BarChart3 className="w-4 h-4" /> },
+];
 
-  const {
-    scrimsList,
-    availableDates,
-    scrimTeamResults,
-    scrimPlayerStats,
-    scrimPlayerAllTime,
-    scrimTeamAllTimeBR,
-    scrimTeamAllTimeMME,
-  } = useScrimData(selectedDate, selectedMode);
-
-  const normalizedScrimsList = scrimsList as ScrimItem[] | undefined;
-
-  const getTitle = () => {
-    if (tab === "agendados") return "Scrims Agendados";
-    if (tab === "historico-times") return "Histórico — Times";
-    if (tab === "historico-jogadores") return "Histórico — Jogadores";
-    return "Scrims";
-  };
-
-  const getSubtitle = () => {
-    if (selectedMode === "br") return "Battle Royale";
-    if (selectedMode === "mme") return "Mata-Mata em Equipe";
-    return "Todos os modos";
-  };
-
+export default function ScrimsLanding() {
   return (
     <MainLayout>
-      {/* Header */}
-      <div className="bg-[#12121a] border-b border-[#2a2a3a]">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Swords className="w-8 h-8 text-emerald-400" />
-                <h1 className="text-3xl md:text-4xl font-extrabold text-[#f0f0f5]">
-                  Scrims
-                </h1>
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 pb-16">
+        {/* Hero Header */}
+        <div className="bg-[#12121a] border-b border-[#2a2a3a] -mx-4 lg:-mx-8 px-4 lg:px-8 py-16 mb-10">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20">
+                <Swords className="w-8 h-8 text-red-400" />
               </div>
-              <p className="text-[#8a8a9e]">{getTitle()}</p>
-              <p className="text-xs text-[#5a5a6e] mt-1">{getSubtitle()}</p>
+              <span className="text-xs font-bold uppercase tracking-widest text-red-400 bg-red-500/10 px-3 py-1 rounded-full">Centro de Treinos</span>
             </div>
-
-            {/* Mode Filter */}
-            <div className="flex items-center gap-2 bg-[#1a1a24] rounded-xl p-1.5 border border-[#2a2a3a]">
-              <ModeFilterButton
-                active={selectedMode === "all"}
-                onClick={() => setSelectedMode("all")}
-                icon={<BarChart3 className="w-3.5 h-3.5" />}
-                label="Todos"
-              />
-              <ModeFilterButton
-                active={selectedMode === "br"}
-                onClick={() => setSelectedMode("br")}
-                icon={<Target className="w-3.5 h-3.5" />}
-                label="BR"
-              />
-              <ModeFilterButton
-                active={selectedMode === "mme"}
-                onClick={() => setSelectedMode("mme")}
-                icon={<Users className="w-3.5 h-3.5" />}
-                label="MME"
-              />
+            <h1 className="text-4xl md:text-5xl font-extrabold text-[#f0f0f5] mb-4 leading-tight">
+              Scrims <span className="text-red-400">Hub</span>
+            </h1>
+            <p className="text-lg text-[#8a8a9e] leading-relaxed mb-8">
+              O centro de organização de todas as partidas de treino (Scrims) da comunidade. 
+              Agende partidas entre times, acompanhe resultados em tempo real e suba no ranking 
+              através de duas modalidades distintas: <span className="text-[#f0f0f5] font-semibold">BR</span> e{" "}
+              <span className="text-[#f0f0f5] font-semibold">MME</span>.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link 
+                to="/scrims/agendados" 
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+              >
+                Ver Partidas <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link 
+                to="/scrims/novo" 
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium bg-[#1a1a24] text-[#f0f0f5] border border-[#2a2a3a] hover:bg-[#2a2a3a] transition-all"
+              >
+                Agendar Nova Scrim
+              </Link>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <TabButton
-            active={tab === "agendados"}
-            onClick={() => {
-              setTab("agendados");
-              setSelectedDate("all");
-            }}
-            icon={<Calendar className="w-4 h-4" />}
-            label="Agendados"
-          />
-          <TabButton
-            active={tab === "historico-times"}
-            onClick={() => {
-              setTab("historico-times");
-              setSelectedDate("all");
-            }}
-            icon={<Trophy className="w-4 h-4" />}
-            label="Histórico — Times"
-          />
-          <TabButton
-            active={tab === "historico-jogadores"}
-            onClick={() => {
-              setTab("historico-jogadores");
-              setSelectedDate("all");
-            }}
-            icon={<Target className="w-4 h-4" />}
-            label="Histórico — Jogadores"
-          />
+        {/* Modalidades */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-extrabold text-[#f0f0f5] mb-6 flex items-center gap-2">
+            <TrendingUp className="w-6 h-6 text-red-400" /> Modalidades Disponíveis
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {MODES.map((mode) => (
+              <Link 
+                key={mode.id} 
+                to={mode.link}
+                className={`relative bg-[#12121a] border ${mode.color} rounded-2xl p-6 transition-all group overflow-hidden`}
+              >
+                <div className="relative z-10">
+                  <div className={`mb-4 p-3 w-fit rounded-xl ${mode.bgColor} transition-transform group-hover:scale-110`}>
+                    {mode.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-[#f0f0f5] mb-2 flex items-center justify-between">
+                    {mode.title}
+                    <ArrowRight className="w-5 h-5 text-[#5a5a6e] group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </h3>
+                  <p className="text-sm text-[#8a8a9e] leading-relaxed">{mode.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
 
-        {/* Info Banner */}
-        {selectedMode !== "all" && (
-          <div className="mb-6 bg-[#1a1a24] border border-[#2a2a3a] rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                selectedMode === "br" ? "bg-blue-500/10" : "bg-orange-500/10"
-              }`}>
-                {selectedMode === "br" ? (
-                  <Target className="w-4 h-4 text-blue-400" />
-                ) : (
-                  <Users className="w-4 h-4 text-orange-400" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[#f0f0f5]">
-                  {selectedMode === "br" ? "Battle Royale (BR)" : "Mata-Mata em Equipe (MME)"}
-                </h3>
-                <p className="text-xs text-[#5a5a6e] mt-1">
-                  {selectedMode === "br"
-                    ? "Sistema de pontuação por posição nas quedas. 1º lugar = 15pts, 2º = 12pts, 3º = 10pts..."
-                    : "Sistema baseado em rounds ganhos. Melhor de 3, 5, 7... O time que fizer mais rounds vence a série."}
-                </p>
-              </div>
-            </div>
+        {/* Acesso Rápido */}
+        <div className="bg-[#1a1a24] rounded-2xl border border-[#2a2a3a] p-6">
+          <h3 className="text-lg font-bold text-[#f0f0f5] mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-red-400" /> Navegação Rápida
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {QUICK_LINKS.map((link) => (
+              <Link 
+                key={link.to} 
+                to={link.to} 
+                className="flex items-center gap-3 p-4 bg-[#12121a] border border-[#2a2a3a] rounded-xl hover:border-red-500/30 hover:bg-[#12121a]/80 transition-all group"
+              >
+                <div className="text-[#5a5a6e] group-hover:text-red-400 transition-colors">{link.icon}</div>
+                <span className="text-sm font-medium text-[#8a8a9e] group-hover:text-[#f0f0f5] transition-colors">{link.label}</span>
+              </Link>
+            ))}
           </div>
-        )}
-
-        {/* Tab Content */}
-        {tab === "agendados" && (
-          <AgendadosTab
-            scrimsList={normalizedScrimsList}
-            onScrimClick={setSelectedScrim}
-          />
-        )}
-
-        {tab === "historico-times" && (
-          <HistoricoTimesTab
-            selectedDate={selectedDate}
-            availableDates={availableDates}
-            onDateChange={setSelectedDate}
-            selectedMode={selectedMode}
-            scrimTeamResults={scrimTeamResults as any}
-            scrimPlayerStats={scrimPlayerStats as any}
-            scrimTeamAllTimeBR={scrimTeamAllTimeBR}
-            scrimTeamAllTimeMME={scrimTeamAllTimeMME}
-            onTeamClick={setSelectedTeam}
-          />
-        )}
-
-        {tab === "historico-jogadores" && (
-          <HistoricoJogadoresTab
-            selectedDate={selectedDate}
-            availableDates={availableDates}
-            onDateChange={setSelectedDate}
-            scrimPlayerStats={scrimPlayerStats as any}
-            scrimPlayerAllTime={scrimPlayerAllTime}
-            onPlayerClick={(name, team) => setSelectedPlayer({ name, team })}
-          />
-        )}
+        </div>
       </div>
-
-      {/* Modals */}
-      <ScrimDetailModal
-        scrim={selectedScrim}
-        isOpen={!!selectedScrim}
-        onClose={() => setSelectedScrim(null)}
-      />
-      <TeamStatsModal
-        teamName={selectedTeam}
-        isOpen={!!selectedTeam}
-        onClose={() => setSelectedTeam("")}
-      />
-      {selectedPlayer && (
-        <PlayerStatsModal
-          playerName={selectedPlayer.name}
-          teamName={selectedPlayer.team}
-          isOpen={!!selectedPlayer}
-          onClose={() => setSelectedPlayer(null)}
-        />
-      )}
     </MainLayout>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        active
-          ? "bg-emerald-500 text-white"
-          : "bg-[#1a1a24] text-[#8a8a9e] hover:text-[#f0f0f5] border border-[#2a2a3a]"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-function ModeFilterButton({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-        active
-          ? "bg-emerald-500 text-white"
-          : "text-[#8a8a9e] hover:text-[#f0f0f5]"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }

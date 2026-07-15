@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createRouter, publicQuery, adminQuery } from "../middleware.js";
-import { getDb } from "../queries/connection.js";
+import { createRouter, publicQuery, adminQuery } from "../../api/middleware.js";
+import { getDb } from "../../api/queries/connection.js";
 import { clans, teams, players } from "../../db/schema.js";
 import { eq, like, or, and, sql } from "drizzle-orm";
-import { verifyToken } from "../lib/auth.js";
+import { verifyToken } from "../../api/lib/auth.js";
 
 export const clansRouter = createRouter({
   list: publicQuery
